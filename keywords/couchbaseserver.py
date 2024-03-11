@@ -1061,7 +1061,7 @@ class CouchbaseServer:
     def load_sample_bucket(self, sample_bucket):
         """ Loads a given sample bucket """
         log_info("Enabling sample bucket {}".format(sample_bucket))
-        self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 200 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))
+        self.remote_executor.must_execute('/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 200 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))
 
     def get_bucket_connection(self, cbs_url, bucket_name, ssl_enabled, cluster):
         cbs_ip = host_for_url(cbs_url)
