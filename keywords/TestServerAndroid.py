@@ -84,13 +84,9 @@ class TestServerAndroid(TestServerBase):
 
         # Package not downloaded, proceed to download from latest builds
 
-        if build is None:
-            url = "{}/{}/{}/{}".format(RELEASED_BUILDS, self.download_source, version, self.package_name)
-        else:
-            url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
-        url = 'https://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-lite-android/3.1.6-vf001/50960/CBLTestServer-Android-3.1.6-vf001-50960-enterprise-release.apk'
-        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
-        resp = requests.get(url, verify=False)
+        new_url = "https://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-lite-android/3.1.6-vf001/50960/CBLTestServer-Android-3.1.6-vf001-50960-enterprise-release.apk"
+        log_info("Downloading {} -> {}/{}".format(new_url, BINARY_DIR, self.package_name))
+        resp = requests.get(new_url, verify=False)
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
             f.write(resp.content)
