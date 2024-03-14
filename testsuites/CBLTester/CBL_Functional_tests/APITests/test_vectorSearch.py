@@ -32,10 +32,10 @@ def vector_search_test_fixture(params_from_base_test_setup):
     data = {
           "bucket": bucket, "scopes": {scope: {
             "collections": {
-                {st_col_name: {"sync": sync_function}},
-                {dbv_col_name: {"sync": sync_function}},
-                {aw_col_name: {"sync": sync_function}},
-                {iv_col_name: {"sync": sync_function}}
+                st_col_name: {"sync": sync_function},
+                dbv_col_name: {"sync": sync_function},
+                aw_col_name: {"sync": sync_function},
+                iv_col_name: {"sync": sync_function}
             }
           }
         }, "num_index_replicas": 0 # This might need to change idk what vectors are
