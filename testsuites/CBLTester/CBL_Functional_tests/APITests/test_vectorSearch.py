@@ -101,7 +101,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     user_scopes_collections
 
       
-def test_vector_search_index_correctness(db_name):
+def test_vector_search_index_correctness(vector_search_test_fixture):
         '''
         @summary: Modifying and pulling documents leads to correct vector embeddings
         We set up a vector search-enabled CBL with four collections:
