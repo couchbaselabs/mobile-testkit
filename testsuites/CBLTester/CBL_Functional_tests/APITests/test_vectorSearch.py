@@ -26,7 +26,6 @@ def vector_search_test_fixture(params_from_base_test_setup):
     dbv_col_name = 'docBodyVectors'
     iv_col_name = 'indexVectors'
     aw_col_name = 'auxiliaryWords'
-    vsHandler = VectorSearch()
 
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_username = "vector_search_user" + random_suffix
@@ -56,6 +55,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
     db = Database(base_url)
+    vsHandler = VectorSearch(base_url)
     sg_client = MobileRestClient()
     db_config = db.configure()
 
