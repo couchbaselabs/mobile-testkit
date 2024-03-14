@@ -74,9 +74,9 @@ def vector_search_test_fixture(params_from_base_test_setup):
         cb_server.create_collection(bucket, scope, iv_col_name)
     
     # sgw database creation
-    if admin_client.does_db_exist(sg_db) is True:
-        admin_client.delete_db(sg_db)
-    admin_client.create_db(sg_db, data)
+    # if admin_client.does_db_exist(sg_db) is True:
+    #     admin_client.delete_db(sg_db)
+    # admin_client.create_db(sg_db, data)
 
     # cbl database, scope and collection creation
     cbl_db = db.create(db, db_config)
@@ -87,19 +87,18 @@ def vector_search_test_fixture(params_from_base_test_setup):
 
 
     # sgw database, scope and collections creation
-    channels = ["ABC"]
-    user_scopes_collections = {scope: [
-         {dbv_col_name: {"admin_channels": channels}},
-         {st_col_name: {"admin_channels": channels}},
-         {iv_col_name: {"admin_channels": channels}}
-         ]}
-    pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
-    if not pre_test_user_exists:
-        sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
+   # channels = ["ABC"]
+   # user_scopes_collections = {scope: [
+   #      {dbv_col_name: {"admin_channels": channels}},
+   #      {st_col_name: {"admin_channels": channels}},
+   #      {iv_col_name: {"admin_channels": channels}}
+   #      ]}
+   # pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
+   # if not pre_test_user_exists:
+   #     sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
 
     yield base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, 
-    dbv_collection, st_collection, iv_collection, aw_collection, auth, sg_admin_url, sg_password, db_config, cb_server, admin_client,
-    user_scopes_collections
+    dbv_collection, st_collection, iv_collection, aw_collection, auth, sg_admin_url, sg_password, db_config, cb_server, admin_client
 
       
 def test_vector_search_index_correctness(vector_search_test_fixture):
@@ -133,7 +132,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         TODO use load words to get db
         '''
         # setup
-        base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, dbv_collection, st_collection, iv_collection, aw_collection, auth, sg_admin_url, sg_password, db_config, cb_server, admin_client, user_scopes_collections = vector_search_test_fixture
+        base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, dbv_collection, st_collection, iv_collection, aw_collection, auth, sg_admin_url, sg_password, db_config, cb_server, admin_client = vector_search_test_fixture
         db = Database(base_url)
         # Check that all 3 collections on CBS exist
         dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
