@@ -10,6 +10,7 @@ from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
+from CBLClient.VectorSearch import VectorSearch
 
 
 bucket = "travel-sample"
@@ -25,6 +26,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     dbv_col_name = 'docBodyVectors'
     iv_col_name = 'indexVectors'
     aw_col_name = 'auxiliaryWords'
+    vsHandler = VectorSearch()
 
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_username = "vector_search_user" + random_suffix
@@ -78,13 +80,8 @@ def vector_search_test_fixture(params_from_base_test_setup):
     #     admin_client.delete_db(sg_db)
     # admin_client.create_db(sg_db, data)
 
-    # cbl database, scope and collection creation
-    cbl_db = db.create(db, db_config)
-    dbv_collection = db.createCollection(cbl_db, dbv_col_name, scope)
-    st_collection = db.createCollection(cbl_db, st_col_name, scope)
-    iv_collection = db.createCollection(cbl_db, iv_col_name, scope)
-    aw_collection = db.createCollection(cbl_db, aw_col_name, scope)
-
+    # load vsTestDatabase on cbl
+    vsTestDatabase = vsHandler.loadDatabase()
 
     # sgw database, scope and collections creation
    # channels = ["ABC"]
@@ -97,7 +94,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
    # if not pre_test_user_exists:
    #     sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
 
-    yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, cbl_db
+    yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase
 
       
 def test_vector_search_index_correctness(vector_search_test_fixture):
@@ -131,7 +128,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         TODO use load words to get db
         '''
         # setup
-        base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, cbl_db = vector_search_test_fixture
+        base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase = vector_search_test_fixture
         db = Database(base_url)
         # Check that all 3 collections on CBS exist
         dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
@@ -144,9 +141,9 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         
 
         # Check that all 4 collections on CBL exist
-        cbl_collections = db.collectionsInScope(cbl_db, scope)
+        cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
         # TODO check if _default counts towards this
-        assert len(cbl_collections) == 4, "wrong number of collections returned"
+        assert len(cbl_collections) == 5, "wrong number of collections returned"
         assert dbv_col_name in cbl_collections, "no CBL collection found for doc body vectors"
         assert st_col_name in cbl_collections, "no CBL collection found for search terms"
         assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
