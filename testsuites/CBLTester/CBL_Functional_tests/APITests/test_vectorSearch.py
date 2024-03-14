@@ -14,14 +14,22 @@ from CBLClient.VectorSearch import VectorSearch
 
 
 bucket = "travel-sample"
+vsBucket = "vsTestDatabase"
 sync_function = "function(doc){channel(doc.channels);}"
 
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
+    sg_client = sg_url = sg_admin_url = None
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+
     random_suffix = str(uuid.uuid4())[:8]
-    db = "vsTestDatabase"
     scope = '_default'
     # Names for the four collections
+    def_col = '_default'
     st_col_name = 'searchTerms'
     dbv_col_name = 'docBodyVectors'
     iv_col_name = 'indexVectors'
@@ -44,13 +52,6 @@ def vector_search_test_fixture(params_from_base_test_setup):
     
     sg_db = "db"
 
-    sg_client = sg_url = sg_admin_url = None
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_url = params_from_base_test_setup["sg_url"]
-    base_url = params_from_base_test_setup["base_url"]
-    sg_blip_url = params_from_base_test_setup["target_url"]
-
     c = cluster.Cluster(config=cluster_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
@@ -68,12 +69,15 @@ def vector_search_test_fixture(params_from_base_test_setup):
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    does_scope_exist = cb_server.does_scope_exist(bucket, scope)
+    cb_server.create_bucket(cluster_config=cluster_config, name="vsTestDatabase")
+    does_scope_exist = cb_server.does_scope_exist(vsBucket, scope)
     if does_scope_exist is False:
-        cb_server.create_scope(bucket, scope)
-        cb_server.create_collection(bucket, scope, dbv_col_name)
-        cb_server.create_collection(bucket, scope, st_col_name)
-        cb_server.create_collection(bucket, scope, iv_col_name)
+        cb_server.create_scope(vsBucket, scope)
+
+    cb_server.create_collection(vsBucket, scope, dbv_col_name)
+    cb_server.create_collection(vsBucket, scope, st_col_name)
+    cb_server.create_collection(vsBucket, scope, iv_col_name)
+    cb_server.create_collection(vsBucket, scope, aw_col_name)
     
     # sgw database creation
     # if admin_client.does_db_exist(sg_db) is True:
@@ -131,12 +135,14 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase = vector_search_test_fixture
         db = Database(base_url)
         # Check that all 3 collections on CBS exist
-        dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
+        dbv_id = cb_server.get_collection_id(vsBucket, scope, dbv_col_name)
         assert dbv_id is not None, "no server collection found for doc body vectors"
-        st_id = cb_server.get_collection_id(bucket, scope, st_col_name)
+        st_id = cb_server.get_collection_id(vsBucket, scope, st_col_name)
         assert st_id is not None, "no server collection found for search terms"
-        iv_id = cb_server.get_collection_id(bucket, scope, iv_col_name)
-        assert st_id is not None, "no server collection found for index vectors"
+        iv_id = cb_server.get_collection_id(vsBucket, scope, iv_col_name)
+        assert iv_id is not None, "no server collection found for index vectors"
+        aw_id = cb_server.get_collection_id(vsBucket, scope, aw_col_name)
+        assert aw_id is not None, "no server collection found for aw"
         assert dbv_id != st_id and dbv_id != iv_id and st_id != iv_id, "duplicate collection ids: these collections are not all distinct"
         
 
