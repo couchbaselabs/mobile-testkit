@@ -15,6 +15,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 bucket = "data-bucket"
 sync_function = "function(doc){channel(doc.channels);}"
 
+@pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
     random_suffix = str(uuid.uuid4())[:8]
     db = "vsTestDatabase"
