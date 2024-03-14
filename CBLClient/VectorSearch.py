@@ -53,10 +53,10 @@ class VectorSearch(object):
         return self._client.invokeMethod("vectorSearch_createIndex", args)
 
 
-    def testPredict(self, input):
+    def getEmbedding(self, input):
         args= Args()
         args.setString("input", input)
-        return self._client.invokeMethod("vectorSearch_testPredict", args) 
+        return self._client.invokeMethod("vectorSearch_getEmbedding", args) 
     
 
     def registerModel(self, key, name):
@@ -73,13 +73,11 @@ class VectorSearch(object):
 
         return self._client.invokeMethod("vectorSearch_query", args)
     
-    def loadWords(self, ):
-        return self._client.invokeMethods("vectorSearch_loadWords")
+    def loadDatabase(self, ):
+        return self._client.invokeMethods("vectorSearch_loadDatabase")
 
     def regenerateWordEmbeddings(self):
         return self._client.invokeMethod("vectorSearch_regenerateWordEmbeddings")
-
- 
 
     def register_model(self, key, name):
         args = Args()
