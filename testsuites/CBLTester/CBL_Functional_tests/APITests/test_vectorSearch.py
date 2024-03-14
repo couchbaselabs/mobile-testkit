@@ -154,21 +154,11 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # Check that all 4 collections on CBL exist
         cbl_collections = db.collectionsInScope(cbl_db, scope)
         # TODO check if _default counts towards this
-        if len(cbl_collections) != 4:
-             print("wrong number of collections returned")
-             assert(False, "wrong number of collections returned")
-        if dbv_col_name not in cbl_collections:
-             print("no CBL collection found for doc body vectors")
-             assert(False, "no CBL collection found for doc body vectors")
-        if st_col_name not in cbl_collections:
-             print("no CBL collection found for search terms")
-             assert(False, "no CBL collection found for search terms")
-        if iv_col_name not in cbl_collections:
-             print("no CBL collection found for index vectors")
-             assert(False, "no CBL collection found for index vectors")
-        if aw_col_name not in cbl_collections:
-             print("no CBL collection found for auxiliary words")
-             assert(False, "no CBL collection found for auxiliary words")
+        assert len(cbl_collections) == 4, "wrong number of collections returned"
+        assert dbv_col_name in cbl_collections, "no CBL collection found for doc body vectors"
+        assert st_col_name in cbl_collections, "no CBL collection found for search terms"
+        assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
+        assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
         
 
         # Check that all 3 collections on SGW exist
