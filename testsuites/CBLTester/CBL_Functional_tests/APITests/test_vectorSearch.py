@@ -12,7 +12,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
 
 
-bucket = "data-bucket"
+bucket = "travel-sample"
 sync_function = "function(doc){channel(doc.channels);}"
 
 @pytest.fixture
