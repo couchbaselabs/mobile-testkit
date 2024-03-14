@@ -137,15 +137,18 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
         if not dbv_id:
              print("no server collection found for doc body vectors")
+             assert(False, "no server collection found for doc body vectors")
         st_id = cb_server.get_collection_id(bucket, scope, st_col_name)
         if not st_id:
              print("no server collection found for search terms")
+             assert(False, "no server collection found for search terms")
         iv_id = cb_server.get_collection_id(bucket, scope, iv_col_name)
         if not iv_id:
              print("no server collection found for index vectors")
-
+             assert(False, "no server collection found for index vectors")
         if dbv_id == st_id or dbv_id == iv_id or st_id == iv_id:
              print("duplicate collection ids: these collections are not all distinct")
+             assert(False, "duplicate collection ids: these collections are not all distinct")
         
 
         # Check that all 4 collections on CBL exist
@@ -153,14 +156,19 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # TODO check if _default counts towards this
         if len(cbl_collections) != 4:
              print("wrong number of collections returned")
+             assert(False, "wrong number of collections returned")
         if dbv_col_name not in cbl_collections:
              print("no CBL collection found for doc body vectors")
+             assert(False, "no CBL collection found for doc body vectors")
         if st_col_name not in cbl_collections:
              print("no CBL collection found for search terms")
+             assert(False, "no CBL collection found for search terms")
         if iv_col_name not in cbl_collections:
              print("no CBL collection found for index vectors")
+             assert(False, "no CBL collection found for index vectors")
         if aw_col_name not in cbl_collections:
              print("no CBL collection found for auxiliary words")
+             assert(False, "no CBL collection found for auxiliary words")
         
 
         # Check that all 3 collections on SGW exist
