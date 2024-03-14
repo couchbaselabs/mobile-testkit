@@ -87,11 +87,11 @@ def vector_search_test_fixture(params_from_base_test_setup):
     vsTestDatabase = vsHandler.loadDatabase()
 
     channels = ["ABC"]
-    user_scopes_collections = {scope: [
-        {dbv_col_name: {"admin_channels": channels}},
-        {st_col_name: {"admin_channels": channels}},
-        {iv_col_name: {"admin_channels": channels}}
-    ]}
+    user_scopes_collections = {scope: {
+        dbv_col_name: {"admin_channels": channels},
+        st_col_name: {"admin_channels": channels},
+        iv_col_name: {"admin_channels": channels}
+    }}
     pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
     if not pre_test_user_exists:
         sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
