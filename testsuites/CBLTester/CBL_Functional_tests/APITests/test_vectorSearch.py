@@ -145,8 +145,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         # Check that all 4 collections on CBL exist
         cbl_collections = db.collectionsInScope(cbl_db, scope)
-        # TODO check if _default counts towards this
-        assert len(cbl_collections) == 4, "wrong number of collections returned"
+        assert len(cbl_collections) == 5, "wrong number of collections returned"
         assert dbv_col_name in cbl_collections, "no CBL collection found for doc body vectors"
         assert st_col_name in cbl_collections, "no CBL collection found for search terms"
         assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
