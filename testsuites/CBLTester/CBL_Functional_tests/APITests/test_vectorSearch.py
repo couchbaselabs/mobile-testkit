@@ -31,15 +31,15 @@ def vector_search_test_fixture(params_from_base_test_setup):
     sg_password = "password"
     data = {
           "bucket": bucket, "scopes": {scope: {
-            "collections": [
+            "collections": {
                 {st_col_name: {"sync": sync_function}},
                 {dbv_col_name: {"sync": sync_function}},
                 {aw_col_name: {"sync": sync_function}},
                 {iv_col_name: {"sync": sync_function}}
-            ]
+            }
           }
-          }, "num_index_replicas": 0 # This might need to change idk what vectors are
-          }
+        }, "num_index_replicas": 0 # This might need to change idk what vectors are
+    }
     
     sg_db = "db"
 
