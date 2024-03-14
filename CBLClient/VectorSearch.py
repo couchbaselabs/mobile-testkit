@@ -74,7 +74,7 @@ class VectorSearch(object):
         return self._client.invokeMethod("vectorSearch_query", args)
     
     def loadDatabase(self, ):
-        return self._client.invokeMethods("vectorSearch_loadDatabase")
+        return self._client.invokeMethod("vectorSearch_loadDatabase")
 
     def regenerateWordEmbeddings(self):
         return self._client.invokeMethod("vectorSearch_regenerateWordEmbeddings")
