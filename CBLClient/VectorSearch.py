@@ -1,4 +1,4 @@
-from CBLClient import Client
+from CBLClient.Client import Client
 from CBLClient.Args import Args
 
 class VectorSearch(object):
