@@ -149,6 +149,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
         assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
         
+        db.deleteDBbyName("vsTestDatabase")
 
         # Check that all 3 collections on SGW exist
 
