@@ -169,7 +169,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         username = "autotest"
         password = "password"
         channels_sg = ["ABC"]
-        num_of_docs = cbl_dbv_col.documentCount()
+        num_of_docs = collectionHandler.documentCount(cbl_dbv_col)
         print(num_of_docs)
         db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
         replicator = Replication(base_url)
