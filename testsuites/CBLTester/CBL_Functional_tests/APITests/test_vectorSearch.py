@@ -18,18 +18,21 @@ sync_function = "function(doc){channel(doc.channels);}"
 sg_admin_url = None
 sg_db = "db"
 sg_blip_url = None
+cbl_db = None
 
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
     global sg_admin_url
     global sg_db
     global sg_blip_url
+    global cbl_db
     sg_client = sg_url = sg_admin_url = None
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    cbl_db = params_from_base_test_setup["source_db"]
 
     random_suffix = str(uuid.uuid4())[:8]
     scope = '_default'
@@ -164,8 +167,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, db, sg_blip_url, continuous=False, replication_type="push_pull", auth=None)
-        replicator.wait_until_replicator_idle(repl)
+        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None)
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
 
