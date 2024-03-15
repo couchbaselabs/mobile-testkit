@@ -4,6 +4,7 @@ from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
+from CBLClient.Collection import Collection
 from libraries.testkit import cluster
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.admin import Admin
@@ -162,20 +163,26 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
         assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
 
+        collectionHandler = Collection(base_url)
+        cbl_dbv_col = collectionHandler.getCollectionInstance(vsTestDatabase, "docBodyVectors")
+
         username = "autotest"
         password = "password"
         channels_sg = ["ABC"]
-        num_of_docs = 10
+        num_of_docs = cbl_dbv_col.documentCount()
+        print(num_of_docs)
         db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
         replicator = Replication(base_url)
         auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None)
-        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db="vsTestDatabase", sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None)
+        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope="_default", collection="docBodyVectors")
         sg_docs = sg_docs["rows"]
-        cbl_doc_count = db.getCount(cbl_db)
-        assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+
+        print(sg_docs)
+
+        assert len(sg_docs) == num_of_docs, "Expected number of docs does not exist in sync-gateway after replication"
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
 
