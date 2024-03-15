@@ -162,7 +162,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         channels_sg = ["ABC"]
         replicator = Replication(base_url)
         auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-        sg_client.create_user(sg_admin_url, sg_db, "username", password, channels=channels_sg, auth=auth)
+        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, db, sg_blip_url, continuous=False, replication_type="push_pull", auth=None)
         replicator.wait_until_replicator_idle(repl)
