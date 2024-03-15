@@ -15,9 +15,15 @@ from CBLClient.VectorSearch import VectorSearch
 
 bucket = "travel-sample"
 sync_function = "function(doc){channel(doc.channels);}"
+sg_admin_url = None
+sg_db = "db"
+sg_blip_url = None
 
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
+    global sg_admin_url
+    global sg_db
+    global sg_blip_url
     sg_client = sg_url = sg_admin_url = None
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -49,8 +55,6 @@ def vector_search_test_fixture(params_from_base_test_setup):
           }
         }, "num_index_replicas": 0 # This might need to change idk what vectors are
     }
-    
-    sg_db = "db"
 
     c = cluster.Cluster(config=cluster_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
@@ -96,7 +100,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     if not pre_test_user_exists:
         sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
 
-    yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase
+    yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client
 
       
 def test_vector_search_index_correctness(vector_search_test_fixture):
@@ -130,7 +134,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         TODO use load words to get db
         '''
         # setup
-        base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase = vector_search_test_fixture
+        base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client = vector_search_test_fixture
         db = Database(base_url)
         # Check that all 3 collections on CBS exist
         dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
@@ -152,7 +156,16 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert st_col_name in cbl_collections, "no CBL collection found for search terms"
         assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
         assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
-        
+
+        username = "autotest"
+        password = "password"
+        channels_sg = ["ABC"]
+        replicator = Replication(base_url)
+        auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+        sg_client.create_user(sg_admin_url, sg_db, "username", password, channels=channels_sg, auth=auth)
+        session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, db, sg_blip_url, continuous=False, replication_type="push_pull", auth=auth)
+        replicator.wait_until_replicator_idle(repl)
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
 
