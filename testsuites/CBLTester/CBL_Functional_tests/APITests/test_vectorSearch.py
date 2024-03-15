@@ -171,7 +171,8 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None)
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=None)
-        assert len(sg_docs) == num_of_docs
+        cbl_doc_count = db.getCount(cbl_db)
+        assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
 
