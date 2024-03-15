@@ -19,6 +19,7 @@ sg_admin_url = None
 sg_db = "db"
 sg_blip_url = None
 cbl_db = None
+sg_url = None
 
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
@@ -26,6 +27,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     global sg_db
     global sg_blip_url
     global cbl_db
+    global sg_url
     sg_client = sg_url = sg_admin_url = None
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -170,7 +172,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None)
-        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=None)
+        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=None)
         cbl_doc_count = db.getCount(cbl_db)
         assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
         db.close(vsTestDatabase)
