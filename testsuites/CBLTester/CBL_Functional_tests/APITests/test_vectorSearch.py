@@ -163,12 +163,15 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         username = "autotest"
         password = "password"
         channels_sg = ["ABC"]
-        db.create_bulk_docs(10, "cbl", db=cbl_db, channels=channels_sg)
+        num_of_docs = 10
+        db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
         replicator = Replication(base_url)
         auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None)
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=None)
+        assert len(sg_docs) == num_of_docs
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
 
