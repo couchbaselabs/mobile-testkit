@@ -163,6 +163,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         username = "autotest"
         password = "password"
         channels_sg = ["ABC"]
+        db.create_bulk_docs(10, "cbl", db=cbl_db, channels=channels_sg)
         replicator = Replication(base_url)
         auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
