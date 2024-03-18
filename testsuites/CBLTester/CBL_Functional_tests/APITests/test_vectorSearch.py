@@ -158,4 +158,18 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         # Check that all 3 collections on SGW exist
 
-        
+
+def test_whatever_for_now():
+    # Check for correct server version
+    
+    # Load vsTestDatabase
+
+    # Register Model
+
+    # Create Index
+
+    # Queries
+
+    # Delete vsTestDatabase
+    pass
+
