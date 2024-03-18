@@ -189,7 +189,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              database = vsTestDatabase,
              scopeName = "_default",
              collectionName = "docBodyVectors",
-             index = "docBodyVectorsIndex", # fix handler so that this parameter is indexName
+             indexName = "docBodyVectorsIndex",
              expression = "vector",
              dimensions = gteSmallDims,
              centroids = 8,
@@ -202,7 +202,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              database = vsTestDatabase,
              scopeName = "_default",
              collectionName = "indexVectors",
-             index = "indexVectorsIndex",
+             indexName = "indexVectorsIndex",
              expression = "prediction(gteSmall, {‘word’: word}).vector",
              dimensions = gteSmallDims,
              centroids = 16, # test with more centroids than there are probes - should check with dev regarding behaviour but ok for now

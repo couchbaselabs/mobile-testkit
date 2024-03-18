@@ -27,14 +27,14 @@ class VectorSearch(object):
         return self._client.invokeMethod("vectorSearch_testDecode", args)
     
     # USEFUL FUNCTIONS
-    def createIndex(self, database, scopeName, collectionName, index, expression, 
+    def createIndex(self, database, scopeName, collectionName, indexName, expression, 
                     dimensions, centroids, scalarEncoding=None, subquantizers=None, bits=None, 
                     metric=None, minTrainingSize=None, maxTrainingSize=None):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("collectionName", collectionName)
         args.setString("scopeName", scopeName)
-        args.setString("index", index)
+        args.setString("indexName", indexName)
         args.setString("expression", expression)
         args.setInt("dimensions", dimensions)
         args.setInt("centroids", centroids)
