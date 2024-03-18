@@ -166,10 +166,10 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         password = "password"
         channels_sg = ["ABC"]
 
-        replicateDocs(db=vsTestDatabase, collection=dbv_col_name, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(db=vsTestDatabase, collection=st_col_name, expectedNumberOfDocs=1, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(db=vsTestDatabase, collection=iv_col_name, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(db=vsTestDatabase, collection=aw_col_name, expectedNumberOfDocs=10, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, expectedNumberOfDocs=1, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, expectedNumberOfDocs=10, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
         
         # setup replicator and replicate
        # replicator = Replication(base_url)
