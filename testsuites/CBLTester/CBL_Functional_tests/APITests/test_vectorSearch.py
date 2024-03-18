@@ -181,7 +181,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # checking existence of doc after replication complete
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
         sg_docs = sg_docs["rows"]
-        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
         #sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=['cbl_1'], auth=session, scope=scope, collection=dbv_col_name)
         assert len(sg_docs) == 300, "Number of docs mismatched"
 #        num_of_docs = 10
