@@ -203,7 +203,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              scopeName = "_default",
              collectionName = "indexVectors",
              indexName = "indexVectorsIndex",
-             expression = "\"prediction(gteSmall, {‘word’: word}).vector\"",
+             expression = "prediction(gteSmall, {\"word\": word}).vector",
              dimensions = gteSmallDims,
              centroids = 16, # test with more centroids than there are probes - should check with dev regarding behaviour but ok for now
              metric = "cosine",
