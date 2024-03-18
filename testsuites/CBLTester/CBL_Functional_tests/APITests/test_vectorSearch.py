@@ -166,45 +166,11 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         password = "password"
         channels_sg = ["ABC"]
 
-        replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, expectedNumberOfDocs=1, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, expectedNumberOfDocs=10, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        
-        # setup replicator and replicate
-       # replicator = Replication(base_url)
-       # collections = []
-       # collections_configuration = []
-       # collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=created_collection))
-       # collections.append(created_collection)
-       # try:
-       #     session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
-       # except Exception as e:
-       #     pytest.fail("Replication failed due to " + str(e))
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 1, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 10, "Number of docs mismatched"
 
-        # checking existence of doc after replication complete
-        # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
-        # sg_docs = sg_docs["rows"]
-        # sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=['cbl_1'], auth=session, scope=scope, collection=dbv_col_name)
-       # sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
-       # sg_docs = sg_docs["rows"]
-       # assert len(sg_docs) == 300, "Number of docs mismatched"
-#        num_of_docs = 10
-#        db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
-#        replicator = Replication(base_url)
-#        auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-#        session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-#        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db=vsTestDatabase, sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None, collection=dbv_col_name)
-#        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
-#        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
-#        sg_docs = sg_docs["rows"]
-
-
-
-
-
-   #     cbl_doc_count = db.getCount(vsTestDatabase)
-   #     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
 
@@ -212,7 +178,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         
 
-def replicateDocs(cbl_db, collection, expectedNumberOfDocs, base_url, sg_client, sg_username, scope):
+def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
         db = Database(base_url)
         createdCollection = db.createCollection(cbl_db, collection, scope)
         channels_sg = ["ABC"]
@@ -227,11 +193,6 @@ def replicateDocs(cbl_db, collection, expectedNumberOfDocs, base_url, sg_client,
         except Exception as e:
             pytest.fail("Replication failed due to " + str(e))
 
-        # checking existence of doc after replication complete
-        # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
-        # sg_docs = sg_docs["rows"]
-        # sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=['cbl_1'], auth=session, scope=scope, collection=dbv_col_name)
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
         sg_docs = sg_docs["rows"]
-        assert len(sg_docs) == expectedNumberOfDocs, "Number of docs mismatched"
-     
+        return len(sg_docs)
