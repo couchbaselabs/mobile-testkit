@@ -105,7 +105,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     if not pre_test_user_exists:
         sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
 
-    yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client
+    yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username
 
       
 def test_vector_search_index_correctness(vector_search_test_fixture):
@@ -139,7 +139,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         TODO use load words to get db
         '''
         # setup
-        base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client = vector_search_test_fixture
+        base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
         db = Database(base_url)
         # Check that all 3 collections on CBS exist
         dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
@@ -165,17 +165,39 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         username = "autotest"
         password = "password"
         channels_sg = ["ABC"]
-        num_of_docs = 10
-        db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
+        
+         # setup replicator and replicate
         replicator = Replication(base_url)
-        auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
-        session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db=vsTestDatabase, sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None, collection=dbv_col_name)
-        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+        collections = []
+        collections_configuration = []
+        collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=dbv_col_name))
+        collections.append(dbv_col_name)
+        try:
+            session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
+        except Exception as e:
+            pytest.fail("Replication failed due to " + str(e))
+
+        # checking existence of doc after replication complete
+        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
         sg_docs = sg_docs["rows"]
-        cbl_doc_count = db.getCount(vsTestDatabase)
-        assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+        sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=['cbl_1'], auth=session, scope=scope, collection=dbv_col_name)
+        assert len(sg_docs) == 300, "Number of docs mismatched"
+#        num_of_docs = 10
+#        db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
+#        replicator = Replication(base_url)
+#        auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+#        session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+#        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password, channels=channels_sg, sg_client=sg_client, cbl_db=vsTestDatabase, sg_blip_url=sg_blip_url, continuous=False, replication_type="push_pull", auth=None, collection=dbv_col_name)
+#        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+#        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+#        sg_docs = sg_docs["rows"]
+
+
+
+
+
+   #     cbl_doc_count = db.getCount(vsTestDatabase)
+   #     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
 
