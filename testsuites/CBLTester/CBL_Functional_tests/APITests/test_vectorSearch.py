@@ -159,17 +159,29 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # Check that all 3 collections on SGW exist
 
 
-def test_whatever_for_now():
-    # Check for correct server version
-    
-    # Load vsTestDatabase
+def test_whatever_for_now(vector_search_test_fixture):
+    base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase = vector_search_test_fixture
+    db = Database(base_url)
 
-    # Register Model
+    # Check for correct server version
+    if cb_server.get_server_version < "7.6": 
+        pytest.skip("Server version must be 7.6 or higher")
+
+    # Load vsTestDatabase
+    vsHandler = VectorSearch(base_url)
+    vsHandler
+
+    # Register Model TODO make this correct
+    vsHandler.registerModel("key", "name")
 
     # Create Index
+    vsHandler.createIndex("vsTestDatabase", scope, dbv_col_name, )
 
     # Queries
+    vsHandler.query(, , vsTestDatabase)
 
     # Delete vsTestDatabase
-    pass
+    db.close(vsTestDatabase)
+    db.deleteDBbyName("vsTestDatabase")
+    
 
