@@ -20,6 +20,7 @@ sg_db = "db"
 sg_blip_url = None
 cbl_db = None
 sg_url = None
+gteSmallDims = 384 #constant for the number of dims of gteSmall embeddings
 
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
@@ -176,9 +177,37 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         sg_docs = sg_docs["rows"]
         cbl_doc_count = db.getCount(cbl_db)
         assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
-        db.close(vsTestDatabase)
-        db.deleteDBbyName("vsTestDatabase")
 
         # Check that all 3 collections on SGW exist
 
-        
+        # Very rough draft of CBL side work
+        # Register model
+        vsHandler = VectorSearch(base_url)
+        vsHandler.register_model(key="word", name="gteSmall")
+        print("Registered model gteSmall on field 'word'")
+        vsHandler.createIndex(
+             database = vsTestDatabase,
+             collectionName = "docBodyVectors",
+             index = "docBodyVectorsIndex", # fix handler so that this parameter is indexName
+             expression = "vector",
+             dimensions = gteSmallDims,
+             centroids = 8,
+             metric = "euclidean",
+             minTrainingSize = 50,
+             maxTrainingSize = 300)
+
+        # worth checking an index with subquantizers? fine for now but dbl check in future
+        vsHandler.createIndex(
+             database = vsTestDatabase,
+             collectionName = "indexVectors",
+             index = "indexVectorsIndex",
+             expression = "prediction(gteSmall, {‘word’: word}).vector",
+             dimensions = gteSmallDims,
+             centroids = 16, # test with more centroids than there are probes - should check with dev regarding behaviour but ok for now
+             metric = "cosine",
+             minTrainingSize = 25,
+             maxTrainingSize = 300)
+
+
+        db.close(vsTestDatabase)
+        db.deleteDBbyName("vsTestDatabase")
