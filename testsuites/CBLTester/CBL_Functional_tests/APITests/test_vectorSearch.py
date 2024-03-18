@@ -212,8 +212,9 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         
 
-def replicateDocs(db, collection, expectedNumberOfDocs, base_url, sg_client, sg_username, scope):
-        createdCollection = db.createCollection(db, collection, scope)
+def replicateDocs(cbl_db, collection, expectedNumberOfDocs, base_url, sg_client, sg_username, scope):
+        db = Database(base_url)
+        createdCollection = db.createCollection(cbl_db, collection, scope)
         channels_sg = ["ABC"]
         # setup replicator and replicate
         replicator = Replication(base_url)
