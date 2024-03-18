@@ -187,7 +187,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         print("Registered model gteSmall on field 'word'")
         vsHandler.createIndex(
              database = vsTestDatabase,
-             scopeName = None,
+             scopeName = "_default",
              collectionName = "docBodyVectors",
              index = "docBodyVectorsIndex", # fix handler so that this parameter is indexName
              expression = "vector",
@@ -200,7 +200,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # worth checking an index with subquantizers? fine for now but dbl check in future
         vsHandler.createIndex(
              database = vsTestDatabase,
-             scopeName = None,
+             scopeName = "_default",
              collectionName = "indexVectors",
              index = "indexVectorsIndex",
              expression = "prediction(gteSmall, {‘word’: word}).vector",
