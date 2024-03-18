@@ -141,7 +141,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # setup
         base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
         db = Database(base_url)
-        created_collection = db.createCollection(vsTestDatabase, dbv_col_name, scope)
         # Check that all 3 collections on CBS exist
         dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
         assert dbv_id is not None, "no server collection found for doc body vectors"
@@ -167,10 +166,10 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         password = "password"
         channels_sg = ["ABC"]
 
-        replicateDocs(collection=dbv_col_name, createdCollection=created_collection, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(collection=st_col_name, createdCollection=created_collection, expectedNumberOfDocs=1, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(collection=iv_col_name, createdCollection=created_collection, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
-        replicateDocs(collection=aw_col_name, createdCollection=created_collection, expectedNumberOfDocs=10, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        replicateDocs(db=vsTestDatabase, collection=dbv_col_name, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        replicateDocs(db=vsTestDatabase, collection=st_col_name, expectedNumberOfDocs=1, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        replicateDocs(db=vsTestDatabase, collection=iv_col_name, expectedNumberOfDocs=300, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        replicateDocs(db=vsTestDatabase, collection=aw_col_name, expectedNumberOfDocs=10, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
         
         # setup replicator and replicate
        # replicator = Replication(base_url)
@@ -213,7 +212,8 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         
 
-def replicateDocs(collection, createdCollection, expectedNumberOfDocs, base_url, sg_client, sg_username, scope):
+def replicateDocs(db, collection, expectedNumberOfDocs, base_url, sg_client, sg_username, scope):
+        createdCollection = db.createCollection(db, collection, scope)
         channels_sg = ["ABC"]
         # setup replicator and replicate
         replicator = Replication(base_url)
