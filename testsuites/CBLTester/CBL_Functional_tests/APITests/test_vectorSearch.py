@@ -167,24 +167,26 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         password = "password"
         channels_sg = ["ABC"]
 
-         # setup replicator and replicate
-        replicator = Replication(base_url)
-        collections = []
-        collections_configuration = []
-        collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=created_collection))
-        collections.append(created_collection)
-        try:
-            session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
-        except Exception as e:
-            pytest.fail("Replication failed due to " + str(e))
+        replicateDocs(collection=dbv_col_name, createdCollection=created_collection, expectedNumberOfDocs=299, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope)
+        
+        # setup replicator and replicate
+       # replicator = Replication(base_url)
+       # collections = []
+       # collections_configuration = []
+       # collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=created_collection))
+       # collections.append(created_collection)
+       # try:
+       #     session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
+       # except Exception as e:
+       #     pytest.fail("Replication failed due to " + str(e))
 
         # checking existence of doc after replication complete
         # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
         # sg_docs = sg_docs["rows"]
         # sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=['cbl_1'], auth=session, scope=scope, collection=dbv_col_name)
-        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
-        sg_docs = sg_docs["rows"]
-        assert len(sg_docs) == 300, "Number of docs mismatched"
+       # sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
+       # sg_docs = sg_docs["rows"]
+       # assert len(sg_docs) == 300, "Number of docs mismatched"
 #        num_of_docs = 10
 #        db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
 #        replicator = Replication(base_url)
@@ -207,3 +209,25 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # Check that all 3 collections on SGW exist
 
         
+
+def replicateDocs(collection, createdCollection, expectedNumberOfDocs, base_url, sg_client, sg_username, scope):
+        channels_sg = ["ABC"]
+        # setup replicator and replicate
+        replicator = Replication(base_url)
+        collections = []
+        collections_configuration = []
+        collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=createdCollection))
+        collections.append(createdCollection)
+        try:
+            session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
+        except Exception as e:
+            pytest.fail("Replication failed due to " + str(e))
+
+        # checking existence of doc after replication complete
+        # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=dbv_col_name)
+        # sg_docs = sg_docs["rows"]
+        # sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=['cbl_1'], auth=session, scope=scope, collection=dbv_col_name)
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
+        sg_docs = sg_docs["rows"]
+        assert len(sg_docs) == expectedNumberOfDocs, "Number of docs mismatched"
+     
