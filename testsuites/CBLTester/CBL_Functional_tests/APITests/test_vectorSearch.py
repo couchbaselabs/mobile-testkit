@@ -141,6 +141,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # setup
         base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
         db = Database(base_url)
+        created_collection = db.createCollection(vsTestDatabase, dbv_col_name, scope)
         # Check that all 3 collections on CBS exist
         dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
         assert dbv_id is not None, "no server collection found for doc body vectors"
@@ -155,7 +156,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         # Check that all 4 collections on CBL exist
         cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
-        db.createCollection(vsTestDatabase, dbv_col_name, scope)
         # TODO check if _default counts towards this
         assert len(cbl_collections) == 5, "wrong number of collections returned"
         assert dbv_col_name in cbl_collections, "no CBL collection found for doc body vectors"
@@ -171,8 +171,8 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         replicator = Replication(base_url)
         collections = []
         collections_configuration = []
-        collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=dbv_col_name))
-        collections.append(dbv_col_name)
+        collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=created_collection))
+        collections.append(created_collection)
         try:
             session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
         except Exception as e:
