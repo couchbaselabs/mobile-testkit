@@ -64,10 +64,11 @@ def vector_search_test_fixture(params_from_base_test_setup):
     c = cluster.Cluster(config=cluster_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
-    db = Database(base_url)
+    vsTestDatabase = Database(base_url)
     vsHandler = VectorSearch(base_url)
     sg_client = MobileRestClient()
-    db_config = db.configure()
+    db_config = vsTestDatabase.configure()
+    vsTestDatabase.create("vsTestDatabase", db_config)
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
@@ -93,7 +94,10 @@ def vector_search_test_fixture(params_from_base_test_setup):
     admin_client.create_db(sg_db, data)
 
     # load vsTestDatabase on cbl
-    vsTestDatabase = vsHandler.loadDatabase()
+    # vsTestDatabase = vsHandler.loadDatabase()
+    db_prefix = "vstestDatabase"
+    prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
+    vsTestDatabase.get_pre_built_db(prebuilt_db_path)
 
     channels = ["ABC"]
     user_scopes_collections = {scope: {
