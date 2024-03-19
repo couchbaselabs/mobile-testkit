@@ -1,6 +1,7 @@
 import pytest
 import time
 import uuid
+import random
 from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
@@ -298,6 +299,20 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         for docId, docBody in auxWordsDocs.items():
              docMemoryObj = documentHandler.create(doc_id=docId, dictionary=docBody)
              collectionHandler.saveDocument(collection=collectionDict["indexVectors"], document=docMemoryObj)
+
+        docIdsCat4And5 = ["word" + str(i) for i in range(201,301)]
+        deleteFromDbv = list(random.sample(docIdsCat4And5, 10))
+        deleteFromIv = list(random.sample(docIdsCat4And5, 10))
+
+        for id in deleteFromDbv:
+             dbv = collectionDict["docBodyVectors"]
+             docMemoryObj = collectionHandler.getDocument(collection=dbv, docId=id)
+             collectionHandler.deleteDocument(collection=dbv, docId=id)
+        
+        for id in deleteFromIv:
+             iv = collectionDict["indexVectors"]
+             docMemoryObj = collectionHandler.getDocument(collection=iv, docId=id)
+             collectionHandler.deleteDocument(collection=iv, docId=id)
         
         print("Waiting for indexes to update")
         # TODO find a better way than sleep
@@ -307,33 +322,33 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         ivQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
                              "FROM indexVectors "
-                             "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                             "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
                         database=vsTestDatabase)
         
         dbvQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
                              "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350)"),
                         database=vsTestDatabase)
 
         ivQueryCat3 = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
                              "FROM indexVectors "
-                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 350) "
                              "AND catid=\"cat3\""),
                         database=vsTestDatabase)
         
         dbvQueryCat1 = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
                              "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
                              "AND catid=\"cat1\""),
                         database=vsTestDatabase)
         
         dbvQueryCat2 = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
                              "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
                              "AND catid=\"cat2\""),
                         database=vsTestDatabase)
         
@@ -343,8 +358,8 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         print(f"Document body vector query cat1: {len(dbvQueryCat1)}")
         print(f"Document body vector query cat2: {len(dbvQueryCat2)}")
 
-        assert len(ivQueryAll) == 300, "wrong number of docs returned from query on index vectors"
-        assert len(dbvQueryAll) == 300, "wrong number of docs returned from query on docBody vectors"
+        assert len(ivQueryAll) == 290, "wrong number of docs returned from query on index vectors"
+        assert len(dbvQueryAll) == 290, "wrong number of docs returned from query on docBody vectors"
         assert len(ivQueryCat3) == 60, "wrong number of docs returned from query on index vectors cat3"
         assert len(dbvQueryCat1) == 50, "wrong number of docs returned from query on docBody vectors cat1"
         assert len(dbvQueryCat2) == 50, "wrong number of docs returned from query on docBody vectors cat2"
