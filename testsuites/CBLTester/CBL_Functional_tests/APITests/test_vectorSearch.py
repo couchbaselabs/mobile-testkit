@@ -94,7 +94,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
 
     # load vsTestDatabase on cbl
     # vsTestDatabase = vsHandler.loadDatabase()
-    db_prefix = "vtestDatabase"
+    db_prefix = "vstestDatabase"
     prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
     vsTestDatabase.get_pre_built_db(prebuilt_db_path)
 
