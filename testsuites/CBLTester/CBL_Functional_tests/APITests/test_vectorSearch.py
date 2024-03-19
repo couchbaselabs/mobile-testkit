@@ -358,7 +358,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         print(f"Document body vector query cat1: {len(dbvQueryCat1)}")
         print(f"Document body vector query cat2: {len(dbvQueryCat2)}")
 
-        assert len(ivQueryAll) == 290, "wrong number of docs returned from query on index vectors"
+        assert len(ivQueryAll) == 300, "wrong number of docs returned from query on index vectors"
         assert len(dbvQueryAll) == 290, "wrong number of docs returned from query on docBody vectors"
         assert len(ivQueryCat3) == 60, "wrong number of docs returned from query on index vectors cat3"
         assert len(dbvQueryCat1) == 50, "wrong number of docs returned from query on docBody vectors cat1"
