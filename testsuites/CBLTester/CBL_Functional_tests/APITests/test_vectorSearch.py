@@ -252,7 +252,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         
         docIdsNeedWord = ["word" + str(num) for num in list(range(101,106))]
         wordsToAdd = ["fizzy", "booze", "whiskey", "daiquiri", "drinking"]
-        docsNeedWord = collectionHandler.getDocuments(collection=collectionDict["indexVectors"], ids=docIdsNeedEmbedding)
+        docsNeedWord = collectionHandler.getDocuments(collection=collectionDict["indexVectors"], ids=docIdsNeedWord)
 
         for i in range(1,6):
              docId = f"word{100+1}"
