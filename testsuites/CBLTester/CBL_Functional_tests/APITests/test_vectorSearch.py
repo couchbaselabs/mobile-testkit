@@ -175,10 +175,15 @@ def test_whatever_for_now(vector_search_test_fixture):
     vsHandler.registerModel("key", "name")
 
     # Create Index
-    vsHandler.createIndex("vsTestDatabase", scope, dbv_col_name, )
+    # This function requires an index name, expression (strings), number of dimensions and centroids (ints)
+    indexName = 'index'
+    expression = 'expression'
+    dimensions = 2000
+    centroids = 10
+    vsHandler.createIndex("vsTestDatabase", scope, dbv_col_name, indexName, expression, dimensions, centroids)
 
     # Queries
-    vsHandler.query(, , vsTestDatabase)
+    vsHandler.query("dinner", , vsTestDatabase)
 
     # Delete vsTestDatabase
     db.close(vsTestDatabase)
