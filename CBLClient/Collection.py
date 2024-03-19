@@ -136,3 +136,8 @@ class Collection(object):
         args.setMemoryPointer("collection", collection)
         args.setDictionary("documents", documents)
         return self._client.invokeMethod("collection_saveDocuments", args)
+    
+    def getCollectionInstances(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_collectionInstances", args)

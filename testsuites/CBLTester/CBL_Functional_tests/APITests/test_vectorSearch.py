@@ -11,6 +11,7 @@ from keywords import couchbaseserver
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
 from CBLClient.VectorSearch import VectorSearch
+from CBLClient.Collection import Collection
 
 
 bucket = "travel-sample"
@@ -194,8 +195,8 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              dimensions = gteSmallDims,
              centroids = 8,
              metric = "euclidean",
-             minTrainingSize = 50,
-             maxTrainingSize = 300)
+             minTrainingSize = 25 * 8, #default training size values (25* 256*), need to adjust handler so values are optional
+             maxTrainingSize = 256 * 8)
 
         # worth checking an index with subquantizers? fine for now but dbl check in future
         vsHandler.createIndex(
@@ -205,10 +206,47 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              indexName = "indexVectorsIndex",
              expression = "prediction(gteSmall, {\"word\": word}).vector",
              dimensions = gteSmallDims,
-             centroids = 16, # test with more centroids than there are probes - should check with dev regarding behaviour but ok for now
+             centroids = 8, 
              metric = "cosine",
-             minTrainingSize = 25,
-             maxTrainingSize = 300)
+             minTrainingSize = 25 * 8,
+             maxTrainingSize = 256 * 8)
+        
+        # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
+
+        indexVectorsQueryResults = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat5\""))
+        
+        docBodyVectorsQueryResults = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat1\""))
+        
+        print(f"Index vector query: {len(indexVectorsQueryResults)}")
+        print(f"Document body vector query: {len(docBodyVectorsQueryResults)}")
+
+        collectionHandler = Collection(base_url)
+        collectionInstances = collectionHandler.getCollectionInstances(database=vsTestDatabase)
+        collectionDict = {
+             "_default": collectionInstances[0],
+             "docBodyVectors": collectionInstances[1],
+             "indexVectors": collectionInstances[2],
+             "auxiliaryWords": collectionInstances[3],
+             "searchTerms": collectionInstances[4]
+        }
+        
+        docIdsNeedEmbedding = list(range(1, 11)) + list(range(50, 61))
+        docIdsNeedEmbedding = ["word" + str(num) for num in docIdsNeedEmbedding]
+        docsNeedEmbedding = collectionHandler.getDocuments(collection=collectionDict["docBodyVectors"], ids=docIdsNeedEmbedding)
+
+        for doc in docsNeedEmbedding:
+             word = doc["word"]
+             embedding = vsHandler.getEmbedding(word)
+             doc["vector"] = embedding
+             collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=doc, doc_id=doc["id"])
 
 
         db.close(vsTestDatabase)
