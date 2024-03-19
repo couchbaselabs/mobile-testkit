@@ -404,7 +404,7 @@ class Replication(object):
         repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels,
                                      replication_type=replication_type,
                                      replicator_authenticator=replicator_authenticator,
-                                     max_retries=max_retries, max_retry_wait_time=max_retry_wait_time, encryptor=encryptor)
+                                     max_retries=max_retries, max_retry_wait_time=max_retry_wait_time, encryptor=encryptor, collection=collection)
         repl = self.create(repl_config)
         self.start(repl)
         self.wait_until_replicator_idle(repl)

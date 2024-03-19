@@ -1,5 +1,7 @@
 import pytest
+import time
 import uuid
+import random
 from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
@@ -11,19 +13,33 @@ from keywords import couchbaseserver
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
 from CBLClient.VectorSearch import VectorSearch
+from CBLClient.Collection import Collection
+from CBLClient.Document import Document
 
 
 bucket = "travel-sample"
 sync_function = "function(doc){channel(doc.channels);}"
+sg_admin_url = None
+sg_db = "db"
+sg_blip_url = None
+cbl_db = None
+sg_url = None
+gteSmallDims = 384 #constant for the number of dims of gteSmall embeddings
 
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
+    global sg_admin_url
+    global sg_db
+    global sg_blip_url
+    global cbl_db
+    global sg_url
     sg_client = sg_url = sg_admin_url = None
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    cbl_db = params_from_base_test_setup["source_db"]
 
     random_suffix = str(uuid.uuid4())[:8]
     scope = '_default'
@@ -49,8 +65,6 @@ def vector_search_test_fixture(params_from_base_test_setup):
           }
         }, "num_index_replicas": 0 # This might need to change idk what vectors are
     }
-    
-    sg_db = "db"
 
     c = cluster.Cluster(config=cluster_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
@@ -96,7 +110,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     if not pre_test_user_exists:
         sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
 
-    yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase
+    yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username
 
       
 def test_vector_search_index_correctness(vector_search_test_fixture):
@@ -130,7 +144,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         TODO use load words to get db
         '''
         # setup
-        base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase = vector_search_test_fixture
+        base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
         db = Database(base_url)
         # Check that all 3 collections on CBS exist
         dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
@@ -152,9 +166,223 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert st_col_name in cbl_collections, "no CBL collection found for search terms"
         assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
         assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
+
+        username = "autotest"
+        password = "password"
+        channels_sg = ["ABC"]
+
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 1, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 10, "Number of docs mismatched"
+
+
+        # Check that all 3 collections on SGW exist
+
+        # Very rough draft of CBL side work
+        # Register model
+        vsHandler = VectorSearch(base_url)
+        vsHandler.register_model(key="word", name="gteSmall")
+        print("Registered model gteSmall on field 'word'")
+        vsHandler.createIndex(
+             database = vsTestDatabase,
+             scopeName = "_default",
+             collectionName = "docBodyVectors",
+             indexName = "docBodyVectorsIndex",
+             expression = "vector",
+             dimensions = gteSmallDims,
+             centroids = 8,
+             metric = "euclidean",
+             minTrainingSize = 25 * 8, #default training size values (25* 256*), need to adjust handler so values are optional
+             maxTrainingSize = 256 * 8)
+
+        # worth checking an index with subquantizers? fine for now but dbl check in future
+        vsHandler.createIndex(
+             database = vsTestDatabase,
+             scopeName = "_default",
+             collectionName = "indexVectors",
+             indexName = "indexVectorsIndex",
+             expression = "prediction(gteSmall, {\"word\": word}).vector",
+             dimensions = gteSmallDims,
+             centroids = 8, 
+             metric = "cosine",
+             minTrainingSize = 25 * 8,
+             maxTrainingSize = 256 * 8)
         
+        # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
+        ivQueryAll = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                        database=vsTestDatabase)
+        
+        dbvQueryAll = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
+                        database=vsTestDatabase)
+
+        ivQueryCat3 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat3\""),
+                        database=vsTestDatabase)
+        
+        dbvQueryCat1 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat1\""),
+                        database=vsTestDatabase)
+        
+        dbvQueryCat2 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat2\""),
+                        database=vsTestDatabase)
+        
+        print(f"Index vector query all: {len(ivQueryAll)}")
+        print(f"Document body vector query all: {len(dbvQueryAll)}")
+        print(f"Index vector query cat3: {len(ivQueryCat3)}")
+        print(f"Document body vector query cat1: {len(dbvQueryCat1)}")
+        print(f"Document body vector query cat2: {len(dbvQueryCat2)}")
+
+        assert len(ivQueryAll) == 295, "wrong number of docs returned from query on index vectors"
+        assert len(dbvQueryAll) == 280, "wrong number of docs returned from query on docBody vectors"
+        assert len(ivQueryCat3) == 45, "wrong number of docs returned from query on index vectors cat3"
+        assert len(dbvQueryCat1) == 40, "wrong number of docs returned from query on docBody vectors cat1"
+        assert len(dbvQueryCat2) == 40, "wrong number of docs returned from query on docBody vectors cat2"
+
+        collectionHandler = Collection(base_url)
+        collectionInstances = collectionHandler.getCollectionInstances(database=vsTestDatabase)
+        collectionDict = {
+             "_default": collectionInstances[0],
+             "docBodyVectors": collectionInstances[1],
+             "indexVectors": collectionInstances[2],
+             "auxiliaryWords": collectionInstances[3],
+             "searchTerms": collectionInstances[4]
+        }
+        
+        docIdsNeedEmbedding = list(range(1, 11)) + list(range(51, 61))
+        docIdsNeedEmbedding = ["word" + str(num) for num in docIdsNeedEmbedding]
+        docsNeedEmbedding = collectionHandler.getDocuments(collection=collectionDict["docBodyVectors"], ids=docIdsNeedEmbedding)
+
+        for docId, docBody in docsNeedEmbedding.items():
+             word = docBody["word"]
+             embedding = vsHandler.getEmbedding(word)
+             docBody["vector"] = embedding
+             collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=docBody, doc_id=docId)
+        
+        docIdsNeedWord = ["word" + str(num) for num in range(101,106)]
+        wordsToAdd = ["fizzy", "booze", "whiskey", "daiquiri", "drinking"]
+        docsNeedWord = collectionHandler.getDocuments(collection=collectionDict["indexVectors"], ids=docIdsNeedWord)
+
+        for i in range(1,6):
+             docId = f"word{100+i}"
+             word = wordsToAdd[i-1]
+             docBody = docsNeedWord[docId]
+             docBody["word"] = word
+             print(docId, ":", docBody)
+             collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=docBody, doc_id=docId)
+        
+        auxWordsIds = ["word" + str(i) for i in range(301,311)]
+        auxWordsDocs = collectionHandler.getDocuments(collection=collectionDict["auxiliaryWords"], ids=auxWordsIds)
+        documentHandler = Document(base_url)
+
+        for docId, docBody in auxWordsDocs.items():
+             docMemoryObj = documentHandler.create(doc_id=docId, dictionary=docBody)
+             collectionHandler.saveDocument(collection=collectionDict["indexVectors"], document=docMemoryObj)
+
+        docIdsCat4And5 = ["word" + str(i) for i in range(201,301)]
+        deleteFromDbv = list(random.sample(docIdsCat4And5, 10))
+        deleteFromIv = list(random.sample(docIdsCat4And5, 10))
+
+        for id in deleteFromDbv:
+             dbv = collectionDict["docBodyVectors"]
+             docMemoryObj = collectionHandler.getDocument(collection=dbv, docId=id)
+             collectionHandler.deleteDocument(collection=dbv, doc=docMemoryObj)
+        
+        for id in deleteFromIv:
+             iv = collectionDict["indexVectors"]
+             docMemoryObj = collectionHandler.getDocument(collection=iv, docId=id)
+             collectionHandler.deleteDocument(collection=iv, doc=docMemoryObj)
+        
+        print("Waiting for indexes to update")
+        # TODO find a better way than sleep
+        # takes around 50-100ms per word so should cover all the words with this
+        time.sleep(15)
+             
+        ivQueryAll = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
+                        database=vsTestDatabase)
+        
+        dbvQueryAll = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350)"),
+                        database=vsTestDatabase)
+
+        ivQueryCat3 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 350) "
+                             "AND catid=\"cat3\""),
+                        database=vsTestDatabase)
+        
+        dbvQueryCat1 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
+                             "AND catid=\"cat1\""),
+                        database=vsTestDatabase)
+        
+        dbvQueryCat2 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
+                             "AND catid=\"cat2\""),
+                        database=vsTestDatabase)
+        
+        print(f"Index vector query all: {len(ivQueryAll)}")
+        print(f"Document body vector query all: {len(dbvQueryAll)}")
+        print(f"Index vector query cat3: {len(ivQueryCat3)}")
+        print(f"Document body vector query cat1: {len(dbvQueryCat1)}")
+        print(f"Document body vector query cat2: {len(dbvQueryCat2)}")
+
+        assert len(ivQueryAll) == 300, "wrong number of docs returned from query on index vectors"
+        assert len(dbvQueryAll) == 290, "wrong number of docs returned from query on docBody vectors"
+        assert len(ivQueryCat3) == 60, "wrong number of docs returned from query on index vectors cat3"
+        assert len(dbvQueryCat1) == 50, "wrong number of docs returned from query on docBody vectors cat1"
+        assert len(dbvQueryCat2) == 50, "wrong number of docs returned from query on docBody vectors cat2"
+
+        # we should do further checks on the documents being returned by the query, i.e. verify that categories are correct etc.
+
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
+        
+
+def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
+        db = Database(base_url)
+        createdCollection = db.createCollection(cbl_db, collection, scope)
+        channels_sg = ["ABC"]
+        # setup replicator and replicate
+        replicator = Replication(base_url)
+        collections = []
+        collections_configuration = []
+        collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=createdCollection))
+        collections.append(createdCollection)
+        try:
+            session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
+        except Exception as e:
+            pytest.fail("Replication failed due to " + str(e))
+
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
+        sg_docs = sg_docs["rows"]
+        return len(sg_docs)
 
         # Check that all 3 collections on SGW exist
 
