@@ -362,7 +362,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # assert len(dbvQueryCat1) == 50, "wrong number of docs returned from query on docBody vectors cat1"
         # assert len(dbvQueryCat2) == 50, "wrong number of docs returned from query on docBody vectors cat2"
 
-        cb_server.create_vector_search_index(bucket=bucket,indexName="test")
+        print(cb_server.create_vector_search_index(bucket=bucket,indexName="test"))
 
         # we should do further checks on the documents being returned by the query, i.e. verify that categories are correct etc.
 
