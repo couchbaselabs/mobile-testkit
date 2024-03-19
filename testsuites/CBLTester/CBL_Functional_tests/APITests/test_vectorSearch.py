@@ -217,13 +217,15 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
                              "FROM indexVectors "
                              "WHERE vector_match(indexVectorsIndex, $vector, 300) "
-                             "AND catid=\"cat5\""))
+                             "AND catid=\"cat5\""),
+                        database=vsTestDatabase)
         
         docBodyVectorsQueryResults = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
                              "FROM docBodyVectors "
                              "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
-                             "AND catid=\"cat1\""))
+                             "AND catid=\"cat1\""),
+                        database=vsTestDatabase)
         
         print(f"Index vector query: {len(indexVectorsQueryResults)}")
         print(f"Document body vector query: {len(docBodyVectorsQueryResults)}")
@@ -262,13 +264,15 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
                              "FROM indexVectors "
                              "WHERE vector_match(indexVectorsIndex, $vector, 300) "
-                             "AND catid=\"cat5\""))
+                             "AND catid=\"cat5\""),
+                        database=vsTestDatabase)
         
         docBodyVectorsQueryResults = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
                              "FROM docBodyVectors "
                              "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
-                             "AND catid=\"cat1\""))
+                             "AND catid=\"cat1\""),
+                        database=vsTestDatabase)
         
         print(f"Index vector query: {len(indexVectorsQueryResults)}")
         print(f"Document body vector query: {len(docBodyVectorsQueryResults)}")
