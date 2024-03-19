@@ -392,7 +392,8 @@ def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
 # b. whether this is an appropriate fixture for a sanity test
 @pytest.mark.sanity
 def test_vector_search_sanity(vector_search_test_fixture):
-    base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase = vector_search_test_fixture
+    base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
+
     db = Database(base_url)
 
     # Check for correct server version
