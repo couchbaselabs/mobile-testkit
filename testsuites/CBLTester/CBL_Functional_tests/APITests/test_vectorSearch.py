@@ -244,21 +244,31 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         docIdsNeedEmbedding = ["word" + str(num) for num in docIdsNeedEmbedding]
         docsNeedEmbedding = collectionHandler.getDocuments(collection=collectionDict["docBodyVectors"], ids=docIdsNeedEmbedding)
 
+        print(docsNeedEmbedding)
+        print("****************")
         for doc in docsNeedEmbedding:
-             word = doc["word"]
-             embedding = vsHandler.getEmbedding(word)
-             doc["vector"] = embedding
-             collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=doc, doc_id=doc["id"])
+             print(doc)
+
+        # for doc in docsNeedEmbedding:
+        #      word = doc["word"]
+        #      embedding = vsHandler.getEmbedding(word)
+        #      doc["vector"] = embedding
+        #      collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=doc, doc_id=doc["id"])
         
         docIdsNeedWord = ["word" + str(num) for num in list(range(101,106))]
         wordsToAdd = ["fizzy", "booze", "whiskey", "daiquiri", "drinking"]
         docsNeedWord = collectionHandler.getDocuments(collection=collectionDict["indexVectors"], ids=docIdsNeedEmbedding)
 
-        for i in range(1,6):
-             word = wordsToAdd[i-1]
-             doc = docsNeedWord[i-1]
-             doc["word"] = word
-             collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=doc, doc_id=f"word{300+i}")
+        print(docsNeedWord)
+        print("****************")
+        for doc in docsNeedWord:
+             print(doc)
+
+        # for i in range(1,6):
+        #      word = wordsToAdd[i-1]
+        #      doc = docsNeedWord[i-1]
+        #      doc["word"] = word
+        #      collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=doc, doc_id=f"word{300+i}")
              
         indexVectorsQueryResults = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
