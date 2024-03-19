@@ -93,7 +93,10 @@ def vector_search_test_fixture(params_from_base_test_setup):
     admin_client.create_db(sg_db, data)
 
     # load vsTestDatabase on cbl
-    vsTestDatabase = vsHandler.loadDatabase()
+    # vsTestDatabase = vsHandler.loadDatabase()
+    db_prefix = "vtestDatabase"
+    prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
+    db.get_pre_built_db(prebuilt_db_path)
 
     channels = ["ABC"]
     user_scopes_collections = {scope: {
