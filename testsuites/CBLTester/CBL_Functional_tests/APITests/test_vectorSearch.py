@@ -244,26 +244,22 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         docIdsNeedEmbedding = ["word" + str(num) for num in docIdsNeedEmbedding]
         docsNeedEmbedding = collectionHandler.getDocuments(collection=collectionDict["docBodyVectors"], ids=docIdsNeedEmbedding)
 
-        print(type(docsNeedEmbedding))
-        print("****************")
-        for doc in docsNeedEmbedding:
-             print(type(doc))
-
-        # for doc in docsNeedEmbedding:
-        #      word = doc["word"]
-        #      embedding = vsHandler.getEmbedding(word)
-        #      doc["vector"] = embedding
-        #      collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=doc, doc_id=doc["id"])
+        for docId, docBody in docsNeedEmbedding.items():
+             word = docBody["word"]
+             embedding = vsHandler.getEmbedding(word)
+             docBody["vector"] = embedding
+             collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=docBody, doc_id=docId)
         
         docIdsNeedWord = ["word" + str(num) for num in list(range(101,106))]
         wordsToAdd = ["fizzy", "booze", "whiskey", "daiquiri", "drinking"]
         docsNeedWord = collectionHandler.getDocuments(collection=collectionDict["indexVectors"], ids=docIdsNeedEmbedding)
 
-        # for i in range(1,6):
-        #      word = wordsToAdd[i-1]
-        #      doc = docsNeedWord[i-1]
-        #      doc["word"] = word
-        #      collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=doc, doc_id=f"word{300+i}")
+        for i in range(1,6):
+             docId = f"word{300+1}"
+             word = wordsToAdd[i-1]
+             docBody = docsNeedWord[docId]
+             docBody["word"] = word
+             collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=docBody, doc_id=docId)
              
         indexVectorsQueryResults = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
