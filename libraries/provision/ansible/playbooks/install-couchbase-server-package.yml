@@ -15,7 +15,8 @@
     couchbase_server_password: password
 
     # 512 reserved for query service
-    couchbase_server_index_ram: 512
+    couchbase_server_index_ram: 256
+    couchbase_server_fts_ram: 256
     couchbase_server_cluster_ram: "{{((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
     couchbase_server_admin_port: 8091
     protocol: http://
@@ -142,11 +143,11 @@
       when:  "'4.5' in couchbase_server_package_name or '4.6' in couchbase_server_package_name"
 
     - name: COUCHBASE SERVER | Configure cluster settings (4.7.X and up) | configure IPv4
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --cluster-username={{ couchbase_server_admin }} --cluster-password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query  --cluster-index-ramsize={{ couchbase_server_index_ram }}  --index-storage-setting=default"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --cluster-username={{ couchbase_server_admin }} --cluster-password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query,fts  --cluster-index-ramsize={{ couchbase_server_index_ram }} --cluster-fts-ramsize={{ couchbase_server_fts_ram }}  --index-storage-setting=default"
       when:  "not '4.0' in couchbase_server_package_name and not '4.1' in couchbase_server_package_name and not '4.5' in couchbase_server_package_name and not '4.6' in couchbase_server_package_name and not '3.0' in couchbase_server_package_name and not '3.1' in couchbase_server_package_name and not ipv6_enabled"
 
     - name: COUCHBASE SERVER | Configure cluster settings (4.7.X and up) | configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} --cluster-username={{ couchbase_server_admin }} --cluster-password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query  --cluster-index-ramsize={{ couchbase_server_index_ram }}  --index-storage-setting=default"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} --cluster-username={{ couchbase_server_admin }} --cluster-password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query,fts  --cluster-index-ramsize={{ couchbase_server_index_ram }} --cluster-fts-ramsize={{ couchbase_server_fts_ram }}  --index-storage-setting=default"
       when:  "not '4.0' in couchbase_server_package_name and not '4.1' in couchbase_server_package_name and not '4.5' in couchbase_server_package_name and not '4.6' in couchbase_server_package_name and not '3.0' in couchbase_server_package_name and not '3.1' in couchbase_server_package_name and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Initialize primary node (3.x only)
