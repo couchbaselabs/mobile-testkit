@@ -98,7 +98,6 @@ def vector_search_test_fixture(params_from_base_test_setup):
     db_prefix = "vstestDatabase"
     prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
     vsTestDatabase.get_pre_built_db(prebuilt_db_path)
-    vsTestDatabase.create()
 
     channels = ["ABC"]
     user_scopes_collections = {scope: {
