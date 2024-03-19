@@ -1,4 +1,5 @@
 import pytest
+import time
 import uuid
 from keywords.utils import random_string
 from CBLClient.Database import Database
@@ -287,6 +288,11 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              docBody = docsNeedWord[docId]
              docBody["word"] = word
              collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=docBody, doc_id=docId)
+        
+        print("Waiting for indexes to update")
+        # TODO find a better way than sleep
+        # takes around 50-100ms per word so should cover all the words with this
+        time.sleep(5)
              
         ivQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
