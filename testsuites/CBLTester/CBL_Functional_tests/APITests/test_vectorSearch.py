@@ -247,6 +247,31 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              embedding = vsHandler.getEmbedding(word)
              doc["vector"] = embedding
              collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=doc, doc_id=doc["id"])
+        
+        docIdsNeedWord = ["word" + str(num) for num in list(range(101,106))]
+        wordsToAdd = ["fizzy", "booze", "whiskey", "daiquiri", "drinking"]
+        docsNeedWord = collectionHandler.getDocuments(collection=collectionDict["indexVectors"], ids=docIdsNeedEmbedding)
+
+        for i in range(1,6):
+             word = wordsToAdd[i-1]
+             doc = docsNeedWord[i-1]
+             doc["word"] = word
+             collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=doc, doc_id=f"word{300+i}")
+             
+        indexVectorsQueryResults = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat5\""))
+        
+        docBodyVectorsQueryResults = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat1\""))
+        
+        print(f"Index vector query: {len(indexVectorsQueryResults)}")
+        print(f"Document body vector query: {len(docBodyVectorsQueryResults)}")
 
 
         db.close(vsTestDatabase)
