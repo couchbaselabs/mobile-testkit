@@ -288,6 +288,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              word = wordsToAdd[i-1]
              docBody = docsNeedWord[docId]
              docBody["word"] = word
+             print(docId, ":", docBody)
              collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=docBody, doc_id=docId)
         
         auxWordsIds = ["word" + str(i) for i in range(301,311)]
@@ -295,7 +296,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         documentHandler = Document(base_url)
 
         for docId, docBody in auxWordsDocs.items():
-             print(docId, ":", docBody)
              docMemoryObj = documentHandler.create(doc_id=docId, dictionary=docBody)
              collectionHandler.saveDocument(collection=collectionDict["indexVectors"], document=docMemoryObj)
         
