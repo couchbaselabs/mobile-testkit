@@ -60,15 +60,15 @@ def vector_search_test_fixture(params_from_base_test_setup):
           }
         }, "num_index_replicas": 0 # This might need to change idk what vectors are
     }
-
+# vsTestDatabase
     c = cluster.Cluster(config=cluster_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
-    vsTestDatabase = Database(base_url)
+    db = Database(base_url)
     vsHandler = VectorSearch(base_url)
     sg_client = MobileRestClient()
-    db_config = vsTestDatabase.configure()
-    vsTestDatabase.create("vsTestDatabase", db_config)
+    db_config = db.configure()
+    db.create("vsTestDatabase", db_config)
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
@@ -97,7 +97,9 @@ def vector_search_test_fixture(params_from_base_test_setup):
     # vsTestDatabase = vsHandler.loadDatabase()
     db_prefix = "vstestDatabase"
     prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
-    vsTestDatabase.get_pre_built_db(prebuilt_db_path)
+    imported_db_path = db.get_pre_built_db(prebuilt_db_path)
+    db.copyDatabase(imported_db_path, "vsTestDatabase", db_config)
+    vsTestDatabase = db.create(vsTestDatabase, db_config)
 
     channels = ["ABC"]
     user_scopes_collections = {scope: {
