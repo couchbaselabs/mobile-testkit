@@ -34,7 +34,7 @@ class VectorSearch(object):
         args.setMemoryPointer("database", database)
         args.setString("collectionName", collectionName)
         args.setString("scopeName", scopeName)
-        args.setString("index", index)
+        args.setString("indexName", index)
         args.setString("expression", expression)
         args.setInt("dimensions", dimensions)
         args.setInt("centroids", centroids)
