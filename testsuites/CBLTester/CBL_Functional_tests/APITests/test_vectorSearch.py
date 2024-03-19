@@ -307,12 +307,12 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         for id in deleteFromDbv:
              dbv = collectionDict["docBodyVectors"]
              docMemoryObj = collectionHandler.getDocument(collection=dbv, docId=id)
-             collectionHandler.deleteDocument(collection=dbv, docId=id)
+             collectionHandler.deleteDocument(collection=dbv, doc=docMemoryObj)
         
         for id in deleteFromIv:
              iv = collectionDict["indexVectors"]
              docMemoryObj = collectionHandler.getDocument(collection=iv, docId=id)
-             collectionHandler.deleteDocument(collection=iv, docId=id)
+             collectionHandler.deleteDocument(collection=iv, doc=docMemoryObj)
         
         print("Waiting for indexes to update")
         # TODO find a better way than sleep
