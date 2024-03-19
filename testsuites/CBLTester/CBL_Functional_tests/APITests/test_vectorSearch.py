@@ -67,7 +67,8 @@ def vector_search_test_fixture(params_from_base_test_setup):
     vsTestDatabase = Database(base_url)
     vsHandler = VectorSearch(base_url)
     sg_client = MobileRestClient()
-    # db_config = db.configure()
+    db_config = vsTestDatabase.configure()
+    vsTestDatabase.create("vsTestDatabase", db_config)
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
@@ -97,6 +98,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     db_prefix = "vstestDatabase"
     prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
     vsTestDatabase.get_pre_built_db(prebuilt_db_path)
+    vsTestDatabase.create()
 
     channels = ["ABC"]
     user_scopes_collections = {scope: {
