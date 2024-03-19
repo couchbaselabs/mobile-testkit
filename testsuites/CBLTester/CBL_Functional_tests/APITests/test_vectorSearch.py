@@ -13,6 +13,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
 from CBLClient.VectorSearch import VectorSearch
 from CBLClient.Collection import Collection
+from CBLClient.Document import Document
 
 
 bucket = "travel-sample"
@@ -278,21 +279,29 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              docBody["vector"] = embedding
              collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=docBody, doc_id=docId)
         
-        docIdsNeedWord = ["word" + str(num) for num in list(range(101,106))]
+        docIdsNeedWord = ["word" + str(num) for num in range(101,106)]
         wordsToAdd = ["fizzy", "booze", "whiskey", "daiquiri", "drinking"]
         docsNeedWord = collectionHandler.getDocuments(collection=collectionDict["indexVectors"], ids=docIdsNeedWord)
 
         for i in range(1,6):
-             docId = f"word{100+1}"
+             docId = f"word{100+i}"
              word = wordsToAdd[i-1]
              docBody = docsNeedWord[docId]
              docBody["word"] = word
              collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=docBody, doc_id=docId)
         
+        auxWordsIds = ["word" + str(i) for i in range(301,311)]
+        auxWordsDocs = collectionHandler.getDocuments(collection=collectionDict["auxiliaryWords"], ids=auxWordsIds)
+        documentHandler = Document(base_url)
+
+        for docId, docBody in auxWordsDocs.items():
+             docMemoryObj = documentHandler.create(doc_id=docId, dictionary=docBody)
+             collectionHandler.saveDocument(collection=collectionDict["indexVectors"], document=docMemoryObj)
+        
         print("Waiting for indexes to update")
         # TODO find a better way than sleep
         # takes around 50-100ms per word so should cover all the words with this
-        time.sleep(5)
+        time.sleep(10)
              
         ivQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
@@ -335,7 +344,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         assert len(ivQueryAll) == 300, "wrong number of docs returned from query on index vectors"
         assert len(dbvQueryAll) == 300, "wrong number of docs returned from query on docBody vectors"
-        assert len(ivQueryCat3) == 50, "wrong number of docs returned from query on index vectors cat3"
+        assert len(ivQueryCat3) == 60, "wrong number of docs returned from query on index vectors cat3"
         assert len(dbvQueryCat1) == 50, "wrong number of docs returned from query on docBody vectors cat1"
         assert len(dbvQueryCat2) == 50, "wrong number of docs returned from query on docBody vectors cat2"
 
