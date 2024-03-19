@@ -295,13 +295,14 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         documentHandler = Document(base_url)
 
         for docId, docBody in auxWordsDocs.items():
+             print(docId, ":", docBody)
              docMemoryObj = documentHandler.create(doc_id=docId, dictionary=docBody)
              collectionHandler.saveDocument(collection=collectionDict["indexVectors"], document=docMemoryObj)
         
         print("Waiting for indexes to update")
         # TODO find a better way than sleep
         # takes around 50-100ms per word so should cover all the words with this
-        time.sleep(10)
+        time.sleep(15)
              
         ivQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
