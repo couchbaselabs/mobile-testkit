@@ -299,10 +299,13 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         deleteFromDbv = list(random.sample(docIdsCat4And5, 10))
         deleteFromIv = list(random.sample(docIdsCat4And5, 10))
 
+        # update docs to remove vector embedding and verify that doc is removed from index
         for id in deleteFromDbv:
              dbv = collectionDict["docBodyVectors"]
              docMemoryObj = collectionHandler.getDocument(collection=dbv, docId=id)
-             collectionHandler.deleteDocument(collection=dbv, doc=docMemoryObj)
+             docMemoryObj = documentHandler.toMutable(document=docMemoryObj)
+             documentHandler.remove(document=docMemoryObj,key="vector")
+             collectionHandler.saveDocument(collection=dbv, document=docMemoryObj)
         
         for id in deleteFromIv:
              iv = collectionDict["indexVectors"]
