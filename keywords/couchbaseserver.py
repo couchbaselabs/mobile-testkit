@@ -1203,6 +1203,10 @@ class CouchbaseServer:
         except DocumentNotFoundException as e:
             raise Exception("Tried to fetch document that does not exist: " + str(e)) from e
         return result.content_as[dict]
+    
+    def create_vector_search_index(self, bucket, indexName, scope = "_default"):
+        url = f"{self.url}:8094/api/bucket/{bucket}/scope/{scope}/index/{indexName}"
+        return url
 
 
 def choose_connection_url(ssl_enabled, ipv6, host):
