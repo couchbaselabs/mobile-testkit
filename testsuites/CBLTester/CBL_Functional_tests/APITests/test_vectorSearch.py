@@ -99,7 +99,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
     imported_db_path = db.get_pre_built_db(prebuilt_db_path)
     print("************************************************" + str(imported_db_path))
-    db.copyDatabase(imported_db_path, "vsTestDatabase", db_config)
+    db.copyDatabase(imported_db_path, "vsTestDatabase.cblite2", db_config)
     vsTestDatabase = db.create(vsTestDatabase, db_config)
 
     channels = ["ABC"]
