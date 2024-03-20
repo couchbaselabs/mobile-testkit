@@ -17,6 +17,7 @@ from CBLClient.Collection import Collection
 from CBLClient.Document import Document
 
 
+
 bucket = "travel-sample"
 sync_function = "function(doc){channel(doc.channels);}"
 sg_admin_url = None
@@ -392,6 +393,7 @@ def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
 # TODO might be worth checking if a. this test case is small enough for vector search and 
 # 
 # b. whether this is an appropriate fixture for a sanity test
+# TODO make this test only pull documents from server that have embeddings then query them
 @pytest.mark.sanity
 def test_vector_search_sanity(vector_search_test_fixture):
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
@@ -399,8 +401,9 @@ def test_vector_search_sanity(vector_search_test_fixture):
     db = Database(base_url)
 
     # Check for correct server version
-    if cb_server.get_server_version < "7.6": 
-        pytest.skip("Server version must be 7.6 or higher")
+    server_version = couchbaseserver.get_server_version(cb_server.host)
+    if server_version >= "7.6.0":
+        pytest.skip("Server version must be before 7.6 for this test")
 
     # Load vsTestDatabase
     vsHandler = VectorSearch(base_url)
