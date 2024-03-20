@@ -388,3 +388,59 @@ def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
         sg_docs = sg_docs["rows"]
         return len(sg_docs)
+
+# TODO might be worth checking if a. this test case is small enough for vector search and 
+# 
+# b. whether this is an appropriate fixture for a sanity test
+@pytest.mark.sanity
+def test_vector_search_sanity(vector_search_test_fixture):
+    base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
+
+    db = Database(base_url)
+
+    # Check for correct server version
+    if cb_server.get_server_version < "7.6": 
+        pytest.skip("Server version must be 7.6 or higher")
+
+    # Load vsTestDatabase
+    vsHandler = VectorSearch(base_url)
+
+    # Register Model
+    vsHandler.registerModel(key="word", name="gteSmall")
+
+    # Create Index
+    # This function requires an index name, expression (strings), number of dimensions and centroids (ints)
+    vsHandler.createIndex(
+             database = vsTestDatabase,
+             scopeName = "_default",
+             collectionName = "indexVectors",
+             indexName = "indexVectorsIndex",
+             expression = "prediction(gteSmall, {\"word\": word}).vector",
+             dimensions = gteSmallDims,
+             centroids = 8, 
+             metric = "cosine",
+             minTrainingSize = 25 * 8,
+             maxTrainingSize = 256 * 8)
+
+    # Queries - we query indexVector collection
+    queryAll = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                        database=vsTestDatabase)
+    
+    queryCat2 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat2\""),
+                        database=vsTestDatabase)
+
+    assert len(queryAll) == 295, len(queryAll) + " documents returned, 295 expected"
+    assert len(queryCat2) == 50, len(queryCat2) + " documents returned, 50 expected"
+
+    # Delete vsTestDatabase
+    db.close(vsTestDatabase)
+    db.deleteDBbyName("vsTestDatabase")
+    
+
