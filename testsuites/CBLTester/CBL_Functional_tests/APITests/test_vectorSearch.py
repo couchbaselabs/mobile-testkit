@@ -26,6 +26,9 @@ cbl_db = None
 sg_url = None
 gteSmallDims = 384 #constant for the number of dims of gteSmall embeddings
 
+admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
+admin_auth_tuple = (admin_auth[0], admin_auth[1])
+
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
     global sg_admin_url
@@ -365,7 +368,7 @@ def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
         collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=createdCollection))
         collections.append(createdCollection)
         try:
-            session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
+            session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=admin_auth, collections=collections, collection_configuration=collections_configuration)
         except Exception as e:
             pytest.fail("Replication failed due to " + str(e))
 
