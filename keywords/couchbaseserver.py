@@ -1205,7 +1205,45 @@ class CouchbaseServer:
         return result.content_as[dict]
     
     def create_vector_search_index(self, bucket, indexName, scope = "_default"):
-        url = f"{self.url}:8094/api/bucket/{bucket}/scope/{scope}/index/{indexName}"
+        scheme = "https://" if self.cbs_ssl else "http://"
+        url = f"{scheme}{self.host}:8094/api/bucket/{bucket}/scope/{scope}/index/{indexName}"
+
+        data = {
+            "type": "fulltext-index",
+            "name": f"{bucket}.{scope}.{indexName}",
+            "sourceType": "gocbcore",
+            "sourceName": f"{bucket}",
+            "planParams": {
+                "maxPartitionsPerPIndex": 1024,
+                "indexPartitions": 1
+            },
+            "params": {
+                "doc_config": {
+                "docid_prefix_delim": "",
+                "docid_regexp": "",
+                "mode": "scope.collection.type_field",
+                "type_field": "vector",
+                },
+                "mapping": {
+                    "analysis": {},
+                    "default_analyzer": "standard",
+                    "default_datetime_parser": "dateTimeOptional",
+                    "default_field": "_all",
+                    "default_mapping": {
+                        "dynamic": True,
+                        "enabled": True
+                    },
+                    "default_type": "_default",
+                    "docvalues_dynamic": False,
+                    "index_dynamic": True,
+                    "store_dynamic": False,
+                    "type_field": "_type"
+                },
+                "store": {
+                    "indexType": "scorch"
+                }
+            },
+        }
         return url
 
 
