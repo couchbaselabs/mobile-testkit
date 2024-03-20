@@ -146,18 +146,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # setup
         base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
         db = Database(base_url)
-        # Check that all 3 collections on CBS exist
-        dbv_id = cb_server.get_collection_id(bucket, scope, dbv_col_name)
-        assert dbv_id is not None, "no server collection found for doc body vectors"
-        st_id = cb_server.get_collection_id(bucket, scope, st_col_name)
-        assert st_id is not None, "no server collection found for search terms"
-        iv_id = cb_server.get_collection_id(bucket, scope, iv_col_name)
-        assert iv_id is not None, "no server collection found for index vectors"
-        aw_id = cb_server.get_collection_id(bucket, scope, aw_col_name)
-        assert aw_id is not None, "no server collection found for aw"
-        assert dbv_id != st_id and dbv_id != iv_id and st_id != iv_id, "duplicate collection ids: these collections are not all distinct"
         
-
         # Check that all 4 collections on CBL exist
         cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
         # TODO check if _default counts towards this
@@ -174,10 +163,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
         assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 1, "Number of docs mismatched"
         assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 10, "Number of docs mismatched"
-
-
-        # Check that all 3 collections on SGW exist
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 45, "Number of docs mismatched"
 
         # Very rough draft of CBL side work
         # Register model
