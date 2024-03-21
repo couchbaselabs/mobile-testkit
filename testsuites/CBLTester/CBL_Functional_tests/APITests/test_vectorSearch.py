@@ -281,7 +281,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         for docId, docBody in auxWordsDocs.items():
              docMemoryObj = documentHandler.create(doc_id=docId, dictionary=docBody)
-             print("aux copy", type(docMemoryObj))
              collectionHandler.saveDocument(collection=collectionDict["indexVectors"], document=docMemoryObj)
 
         docIdsCat4And5 = ["word" + str(i) for i in range(201,301)]
@@ -292,7 +291,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         for id in deleteFromDbv:
              dbv = collectionDict["docBodyVectors"]
              docMemoryObj = collectionHandler.getDocument(collection=dbv, docId=id)
-             print("deleteFromDBV", type(docMemoryObj))
+             print("deleteFromDBV", type(docMemoryObj), str(docMemoryObj))
              docMemoryObj = documentHandler.toMutable(document=docMemoryObj)
              documentHandler.remove(document=docMemoryObj,key="vector")
              collectionHandler.saveDocument(collection=dbv, document=docMemoryObj)
