@@ -170,7 +170,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              maxTrainingSize = 256 * 8)
 
         # worth checking an index with subquantizers? fine for now but dbl check in future
-         vsHandler.createIndex(
+        vsHandler.createIndex(
             database = vsTestDatabase,
             scopeName = "_default",
             collectionName = "indexVectors",
