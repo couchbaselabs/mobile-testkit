@@ -185,24 +185,24 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              maxTrainingSize = 256 * 8)
 
         # worth checking an index with subquantizers? fine for now but dbl check in future
-       # vsHandler.createIndex(
-       #      database = vsTestDatabase,
-       #      scopeName = "_default",
-       #      collectionName = "indexVectors",
-       #      indexName = "indexVectorsIndex",
-       #      expression = "prediction(gteSmall, {\"word\": word}).vector",
-       #      dimensions = gteSmallDims,
-       #      centroids = 8,
-       #      metric = "cosine",
-       #      minTrainingSize = 25 * 8,
-       #      maxTrainingSize = 256 * 8)
+        vsHandler.createIndex(
+             database = vsTestDatabase,
+             scopeName = "_default",
+             collectionName = "indexVectors",
+             indexName = "indexVectorsIndex",
+             expression = "prediction(gteSmall, {\"word\": word}).vector",
+             dimensions = gteSmallDims,
+             centroids = 8,
+             metric = "cosine",
+             minTrainingSize = 25 * 8,
+             maxTrainingSize = 256 * 8)
         
         # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
-       # ivQueryAll = vsHandler.query(term="dinner",
-       #                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-       #                      "FROM indexVectors "
-       #                      "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
-       #                 database=vsTestDatabase)
+        ivQueryAll = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                        database=vsTestDatabase)
         
         dbvQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
@@ -210,12 +210,12 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                              "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
                         database=vsTestDatabase)
 
-       # ivQueryCat3 = vsHandler.query(term="dinner",
-       #                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-       #                      "FROM indexVectors "
-       #                      "WHERE vector_match(indexVectorsIndex, $vector, 300) "
-       #                      "AND catid=\"cat3\""),
-       #                 database=vsTestDatabase)
+        ivQueryCat3 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat3\""),
+                        database=vsTestDatabase)
         
         dbvQueryCat1 = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
