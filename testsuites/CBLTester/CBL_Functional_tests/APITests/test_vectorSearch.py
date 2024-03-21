@@ -237,12 +237,13 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              "auxiliaryWords": collectionInstances[3],
              "searchTerms": collectionInstances[4]
         }
-
-        print(collectionInstances)
         
-        # docIdsNeedEmbedding = list(range(1, 11)) + list(range(51, 61))
-        # docIdsNeedEmbedding = ["word" + str(num) for num in docIdsNeedEmbedding]
-        # docsNeedEmbedding = collectionHandler.getDocuments(collection=collectionDict["docBodyVectors"], ids=docIdsNeedEmbedding)
+        docIdsNeedEmbedding = list(range(1, 11)) + list(range(51, 61))
+        print("docIdsNeedEmbedding", docIdsNeedEmbedding)
+        docIdsNeedEmbedding = ["word" + str(num) for num in docIdsNeedEmbedding]
+        print("docIdsNeedEmbedding", docIdsNeedEmbedding)
+        docsNeedEmbedding = collectionHandler.getDocuments(collection=collectionDict["docBodyVectors"], ids=docIdsNeedEmbedding)
+        print(docsNeedEmbedding)
 
         # for docId, docBody in docsNeedEmbedding.items():
         #      word = docBody["word"]
