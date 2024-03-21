@@ -66,6 +66,7 @@ class Collection(object):
         args = Args()
         args.setString("docId", docId)
         args.setMemoryPointer("collection", collection)
+        print("call to getDocument using args", args._args)
         return self._client.invokeMethod("collection_getDocument", args)
 
     def deleteDocument(self, collection, doc):

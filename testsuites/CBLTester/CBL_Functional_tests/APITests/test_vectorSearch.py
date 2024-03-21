@@ -290,6 +290,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # update docs to remove vector embedding and verify that doc is removed from index
         for id in deleteFromDbv:
              dbv = collectionDict["docBodyVectors"]
+             print("deleteFromDBV docId", id)
              docMemoryObj = collectionHandler.getDocument(collection=dbv, docId=id)
              print("deleteFromDBV", type(docMemoryObj), str(docMemoryObj))
              docMemoryObj = documentHandler.toMutable(document=docMemoryObj)
