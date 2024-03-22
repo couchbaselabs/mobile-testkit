@@ -244,13 +244,12 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert len(dbvQueryCat2) == 40, "wrong number of docs returned from query on docBody vectors cat2"
 
         collectionHandler = Collection(base_url)
-        collectionInstances = collectionHandler.getCollectionInstances(database=vsTestDatabase)
         collectionDict = {
-             "_default": collectionInstances[0],
-             "docBodyVectors": collectionInstances[1],
-             "indexVectors": collectionInstances[2],
-             "auxiliaryWords": collectionInstances[3],
-             "searchTerms": collectionInstances[4]
+            "_default": db.createCollection(vsTestDatabase, "_default", scope),
+            "docBodyVectors": db.createCollection(vsTestDatabase, "docBodyVectors", scope),
+            "indexVectors": db.createCollection(vsTestDatabase, "indexVectors", scope),
+            "auxiliaryWords": db.createCollection(vsTestDatabase, "auxiliaryWords", scope),
+            "searchTerms": db.createCollection(vsTestDatabase, "searchTerms", scope)
         }
         
         docIdsNeedEmbedding = list(range(1, 11)) + list(range(51, 61))
