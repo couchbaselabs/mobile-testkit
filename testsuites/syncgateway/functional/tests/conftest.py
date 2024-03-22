@@ -476,8 +476,8 @@ def params_from_base_suite_setup(request):
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
     if skip_provisioning or use_sequoia:
-        should_provision = False
-
+        print("++++++++++++++++++++++++++++++++++++++ setting should provision to flase")
+    should_provision = False
     cluster_utils = ClusterKeywords(cluster_config)
     provision_flag = True
     count = 0
