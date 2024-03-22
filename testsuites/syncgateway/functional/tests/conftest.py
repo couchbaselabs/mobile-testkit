@@ -474,9 +474,6 @@ def params_from_base_suite_setup(request):
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
-    should_provision = True
-    if skip_provisioning or use_sequoia:
-        print("++++++++++++++++++++++++++++++++++++++ setting should provision to flase")
     should_provision = False
     cluster_utils = ClusterKeywords(cluster_config)
     provision_flag = True
@@ -487,7 +484,8 @@ def params_from_base_suite_setup(request):
     code_coverage_var = code_coverage
     cluster_config_var = cluster_config
     while provision_flag and count < max_count:
-        if should_provision:
+        print("++++++++++++++++++++++++++++++++++++++++++should_provision = " + str(should_provision))
+        if should_provision == True:
             try:
                 cluster_utils.provision_cluster(
                     cluster_config=cluster_config,
