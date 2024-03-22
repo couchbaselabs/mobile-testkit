@@ -180,7 +180,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              expression = "vector",
              dimensions = gteSmallDims,
              centroids = 8,
-             metric = "euclidean",
+             metric = "cosine",
              minTrainingSize = 25 * 8, #default training size values (25* 256*), need to adjust handler so values are optional
              maxTrainingSize = 256 * 8)
 
