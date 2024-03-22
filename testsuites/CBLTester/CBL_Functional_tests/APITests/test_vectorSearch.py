@@ -170,7 +170,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # Very rough draft of CBL side work
         # Register model
         vsHandler = VectorSearch(base_url)
-        vsHandler.register_model(key="word", name="thisIsTheModelName")
+        vsHandler.register_model(key="word", name="gteSmall")
         print("Registered model gteSmall on field 'word'")
         vsHandler.createIndex(
              database = vsTestDatabase,
