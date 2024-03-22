@@ -484,6 +484,7 @@ def params_from_base_suite_setup(request):
     code_coverage_var = code_coverage
     cluster_config_var = cluster_config
     while provision_flag and count < max_count:
+        should_provision = False
         print("++++++++++++++++++++++++++++++++++++++++++should_provision = " + str(should_provision))
         if should_provision == True:
             try:
