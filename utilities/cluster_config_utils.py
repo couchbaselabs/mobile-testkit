@@ -73,17 +73,16 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     with open(cluster_config_json) as f:
         cluster = json.loads(f.read())
     cluster["environment"][property_name] = value
-    print("**********************************************************GILAD" + str(cluster["environment"][property_name]))
     with open(cluster_config_json, "w") as f:
         json.dump(cluster, f, indent=4)
 
     # Write [section] property = value in the cluster_config
-    config = CustomConfigParser()
-    config.read(cluster_config)
-    print({section: dict(config[section]) for section in config.sections()})
-    config.set('environment', property_name, str(value))
-    with open(cluster_config, 'w') as f:
-        config.write(f)
+    # config = CustomConfigParser()
+    # config.read(cluster_config)
+    # print({section: dict(config[section]) for section in config.sections()})
+    # config.set('environment', property_name, str(value))
+    # with open(cluster_config, 'w') as f:
+    #   config.write(f)
 
 
 def generate_x509_certs(cluster_config, bucket_name, sg_platform):
