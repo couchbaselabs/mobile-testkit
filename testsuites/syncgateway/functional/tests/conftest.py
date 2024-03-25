@@ -605,7 +605,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     trace_logs = params_from_base_suite_setup["trace_logs"]
 
     test_name = request.node.name
-    c = cluster.Cluster(cluster_config)
+    c = cluster.Cluster(cluster_config + ".json")
     sg = c.sync_gateways[0]
     cbs_ip = c.servers[0].host
 
