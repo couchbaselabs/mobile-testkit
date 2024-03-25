@@ -680,6 +680,7 @@ class SyncGateway(object):
         """ Stop sync gateways in a cluster. If url is passed, shut down
         shut down the sync gateway at that url
         """
+        return
         ansible_runner = AnsibleRunner(cluster_config)
         if url is not None:
             target = hostname_for_url(cluster_config, url)
