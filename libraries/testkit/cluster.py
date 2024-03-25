@@ -39,9 +39,9 @@ class Cluster:
         cbs_urls = []
         acs = []
 
-        if not os.path.isfile(self._cluster_config):
-            log_info("Cluster config not found in 'resources/cluster_configs/'")
-            raise IOError("Cluster config not found in 'resources/cluster_configs/'")
+        # if not os.path.isfile(self._cluster_config):
+        #    log_info("Cluster config not found in 'resources/cluster_configs/'")
+        #    raise IOError("Cluster config not found in 'resources/cluster_configs/'")
 
         log_info(self._cluster_config)
 
