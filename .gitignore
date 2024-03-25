@@ -60,6 +60,7 @@ results/logs/*
 
 resources/cluster_configs/*
 !resources/cluster_configs/README.md
+!resources/cluster_configs/gilad_custom_1sg_1cbs.json
 
 resources/liteserv_configs/*
 !resources/liteserv_configs/README.md

@@ -296,16 +296,7 @@ def params_from_base_suite_setup(request):
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
-    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
-    if ci:
-        cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
-        if sg_lb:
-            cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
-    else:
-        cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
-        if sg_lb:
-            cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
-
+    cluster_config = "{}/gilad_custom_1sg_1cb.son".format(CLUSTER_CONFIGS_DIR)
     log_info("Using '{}' config!".format(cluster_config))
 
     if sg_ssl:
