@@ -72,7 +72,7 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     cluster_config_json = "{}.json".format(cluster_config)
     with open(cluster_config_json) as f:
         cluster = json.loads(f.read())
-
+    print("*****************************************************GILAD=" + str(cluster))
     cluster["environment"][property_name] = value
     with open(cluster_config_json, "w") as f:
         json.dump(cluster, f, indent=4)
