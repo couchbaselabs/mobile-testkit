@@ -78,8 +78,8 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
 
     # Write [section] property = value in the cluster_config
     config = CustomConfigParser()
+    print("**************************************************************GILAD" + str(config.items()))
     config.read(cluster_config)
-    print("---------------------------------------------------------------GILAD" + str(config))
     config.set('environment', property_name, str(value))
     with open(cluster_config, 'w') as f:
         config.write(f)
