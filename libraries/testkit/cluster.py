@@ -117,6 +117,7 @@ class Cluster:
 
     def reset(self, sg_config_path, bucket_list=[], use_config=False, sgdb_creation=True):
 
+        return
         ansible_runner = AnsibleRunner(self._cluster_config)
 
         log_info(">>> Reseting cluster ...")
