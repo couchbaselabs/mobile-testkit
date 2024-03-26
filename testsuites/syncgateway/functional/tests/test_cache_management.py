@@ -148,6 +148,8 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     sdk_client.timeout = 600
 
     # 2. Create docs in CBS via SDK
+    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
+    beforeUpload =  len(all_changes_total["results"]) 
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'], non_sgw=True)
     log_info('Adding {} docs via SDK ...'.format(num_docs))
     sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
@@ -160,7 +162,7 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     if sg_ce:
         assert len(all_changes_total["results"]) == 0
     else:
-        assert len(all_changes_total["results"]) == num_docs
+        assert len(all_changes_total["results"]) == beforeUpload + num_docs
 
 
 @pytest.mark.syncgateway
