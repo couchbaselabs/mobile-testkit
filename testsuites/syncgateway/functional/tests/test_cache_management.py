@@ -75,13 +75,15 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
 
     # 2. Create docs in CBS via SDK
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'], non_sgw=True)
+    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
+    beforeAdding = len(all_changes_total["results"])
     log_info('Adding {} docs via SDK ...'.format(num_docs))
     sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     # 3. Verify docs are not imported to SGW as import_docs is set to false by default
     all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
-    assert len(all_changes_total["results"]) == 0
+    assert len(all_changes_total["results"]) == beforeAdding + num_docs
 
     # 4. if Xattrs=true i.e if import_docs=true, Verify warn_count incremented on stats
     if xattrs_enabled and sync_gateway_version < "3.0.0":
