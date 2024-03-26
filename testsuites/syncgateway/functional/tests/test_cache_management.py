@@ -158,10 +158,10 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
     sg_ce = False
-    if sg_ce:
-        assert len(all_changes_total["results"]) == 0
-    else:
-        assert len(all_changes_total["results"]) == beforeAdding + num_docs
+   # if sg_ce:
+   #     assert len(all_changes_total["results"]) == 0
+   # else:
+    assert len(all_changes_total["results"]) == beforeAdding + num_docs
 
 
 @pytest.mark.syncgateway
