@@ -1,61 +1,41 @@
 {
-    "hosts": [
-        {
-            "name": "host1",
-            "ip": "172.23.121.227"
-        },
-        {
-            "name": "host2",
-            "ip": "172.23.218.205"
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxFileDescriptors": 90000,
+    "compressResponses": false,
+
+
+
+    "logging": {"debug": {"enabled": true} },
+
+
+
+    "use_tls_server": false,
+    "admin_interface_authentication": false,
+"metrics_interface_authentication": false,
+    "databases":{
+        "db":{
+
+
+            "allow_conflicts": false,
+
+            "num_index_replicas": 0,
+            "username": "data-bucket",
+            "password": "password",
+
+
+
+
+            "server":"couchbase://1172.23.121.227:",
+            "bucket":"data-bucket",
+            "cache": {
+                "channel_cache": {
+                    "max_length": 15000,
+                    "min_length": 15000,
+                    "expiry_seconds": 90
+                }
+            }
         }
-    ],
-    "couchbase_servers": [
-        {
-            "name": "cb1",
-            "ip": "172.23.218.205"
-        }
-    ],
-    "sync_gateways": [
-        {
-            "name": "sg1",
-            "ip": "172.23.121.227"
-        }
-    ],
-    "sg_accels": [],
-    "load_generators": [],
-    "load_balancers": [],
-    "webhook_ip": [
-        {
-            "name": "wbhk1",
-            "ip": "172.23.108.167"
-        }
-    ],
-    "environment": {
-        "cbs_ssl_enabled": false,
-        "xattrs_enabled": false,
-        "sg_lb_enabled": false,
-        "ipv6_enabled": false,
-        "x509_certs": false,
-        "delta_sync_enabled": false,
-        "two_sg_cluster_lb_enabled": false,
-        "sync_gateway_ssl": false,
-        "sg_use_views": false,
-        "number_replicas": 0,
-        "server_version": "7.6.0-2176",
-        "sync_gateway_version": "3.2.0-319",
-        "no_conflicts_enabled": true,
-        "cbs_platform": "debian",
-        "sg_platform": "centos",
-        "cbs_ce": false,
-        "magma_storage_enabled": false,
-        "sg_ce": false,
-        "hide_product_version": false,
-        "cbs_developer_preview": false,
-        "disable_persistent_config": false,
-        "server_tls_skip_verify": false,
-        "disable_tls_server": true,
-        "disable_admin_auth": true,
-        "trace_logs": false
     }
 }
-
