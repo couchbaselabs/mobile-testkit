@@ -293,7 +293,7 @@ def copy_to_temp_conf(cluster_config, mode):
     cluster_config_json = "{}.json".format(cluster_config)
     open(temp_cluster_config, "w+")
     open(temp_cluster_config_json, "w+")
-    copyfile(cluster_config, temp_cluster_config)
+    copyfile(cluster_config + ".json", temp_cluster_config)
     copyfile(cluster_config_json, temp_cluster_config_json)
     return temp_cluster_config
 
