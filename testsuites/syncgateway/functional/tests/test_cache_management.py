@@ -148,6 +148,7 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     sdk_client.timeout = 600
 
     # 2. Create docs in CBS via SDK
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
     beforeUpload =  len(all_changes_total["results"]) 
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'], non_sgw=True)
@@ -157,7 +158,6 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     time.sleep(2)  # give some time to replicate to SGW
 
     # 3. Verify docs are not imported to SGW as import_docs is set to false by default
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
     if sg_ce:
         assert len(all_changes_total["results"]) == 0
