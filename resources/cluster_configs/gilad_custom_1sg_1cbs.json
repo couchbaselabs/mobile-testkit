@@ -4,30 +4,17 @@
     "maxIncomingConnections": 0,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
-
-
-
     "logging": {"debug": {"enabled": true} },
-
-
-
     "use_tls_server": false,
     "admin_interface_authentication": false,
-"metrics_interface_authentication": false,
+    "metrics_interface_authentication": false,
     "databases":{
         "db":{
-
-
             "allow_conflicts": false,
-
             "num_index_replicas": 0,
             "username": "data-bucket",
             "password": "password",
-
-
-
-
-            "server":"couchbase://1172.23.121.227:",
+            "server":"couchbase://172.23.218.205:",
             "bucket":"data-bucket",
             "cache": {
                 "channel_cache": {
