@@ -74,6 +74,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     sdk_client.timeout = 600
 
     # 2. Create docs in CBS via SDK
+    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
     beforeDocCreation = len(all_changes_total["results"])
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'], non_sgw=True)
     log_info('Adding {} docs via SDK ...'.format(num_docs))
