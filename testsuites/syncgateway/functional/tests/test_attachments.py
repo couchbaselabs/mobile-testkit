@@ -150,6 +150,7 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     # bucket = "data-bucket"
     buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
     bucket = buckets[0]
+    bucekt = "travel-sample"
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_share_ancestor'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -158,7 +159,8 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
 
-    sg_user_name = "sg_user"  +  str(uuid.uuid4())[:6]
+    random_prefix = str(uuid.uuid4())[:6]
+    sg_user_name = "sg_user"  +  random_prefix
     sg_user_password = "password"
 
     sg_user_channels = ["NBC"]
@@ -169,7 +171,7 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
-    doc = document.create_doc(doc_id="doc_1", content={"sample_key": "sample_val"}, channels=sg_user_channels)
+    doc = document.create_doc(doc_id="doc_1" + random_prefix, content={"sample_key": "sample_val"}, channels=sg_user_channels)
     doc_gen_1 = client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=sg_user_session)
     client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], attachment_name="sample_text.txt", auth=sg_user_session)
     client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], auth=sg_user_session)
@@ -241,7 +243,8 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
 
-    sg_user_name = "sg_user"  +  str(uuid.uuid4())[:6]
+    random_prefix = str(uuid.uuid4())[:6]
+    sg_user_name = "sg_user"  +  random_prefix
     sg_user_password = "sg_user_password"
 
     sg_user_channels = ["NBC"]
@@ -252,7 +255,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
-    docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db, channels=sg_user_channels, auth=sg_user_session)
+    docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db + random_prefix, channels=sg_user_channels, auth=sg_user_session)
     assert len(docs) == 100
 
     # Create doc with attachment and push to sync_gateway
