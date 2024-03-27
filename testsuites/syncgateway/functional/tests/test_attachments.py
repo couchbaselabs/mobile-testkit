@@ -267,7 +267,9 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
 
     # Assert that the attachment doc gets written to couchbase server
     if sync_gateway_version >= "3.0.0":
+        print("-----------------------------------------GILAD_BEFORE")
         server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att2:", ipv6=cluster.ipv6)
+        print("-----------------------------------------GILAD_AFTER")
     else:
         server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)
