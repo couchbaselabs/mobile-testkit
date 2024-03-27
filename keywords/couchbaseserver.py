@@ -545,7 +545,7 @@ class CouchbaseServer:
             if row["$1"]["id"].startswith("_sync:rev"):
                 cached_rev_doc_ids.append(row["$1"]["id"])
 
-        log_info("Found temp rev docs: {}".format(cached_rev_doc_ids))
+        # log_info("Found temp rev docs: {}".format(cached_rev_doc_ids))
         for doc_id in cached_rev_doc_ids:
             log_debug("Removing: {}".format(doc_id))
             bucket_obj.remove(doc_id)

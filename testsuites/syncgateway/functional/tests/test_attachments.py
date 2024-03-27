@@ -271,4 +271,5 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     else:
         server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)
+    print("-----------------------------------------GILADnum_att_docs=====" + str(num_att_docs))
     assert num_att_docs == 1
