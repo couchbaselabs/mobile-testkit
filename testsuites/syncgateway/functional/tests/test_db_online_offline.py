@@ -901,6 +901,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels, auth=None
         user = User(target=sync_gateway, db=db, name=user_name, password="password", channels=channels)
 
     # PUT /{db}/{name}
+    start_num_of_docs =  all_docs_result = user.get_all_docs()
     add_docs_errors = user.add_docs(num_docs=num_docs)
     error_responses.extend(add_docs_errors)
 
@@ -949,7 +950,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels, auth=None
     try:
         all_docs_result = user.get_all_docs()
         # num_docs /{db}/{doc} PUT + num_docs /{db}/_bulk_docs + num_docs POST /{db}/
-        assert len(all_docs_result["rows"]) == num_docs * 3
+        assert len(all_docs_result["rows"]) == start_num_of_docs + num_docs * 3
     except HTTPError as e:
         log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
