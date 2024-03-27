@@ -1,4 +1,5 @@
 import pytest
+import uuid
 
 from requests.exceptions import HTTPError
 
@@ -157,7 +158,7 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
 
-    sg_user_name = "sg_user"
+    sg_user_name = "sg_user"  +  str(uuid.uuid4())[:6]
     sg_user_password = "password"
 
     sg_user_channels = ["NBC"]
@@ -240,7 +241,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
 
-    sg_user_name = "sg_user"
+    sg_user_name = "sg_user" + uuid
     sg_user_password = "sg_user_password"
 
     sg_user_channels = ["NBC"]
