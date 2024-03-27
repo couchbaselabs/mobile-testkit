@@ -73,16 +73,16 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     log_info("Using bucket: {}".format(bucket))
 
     channels_list = ["ABC"]
-
+    random_prefix = str(uuid.uuid4())[:6]
     client = MobileRestClient()
     sg_util = SyncGateway()
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
-    user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1", password="password", channels=channels_list, auth=auth)
+    user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1" + random_prefix, password="password", channels=channels_list, auth=auth)
     atts = attachment.load_from_data_dir(["sample_text.txt"])
-    doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachments=atts, channels=channels_list)
+    doc_with_att = document.create_doc(doc_id="att_doc"+ random_prefix, content={"sample_key": "sample_val"}, attachments=atts, channels=channels_list)
 
     doc_gen_1 = client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=user1)
     client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], number_updates=10, auth=user1)
