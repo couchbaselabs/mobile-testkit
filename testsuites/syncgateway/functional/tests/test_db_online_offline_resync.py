@@ -2,6 +2,7 @@ from libraries.testkit.verify import verify_changes
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 
+import uuid
 import time
 import pytest
 
@@ -73,10 +74,11 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     if auth:
         admin.auth = HTTPBasicAuth(auth[0], auth[1])
     # Register User
+    random_suffix = str(uuid.uuid4())[:8]
     log_info("Register User")
-    user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
+    user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User" + random_suffix,
                                              number=num_users, password=password, channels=channels)
-    user_x = admin.register_user(target=sgs[0], db="db", name="User-X", password="password", channels=["channel_x"])
+    user_x = admin.register_user(target=sgs[0], db="db", name="User-X" + random_suffix, password="password", channels=["channel_x"])
 
     # Add User
     log_info("Add docs")
