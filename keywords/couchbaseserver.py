@@ -541,9 +541,13 @@ class CouchbaseServer:
         index_manager = QueryIndexManager(cluster)
         index_manager.create_primary_index(bucket, ignore_exists=True)
         cached_rev_doc_ids = []
+        print("************************************GILAD_BEFORE_QUERY")
         for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
+            print("************************************GILAD_INSIDE_FOR")
             if row["$1"]["id"].startswith("_sync:rev"):
+                print("************************************GILAD_INSIDE_IF")
                 cached_rev_doc_ids.append(row["$1"]["id"])
+        print("************************************GILAD_AFTER_QUERY")
 
         # log_info("Found temp rev docs: {}".format(cached_rev_doc_ids))
         for doc_id in cached_rev_doc_ids:
