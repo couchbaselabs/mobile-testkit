@@ -950,7 +950,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels, auth=None
     try:
         all_docs_result = user.get_all_docs()
         # num_docs /{db}/{doc} PUT + num_docs /{db}/_bulk_docs + num_docs POST /{db}/
-        assert len(all_docs_result["rows"]) == start_num_of_docs + num_docs * 3
+        assert len(all_docs_result["rows"]) == len(start_num_of_docs["rows"]) + num_docs * 3
     except HTTPError as e:
         log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
