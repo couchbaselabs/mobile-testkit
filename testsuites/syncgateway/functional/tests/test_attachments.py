@@ -231,6 +231,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     # bucket = "data-bucket"
     buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
     bucket = buckets[0]
+    bucket = "travel-sample"
 
     log_info("Running 'test_writing_attachment_to_couchbase_server'")
     log_info("Using cbs_url: {}".format(cbs_url))
