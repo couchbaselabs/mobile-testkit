@@ -2,23 +2,23 @@
     "hosts": [
         {
             "name": "host1",
-            "ip": "172.23.121.227"
+            "ip": "172.23.218.197"
         },
         {
             "name": "host2",
-            "ip": "172.23.218.205"
+            "ip": "172.23.218.200"
         }
     ],
     "couchbase_servers": [
         {
             "name": "cb1",
-            "ip": "172.23.218.205"
+            "ip": "172.23.218.197"
         }
     ],
     "sync_gateways": [
         {
             "name": "sg1",
-            "ip": "172.23.121.227"
+            "ip": "172.23.218.200"
         }
     ],
     "sg_accels": [],
@@ -41,8 +41,8 @@
         "sync_gateway_ssl": false,
         "sg_use_views": false,
         "number_replicas": 0,
-        "server_version": "7.6.0-2176",
-        "sync_gateway_version": "3.2.0-319",
+        "server_version": "6.6.0",
+        "sync_gateway_version": "2.8.0",
         "no_conflicts_enabled": true,
         "cbs_platform": "debian",
         "sg_platform": "centos",
