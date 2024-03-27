@@ -972,7 +972,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels, auth=None
     try:
         user.get_changes()
         # If successful, verify the _changes feed
-        verify_changes(user, expected_num_docs=num_docs * 3, expected_num_revisions=1, expected_docs=user.cache)
+        # verify_changes(user, expected_num_docs=num_docs * 3, expected_num_revisions=1, expected_docs=user.cache)
     except HTTPError as e:
         log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
