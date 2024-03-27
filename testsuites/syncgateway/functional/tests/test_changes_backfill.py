@@ -1,6 +1,7 @@
 import pytest
 import concurrent.futures
 import time
+import uuid
 
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
@@ -64,17 +65,17 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
 
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)
-
+    random_str = str(uuid.uuid4())[:6]
     client = MobileRestClient()
 
-    admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A"], roles=[])
+    admin_user_info = userinfo.UserInfo("admin" + random_str, "pass", channels=["A"], roles=[])
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     if grant_type == "CHANNEL-TO-ROLE-REST" or grant_type == "CHANNEL-TO-ROLE-SYNC":
         client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[], auth=auth)
-        user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=["empty_role"])
+        user_b_user_info = userinfo.UserInfo("USER_B" + random_str, "pass", channels=["B"], roles=["empty_role"])
     else:
-        user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
+        user_b_user_info = userinfo.UserInfo("USER_B" + random_str, "pass", channels=["B"], roles=[])
 
     # Create users / sessions
     client.create_user(
@@ -110,13 +111,13 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     )
 
     # Create 50 "A" channel docs
-    a_docs = client.add_docs(url=sg_url, db=sg_db, number=50, id_prefix=None, auth=admin_session, channels=["A"])
+    a_docs = client.add_docs(url=sg_url, db=sg_db, number=50, id_prefix="a-doc" + random_str, auth=admin_session, channels=["A"])
     assert len(a_docs) == 50
 
-    b_docs = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="b_doc", auth=user_b_session, channels=["B"])
+    b_docs = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="b_doc" + random_str, auth=user_b_session, channels=["B"])
     assert len(b_docs) == 1
 
-    user_doc = {"id": "_user/USER_B", "rev": None}
+    user_doc = {"id": "_user/USER_B" + random_str, "rev": None}
     b_docs.append(user_doc)
 
     # Loop until admin user sees docs in changes
@@ -137,15 +138,15 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     elif grant_type == "CHANNEL-SYNC":
         log_info("Granting user access to channel A sync function access()")
         # Grant via access() in sync_function, then id 'channel_access' will trigger an access(doc.users, doc.channels)
-        access_doc = document.create_doc("channel_access", channels=["A"])
+        access_doc = document.create_doc("channel_access" + random_str, channels=["A"])
         access_doc["users"] = ["USER_B"]
         client.add_doc(url=sg_url, db=sg_db, doc=access_doc, auth=admin_session)
 
     elif grant_type == "ROLE-REST":
         log_info("Granting user access to channel A via Admin REST role grant")
         # Create role with channel A
-        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"], auth=auth)
-        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", channels=["B"], roles=["channel-A-role"], auth=auth)
+        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role" + random_str, channels=["A"], auth=auth)
+        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B" + random_str, channels=["B"], roles=["channel-A-role"], auth=auth)
 
     elif grant_type == "ROLE-SYNC":
         log_info("Granting user access to channel A via sync function role() grant")
@@ -153,19 +154,19 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
         client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"], auth=auth)
 
         # Grant via role() in sync_function, then id 'role_access' will trigger an role(doc.users, doc.roles)
-        role_access_doc = document.create_doc("role_access")
+        role_access_doc = document.create_doc("role_access" + random_str)
         role_access_doc["users"] = ["USER_B"]
         role_access_doc["roles"] = ["role:channel-A-role"]
         client.add_doc(sg_url, db=sg_db, doc=role_access_doc, auth=admin_session)
 
     elif grant_type == "CHANNEL-TO-ROLE-REST":
         # Update the empty_role to have channel "A"
-        client.update_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=["A"], auth=auth)
+        client.update_role(url=sg_admin_url, db=sg_db, name="empty_role" + random_str, channels=["A"], auth=auth)
 
     elif grant_type == "CHANNEL-TO-ROLE-SYNC":
         # Grant empty_role access to channel "A" via sync function
         # Grant channel access to role via sync function
-        access_doc = document.create_doc("channel_grant_to_role")
+        access_doc = document.create_doc("channel_grant_to_role" + random_str)
         access_doc["roles"] = ["role:empty_role"]
         access_doc["channels"] = ["A"]
         client.add_doc(url=sg_url, db=sg_db, doc=access_doc, auth=admin_session, use_post=True)
