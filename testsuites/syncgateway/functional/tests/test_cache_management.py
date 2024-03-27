@@ -18,7 +18,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 @pytest.mark.cachemanagement
 @pytest.mark.basicsgw
 @pytest.mark.oscertify
-def (params_from_base_test_setup):
+def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19Ai9SsMVrxc6JWVfcXc7y14JHtcYjPd5axBYyPQR0Dc/edit#gid=0
@@ -69,7 +69,7 @@ def (params_from_base_test_setup):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), name=bucket_name, password='password')
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), name=bucket_name,password='password')
     else:
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), name=bucket_name, password='password')
     sdk_client.timeout = 600
