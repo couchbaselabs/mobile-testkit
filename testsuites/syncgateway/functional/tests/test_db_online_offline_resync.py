@@ -96,7 +96,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     # every user should have same number of docs
     # total/expected docs = num_users * num_docs
     recieved_docs = in_parallel(user_objects, 'get_num_docs')
-
+    print("---------------------------------GILADAAAA" + str(before_recieved_docs.keys()))
     expected_docs = before_recieved_docs["User_0"] + num_users * num_docs
     for user_obj, docs in list(recieved_docs.items()):
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
