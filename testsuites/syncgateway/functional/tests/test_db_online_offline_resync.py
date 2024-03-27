@@ -74,13 +74,13 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     if auth:
         admin.auth = HTTPBasicAuth(auth[0], auth[1])
     # Register User
-    random_suffix = str(uuid.uuid4())[:8]
     log_info("Register User")
-    user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User" + random_suffix,
+    user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
-    user_x = admin.register_user(target=sgs[0], db="db", name="User-X" + random_suffix, password="password", channels=["channel_x"])
+    user_x = admin.register_user(target=sgs[0], db="db", name="User-X", password="password", channels=["channel_x"])
     admin
-    orgDocNum = user_x.get_num_docs()
+    in_parallel(user_objects, 'get_changes')
+    before_recieved_docs = in_parallel(user_objects, 'get_num_docs')
     # Add User
     log_info("Add docs")
     bulk = True
@@ -97,7 +97,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     # total/expected docs = num_users * num_docs
     recieved_docs = in_parallel(user_objects, 'get_num_docs')
 
-    expected_docs = orgDocNum + num_users * num_docs
+    expected_docs = before_recieved_docs + num_users * num_docs
     for user_obj, docs in list(recieved_docs.items()):
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
