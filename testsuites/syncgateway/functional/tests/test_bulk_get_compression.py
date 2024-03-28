@@ -4,6 +4,7 @@ import pytest
 import subprocess
 import json
 import os
+import uuid
 
 import libraries.testkit.settings
 from libraries.testkit.cluster import Cluster
@@ -175,7 +176,7 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-
+    random_str = str(uuid.uuid4())[:6]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_bulk_get_compression'")
@@ -202,19 +203,19 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
     if auth:
         admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
-    user = admin.register_user(cluster.sync_gateways[0], "db", "seth", "password", channels=["seth"])
+    user = admin.register_user(cluster.sync_gateways[0], "db", "seth" + random_str, "password", channels=["seth"])
 
     doc_body = Data.load("mock_users_20k.json")
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
-        futures = [executor.submit(user.add_doc, doc_id="test-{}".format(i), content=doc_body) for i in range(num_docs)]
+        futures = [executor.submit(user.add_doc, doc_id="test-{}".format(i) + random_str, content=doc_body) for i in range(num_docs)]
         for future in concurrent.futures.as_completed(futures):
             try:
                 log_info(future.result())
             except Exception as e:
                 log_info("Failed to push doc: {}".format(e))
 
-    docs = [{"id": "test-{}".format(i)} for i in range(num_docs)]
+    docs = [{"id": "test-{}".format(i) + random_str} for i in range(num_docs)]
     payload = {"docs": docs}
 
     # Issue curl request and get size of request
