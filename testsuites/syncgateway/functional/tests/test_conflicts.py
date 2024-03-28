@@ -1,4 +1,5 @@
 import time
+import uuid
 
 import pytest
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -59,7 +60,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-
+    random_str = str(uuid.uuid4())[:6]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and get_sg_version(cluster_config) < "1.5.0":
@@ -78,7 +79,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     client = MobileRestClient()
 
     seth_user_info = userinfo.UserInfo(
-        name="seth",
+        name="seth" + random_str,
         password="pass",
         channels=["NATGEO"],
         roles=[]
@@ -94,7 +95,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
         auth=auth
     )
 
-    test_doc_body = document.create_doc(doc_id="test_doc", channels=seth_user_info.channels)
+    test_doc_body = document.create_doc(doc_id="test_doc" + random_str, channels=seth_user_info.channels)
     rev_gen_1_doc = client.add_doc(url=sg_url, db=sg_db, doc=test_doc_body, auth=seth_auth)
 
     rev_gen_6_doc = client.update_doc(url=sg_url, db=sg_db, doc_id=rev_gen_1_doc["id"], number_updates=5, auth=seth_auth)
@@ -115,7 +116,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
             break
 
     assert len(changes_1["results"]) == 1
-    assert changes_1["results"][0]["id"] == "test_doc"
+    assert changes_1["results"][0]["id"] == "test_doc" + random_str
     assert changes_1["results"][0]["changes"][0]["rev"].startswith("6-")
 
     # Create a conflict off of rev one
@@ -127,19 +128,19 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
         new_revision="2-foo",
         auth=seth_auth
     )
-    assert rev_gen_2_doc_conflict["id"] == "test_doc"
+    assert rev_gen_2_doc_conflict["id"] == "test_doc" + random_str
     assert rev_gen_2_doc_conflict["rev"] == "2-foo"
 
     # Issue changes since changes_1 last_seq above
     changes_2 = client.get_changes(url=sg_url, db=sg_db, since=changes_1["last_seq"], auth=seth_auth)
     assert len(changes_2["results"]) == 1
-    assert changes_2["results"][0]["id"] == "test_doc"
+    assert changes_2["results"][0]["id"] == "test_doc" + random_str
     assert changes_2["results"][0]["changes"][0]["rev"].startswith("6-")
 
     # Issue changes since 0, strip user doc and make sure the doc is still the '6-' rev
     changes_from_0_one = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_auth, skip_user_docs=True)
     assert len(changes_from_0_one["results"]) == 1
-    assert changes_from_0_one["results"][0]["id"] == "test_doc"
+    assert changes_from_0_one["results"][0]["id"] == "test_doc" + random_str
     assert changes_from_0_one["results"][0]["changes"][0]["rev"].startswith("6-")
 
     # Create a 3-foo rev with 2-foo as the parent
@@ -151,19 +152,19 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
         new_revision="3-foo",
         auth=seth_auth
     )
-    assert rev_gen_3_doc_conflict["id"] == "test_doc"
+    assert rev_gen_3_doc_conflict["id"] == "test_doc" + random_str
     assert rev_gen_3_doc_conflict["rev"] == "3-foo"
 
     # Issue changes since changes_2 last_seq above
     changes_3 = client.get_changes(url=sg_url, db=sg_db, since=changes_2["last_seq"], auth=seth_auth)
     assert len(changes_3["results"]) == 1
-    assert changes_3["results"][0]["id"] == "test_doc"
+    assert changes_3["results"][0]["id"] == "test_doc" + random_str
     assert changes_3["results"][0]["changes"][0]["rev"].startswith("6-")
 
     # Issue changes since 0, strip user doc and make sure the doc is still the '6-' rev
     changes_from_0_two = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_auth, skip_user_docs=True)
     assert len(changes_from_0_two["results"]) == 1
-    assert changes_from_0_two["results"][0]["id"] == "test_doc"
+    assert changes_from_0_two["results"][0]["id"] == "test_doc" + random_str
     assert changes_from_0_two["results"][0]["changes"][0]["rev"].startswith("6-")
 
     # Delete test_doc at rev 6-*
@@ -172,7 +173,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     # Issue changes since changes_3 last_seq above
     changes_4 = client.get_changes(url=sg_url, db=sg_db, since=changes_3["last_seq"], auth=seth_auth)
     assert len(changes_4["results"]) == 1
-    assert changes_4["results"][0]["id"] == "test_doc"
+    assert changes_4["results"][0]["id"] == "test_doc" + random_str
     assert changes_4["results"][0]["changes"][0]["rev"] == "3-foo"
 
     # Issue a oneshot changes since changes_4 last_seq and assert no results are returned
