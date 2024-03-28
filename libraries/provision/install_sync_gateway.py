@@ -169,6 +169,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                          sa_platform="centos", sa_installer_type="msi",
                          ipv6=False, aws=False, url=None, sync_gateway_version=None, custom_build=None, code_coverage=None):
 
+    return
     log_info(sync_gateway_config)
     ansible_runner = AnsibleRunner(cluster_config)
     c_cluster = cluster.Cluster(cluster_config)

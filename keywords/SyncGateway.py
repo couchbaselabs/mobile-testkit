@@ -421,6 +421,7 @@ class SyncGateway(object):
 
     def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config, url=None, skip_bucketcreation=False):
 
+        return
         # Dirty hack -- these have to be put here in order to avoid circular imports
         from libraries.provision.install_sync_gateway import install_sync_gateway
         from libraries.provision.install_sync_gateway import SyncGatewayConfig
