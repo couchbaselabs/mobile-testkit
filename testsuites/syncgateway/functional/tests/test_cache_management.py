@@ -217,9 +217,9 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), username='Administrator', password='password')
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), username='Administrator', password='password')
     sdk_client.timeout = 600
 
     # 4. Create docs in CBS via SDK
