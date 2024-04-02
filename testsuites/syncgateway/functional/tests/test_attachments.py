@@ -255,7 +255,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
-
+    start_server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att2:", ipv6=cluster.ipv6)
     docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db + random_prefix, channels=sg_user_channels, auth=sg_user_session)
     assert len(docs) == 100
 
@@ -268,11 +268,8 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
 
     # Assert that the attachment doc gets written to couchbase server
     if sync_gateway_version >= "3.0.0":
-        print("-----------------------------------------GILAD_BEFORE")
         server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att2:", ipv6=cluster.ipv6)
-        print("-----------------------------------------GILAD_AFTER")
     else:
         server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)
-    print("-----------------------------------------GILADnum_att_docs=====" + str(num_att_docs))
-    assert num_att_docs == 1
+    assert num_att_docs == start_server_att_docs + 1
