@@ -574,7 +574,7 @@ class CouchbaseServer:
         index_manager.create_primary_index(bucket, ignore_exists=True)
         found_ids = []
         for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
-            log_info(row)
+        #    log_info(row)
             if row["$1"]["id"].startswith(prefix):
                 found_ids.append(row["$1"]["id"])
 
