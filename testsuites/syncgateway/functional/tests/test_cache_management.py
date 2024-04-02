@@ -200,7 +200,7 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_client = MobileRestClient()
     buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
-    bucket_name = buckets[0]
+    bucket_name = "travel-sample"
 
     cbs_host = host_for_url(cbs_url)
 
