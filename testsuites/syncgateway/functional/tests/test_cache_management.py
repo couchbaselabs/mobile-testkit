@@ -71,7 +71,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     if cluster.ipv6:
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), name=bucket_name,password='password')
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), name=bucket_name, password='password')
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), name=bucket_name, username="Administrator", password='password')
     sdk_client.timeout = 600
 
     # 2. Create docs in CBS via SDK
