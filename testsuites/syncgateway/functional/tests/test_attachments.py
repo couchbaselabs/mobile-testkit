@@ -251,7 +251,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     sg_user_channels = ["NBC"]
 
     client = MobileRestClient()
-
+    server = couchbaseserver.CouchbaseServer(cbs_url)
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
@@ -264,7 +264,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     doc_with_att = document.create_doc(doc_id="att_doc" + random_prefix, content={"sample_key": "sample_val"}, attachments=atts, channels=sg_user_channels)
 
     client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
-    server = couchbaseserver.CouchbaseServer(cbs_url)
+
 
     # Assert that the attachment doc gets written to couchbase server
     if sync_gateway_version >= "3.0.0":
