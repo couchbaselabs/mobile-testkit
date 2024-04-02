@@ -221,7 +221,8 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     else:
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), username='Administrator', password='password')
     sdk_client.timeout = 600
-
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    org_all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
     # 4. Create docs in CBS via SDK
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'], non_sgw=True)
     log_info('Adding {} docs via SDK ...'.format(num_docs))
@@ -230,12 +231,11 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     time.sleep(1)  # give some time to import docs to SGW
 
     # 3. Verify docs are imported to SGW
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     count = 0
     while count < 5:
         all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
         assert len(all_changes_total["results"]) == num_docs
-        if len(all_changes_total["results"]) == num_docs:
+        if len(all_changes_total["results"]) == len(org_all_changes_total) + num_docs:
             break
         else:
             time.sleep(0.30)
