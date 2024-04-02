@@ -234,7 +234,7 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     count = 0
     while count < 5:
         all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
-        assert len(all_changes_total["results"]) == num_docs
+        assert len(all_changes_total["results"]) == len(org_all_changes_total) + num_docs
         if len(all_changes_total["results"]) == len(org_all_changes_total) + num_docs:
             break
         else:
