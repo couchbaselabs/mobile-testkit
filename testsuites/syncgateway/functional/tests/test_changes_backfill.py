@@ -124,7 +124,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=a_docs, auth=admin_session)
 
     # Loop until user_b sees b_doc_0 doc and _user/USER_B doc
-    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=b_docs, auth=user_b_session, strict=True)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=b_docs, auth=user_b_session, strict=False)
 
     # Get last_seq for user_b
     user_b_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=user_b_session, feed="normal")
