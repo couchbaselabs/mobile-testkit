@@ -48,10 +48,10 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
     try:  # To be able to teardon in case of a setup error
         pre_test_db_exists = pre_test_user_exists = sg_client = sg_url = sg_admin_url = None
         random_suffix = str(uuid.uuid4())[:8]
-        db_prefix = "db_"
+        db_prefix = "db"
         scope_prefix = "scope_"
         collection_prefix = "collection_"
-        db = db_prefix + random_suffix
+        db = db_prefix
         scope = scope_prefix + random_suffix
         collection = collection_prefix + random_suffix
         sg_username = "scopes_collections_user" + random_suffix
