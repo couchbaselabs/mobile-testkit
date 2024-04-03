@@ -184,7 +184,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
         user_b_changes_after_grant = client.get_changes(
             url=sg_url,
             db=sg_db,
-            since=user_b_changes["last_seq"],
+            since=0,
             auth=user_b_session,
             feed="normal"
         )
