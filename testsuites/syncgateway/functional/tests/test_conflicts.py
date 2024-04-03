@@ -416,7 +416,7 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
             doc_id=doc_id,
             number_updates=10,
             auth=session,
-            attachment_name="sample_text.txt" + random_str
+            attachment_name="sample_text.txt"
         )
 
     update_from_sg_task.result()
