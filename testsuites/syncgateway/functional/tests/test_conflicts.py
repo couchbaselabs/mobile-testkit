@@ -274,8 +274,8 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
             break
 
     assert len(changes_1["results"]) - len(org_changes_1["results"]) == 1
-    assert changes_1["results"][0]["id"] == "test_doc" + random_str
-    assert changes_1["results"][0]["changes"][0]["rev"].startswith("6-")
+    assert changes_1["results"][len(changes_1["results"])-1]["id"] == "test_doc" + random_str
+    assert changes_1["results"][len(changes_1["results"]-1)]["changes"][0]["rev"].startswith("6-")
 
     # Create a conflict off of rev one
     rev_gen_1_doc_conflict = client.add_conflict(
