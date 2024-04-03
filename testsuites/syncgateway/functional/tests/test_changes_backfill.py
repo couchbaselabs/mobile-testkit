@@ -128,7 +128,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
 
     # Get last_seq for user_b
     user_b_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=user_b_session, feed="normal")
-
+    org_user_b_changes = user_b_changes
     # Grant access to channel "A"
     if grant_type == "CHANNEL-REST":
         log_info("Granting user access to channel A via Admin REST user update")
@@ -199,7 +199,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     # User B shoud have recieved 51 docs (a_docs + 1 _user/USER_B doc) if a REST grant or 50 changes if the grant
     # is via the sync function
     changes_results = user_b_changes_after_grant["results"]
-    assert 50 <= len(changes_results) <= 51
+    assert org_user_b_changes + 50 <= len(changes_results) <= org_user_b_changes + 51
 
     # Create a dictionary of id rev pair of all the docs that are not "_user/" docs from changes
     ids_and_revs_from_user_changes = {
