@@ -250,7 +250,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
         channels=seth_user_info.channels,
         auth=auth
     )
-    org_changes_1 = client.get_changes(url=sg_url, db=sg_db, since=last_seq, auth=seth_auth, skip_user_docs=True)
+    org_changes_1 = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_auth, skip_user_docs=True)
     test_doc_body = document.create_doc(doc_id="test_doc" + random_str, channels=seth_user_info.channels)
     rev_gen_1_doc = client.add_doc(url=sg_url, db=sg_db, doc=test_doc_body, auth=seth_auth)
 
