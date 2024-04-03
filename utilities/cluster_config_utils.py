@@ -41,7 +41,7 @@ class CustomConfigParser(configparser.RawConfigParser):
 def get_cluster(url, bucket_name):
     timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=180), query_timeout=timedelta(seconds=300),
                                             config_total_timeout=timedelta(seconds=600))
-    options = ClusterOptions(PasswordAuthenticator("travel-sample", "password"), timeout_options=timeout_options)
+    options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
     cluster = Cluster(url, options)
     cluster = cluster.bucket(bucket_name)
     return cluster.default_collection()
@@ -72,18 +72,17 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     cluster_config_json = "{}.json".format(cluster_config)
     with open(cluster_config_json) as f:
         cluster = json.loads(f.read())
-
     cluster["environment"][property_name] = value
     with open(cluster_config_json, "w") as f:
         json.dump(cluster, f, indent=4)
 
     # Write [section] property = value in the cluster_config
-    config = CustomConfigParser()
-    config.read(cluster_config)
-    config.set('environment', property_name, str(value))
-
-    with open(cluster_config, 'w') as f:
-        config.write(f)
+    # config = CustomConfigParser()
+    # config.read(cluster_config)
+    # print({section: dict(config[section]) for section in config.sections()})
+    # config.set('environment', property_name, str(value))
+    # with open(cluster_config, 'w') as f:
+    #   config.write(f)
 
 
 def generate_x509_certs(cluster_config, bucket_name, sg_platform):
@@ -294,7 +293,7 @@ def copy_to_temp_conf(cluster_config, mode):
     cluster_config_json = "{}.json".format(cluster_config)
     open(temp_cluster_config, "w+")
     open(temp_cluster_config_json, "w+")
-    copyfile(cluster_config, temp_cluster_config)
+    copyfile(cluster_config + ".json", temp_cluster_config)
     copyfile(cluster_config_json, temp_cluster_config_json)
     return temp_cluster_config
 
