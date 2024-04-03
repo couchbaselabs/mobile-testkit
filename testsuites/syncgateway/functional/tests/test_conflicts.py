@@ -209,6 +209,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    random_str = str(uuid.uuid4())[:6]
 
     if no_conflicts_enabled:
         pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
@@ -234,7 +235,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     client = MobileRestClient()
 
     seth_user_info = userinfo.UserInfo(
-        name="seth",
+        name="seth" + random_str,
         password="pass",
         channels=["NATGEO"],
         roles=[]
@@ -250,7 +251,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
         auth=auth
     )
 
-    test_doc_body = document.create_doc(doc_id="test_doc", channels=seth_user_info.channels)
+    test_doc_body = document.create_doc(doc_id="test_doc" + random_str, channels=seth_user_info.channels)
     rev_gen_1_doc = client.add_doc(url=sg_url, db=sg_db, doc=test_doc_body, auth=seth_auth)
 
     rev_gen_6_doc = client.update_doc(url=sg_url, db=sg_db, doc_id=rev_gen_1_doc["id"], number_updates=5, auth=seth_auth)
@@ -270,7 +271,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
             break
 
     assert len(changes_1["results"]) == 1
-    assert changes_1["results"][0]["id"] == "test_doc"
+    assert changes_1["results"][0]["id"] == "test_doc" + random_str
     assert changes_1["results"][0]["changes"][0]["rev"].startswith("6-")
 
     # Create a conflict off of rev one
