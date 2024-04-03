@@ -402,7 +402,7 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
     session = cookie, session_id
 
     # 1. Create a doc
-    sg_doc_body = document.create_doc(doc_id=doc_id, content="sg-doc1" + random_str, channels=channel)
+    sg_doc_body = document.create_doc(doc_id=doc_id, content="sg-doc1" , channels=channel)
     sg_client.add_doc(url=sg_url, db=sg_db, doc=sg_doc_body, auth=session)
 
     # 2. Start one thread and update the doc with attachment
