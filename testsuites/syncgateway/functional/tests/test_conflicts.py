@@ -266,12 +266,11 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
             raise keywords.exceptions.TimeoutError("Wait for Replication Status Idle: TIMEOUT")
 
         changes_1 = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_auth, skip_user_docs=True)
-        print("********************************************************GILKAL" + str(changes_1))
         last_seq = changes_1["last_seq"]
         if len(changes_1["results"]) > 0 and changes_1["results"][0]["changes"][0]["rev"].startswith("6-"):
             break
 
-    assert len(changes_1["results"]) == len(org_changes_1) + 1
+    assert len(changes_1["results"]) - len(org_changes_1) == 1
     assert changes_1["results"][0]["id"] == "test_doc"
     assert changes_1["results"][0]["changes"][0]["rev"].startswith("6-")
 
