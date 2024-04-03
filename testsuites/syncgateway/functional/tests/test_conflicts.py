@@ -380,11 +380,11 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
-
+    random_str = str(uuid.uuid4())[:6]
     channel = ["concurrent-updates"]
-    username = "autotest"
+    username = "autotest" + random_str
     password = "password"
-    doc_id = "doc_1"
+    doc_id = "doc_1" + random_str
     sg_db = "db"
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_client = MobileRestClient()
@@ -398,11 +398,11 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel, auth=auth)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 1. Create a doc
-    sg_doc_body = document.create_doc(doc_id=doc_id, content="sg-doc1", channels=channel)
+    sg_doc_body = document.create_doc(doc_id=doc_id, content="sg-doc1" + random_str, channels=channel)
     sg_client.add_doc(url=sg_url, db=sg_db, doc=sg_doc_body, auth=session)
 
     # 2. Start one thread and update the doc with attachment
