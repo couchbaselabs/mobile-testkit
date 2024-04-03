@@ -139,7 +139,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
         log_info("Granting user access to channel A sync function access()")
         # Grant via access() in sync_function, then id 'channel_access' will trigger an access(doc.users, doc.channels)
         access_doc = document.create_doc("channel_access" + random_str, channels=["A"])
-        access_doc["users"] = ["USER_B"]
+        access_doc["users"] = ["USER_B" + random_str]
         client.add_doc(url=sg_url, db=sg_db, doc=access_doc, auth=admin_session)
 
     elif grant_type == "ROLE-REST":
