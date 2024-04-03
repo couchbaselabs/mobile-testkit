@@ -218,6 +218,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     assert ids_and_revs_from_user_changes == ids_and_revs_from_a_docs
 
     # Get changes from last_seq of the changes request after the grant. There should be no new changes
+    print("----------------------------------------------------------------" + str(user_b_changes))
     user_b_changes = client.get_changes(url=sg_url, db=sg_db,
                                         since=user_b_changes_after_grant["last_seq"], auth=user_b_session, feed="normal")
     assert len(user_b_changes["results"]) == 0
