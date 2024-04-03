@@ -199,7 +199,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     # User B shoud have recieved 51 docs (a_docs + 1 _user/USER_B doc) if a REST grant or 50 changes if the grant
     # is via the sync function
     changes_results = user_b_changes_after_grant["results"]
-    assert org_user_b_changes + 50 <= len(changes_results) <= org_user_b_changes + 51
+    assert len(org_user_b_changes) + 50 <= len(changes_results) <= len(org_user_b_changes) + 51
 
     # Create a dictionary of id rev pair of all the docs that are not "_user/" docs from changes
     ids_and_revs_from_user_changes = {
