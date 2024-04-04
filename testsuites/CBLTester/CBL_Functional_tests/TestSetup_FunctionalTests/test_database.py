@@ -321,8 +321,6 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
     False,
     True
 ])
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("android"),
-                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1187")
 def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     """
         @summary:
