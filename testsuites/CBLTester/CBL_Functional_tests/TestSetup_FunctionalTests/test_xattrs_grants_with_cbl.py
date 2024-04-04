@@ -229,6 +229,8 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     pytest.param("delete"),
     pytest.param("expire")
 ])
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("android"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1188")
 def test_tombstone_docs_via_sdk(params_from_base_test_setup, tombstone_type):
     """
     @summary:
