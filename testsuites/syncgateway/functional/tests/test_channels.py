@@ -55,7 +55,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     seth_user_info = userinfo.UserInfo('seth' + random_str, 'pass', channels=['NASA'], roles=[])
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    org_expvars = client.get_expvars(url=sg_admin_url, auth=auth)
+
     client.create_user(
         url=sg_admin_url,
         db=sg_db_name,
@@ -85,6 +85,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     sg.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     # Add 1 doc to Sync Gateway (to initialize the channel cache)
+    org_expvars = client.get_expvars(url=sg_admin_url, auth=auth)
     doc_bodies = document.create_docs(doc_id_prefix='doc_new' + random_str, number=1, channels=seth_user_info.channels)
     bulk_docs_resp_new = client.add_bulk_docs(url=sg_url, db=sg_db_name, docs=doc_bodies, auth=seth_session)
     assert len(bulk_docs_resp_new) == 1
@@ -100,7 +101,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     if mode == 'cc':
         log_info('Looking for view queries == 1 in expvars')
         if sync_gateway_version < "3.0.0":
-            assert expvars['syncGateway_changeCache']['view_queries'] == org_expvars + 3
+            assert expvars['syncGateway_changeCache']['view_queries'] == org_expvars['syncGateway_changeCache']['view_queries'] + 3
         else:
             assert expvars['syncgateway']['per_db'][sg_db_name]['cache']['view_queries'] == org_expvars['syncgateway']['per_db'][sg_db_name]['cache']['view_queries'] + 3
 
