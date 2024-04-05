@@ -85,12 +85,12 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     sg.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     # Add 1 doc to Sync Gateway (to initialize the channel cache)
-    org_expvars = client.get_expvars(url=sg_admin_url, auth=auth)
     doc_bodies = document.create_docs(doc_id_prefix='doc_new' + random_str, number=1, channels=seth_user_info.channels)
     bulk_docs_resp_new = client.add_bulk_docs(url=sg_url, db=sg_db_name, docs=doc_bodies, auth=seth_session)
     assert len(bulk_docs_resp_new) == 1
 
     # Changes request to trigger population of channel cache with view call
+    org_expvars = client.get_expvars(url=sg_admin_url, auth=auth)
     bulk_docs_resp += bulk_docs_resp_new
     client.verify_docs_in_changes(url=sg_url, db=sg_db_name, expected_docs=bulk_docs_resp, auth=seth_session)
 
