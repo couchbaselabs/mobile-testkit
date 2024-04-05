@@ -55,6 +55,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     seth_user_info = userinfo.UserInfo('seth' + random_str, 'pass', channels=['NASA'], roles=[])
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    org_expvars = client.get_expvars(url=sg_admin_url, auth=auth)
     client.create_user(
         url=sg_admin_url,
         db=sg_db_name,
@@ -99,9 +100,9 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     if mode == 'cc':
         log_info('Looking for view queries == 1 in expvars')
         if sync_gateway_version < "3.0.0":
-            assert expvars['syncGateway_changeCache']['view_queries'] == 3
+            assert expvars['syncGateway_changeCache']['view_queries'] == org_expvars + 3
         else:
-            assert expvars['syncgateway']['per_db'][sg_db_name]['cache']['view_queries'] == 3
+            assert expvars['syncgateway']['per_db'][sg_db_name]['cache']['view_queries'] == org_expvars + 3
 
     # Issue a second changes request that shouldn't trigger a view call
     client.verify_docs_in_changes(url=sg_url, db=sg_db_name, expected_docs=bulk_docs_resp, auth=seth_session)
