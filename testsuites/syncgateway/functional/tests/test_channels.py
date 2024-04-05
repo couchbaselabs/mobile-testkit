@@ -1,5 +1,5 @@
 import time
-
+import uuid
 import pytest
 
 from keywords.utils import log_info
@@ -43,6 +43,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = topology['sync_gateways'][0]['admin']
     sg_db_name = 'db'
     num_docs = 10000
+    random_str = str(uuid.uuid4())[:6]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -51,7 +52,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 
     client = MobileRestClient()
 
-    seth_user_info = userinfo.UserInfo('seth', 'pass', channels=['NASA'], roles=[])
+    seth_user_info = userinfo.UserInfo('seth' + random_str, 'pass', channels=['NASA'], roles=[])
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client.create_user(
@@ -71,7 +72,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     )
 
     # Add docs to Sync Gateway
-    doc_bodies = document.create_docs(doc_id_prefix='seth_doc', number=num_docs, channels=seth_user_info.channels)
+    doc_bodies = document.create_docs(doc_id_prefix='seth_doc' + random_str, number=num_docs, channels=seth_user_info.channels)
     bulk_docs_resp = client.add_bulk_docs(url=sg_url, db=sg_db_name, docs=doc_bodies, auth=seth_session)
     assert len(bulk_docs_resp) == num_docs
 
@@ -83,7 +84,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     sg.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     # Add 1 doc to Sync Gateway (to initialize the channel cache)
-    doc_bodies = document.create_docs(doc_id_prefix='doc_new', number=1, channels=seth_user_info.channels)
+    doc_bodies = document.create_docs(doc_id_prefix='doc_new' + random_str, number=1, channels=seth_user_info.channels)
     bulk_docs_resp_new = client.add_bulk_docs(url=sg_url, db=sg_db_name, docs=doc_bodies, auth=seth_session)
     assert len(bulk_docs_resp_new) == 1
 
