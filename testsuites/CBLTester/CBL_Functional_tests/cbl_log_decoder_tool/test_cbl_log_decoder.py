@@ -2,6 +2,7 @@ import pytest
 import os
 import requests
 import shutil
+import subprocess
 
 from zipfile import ZipFile
 from keywords.constants import BINARY_DIR
@@ -173,9 +174,11 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
 def decode_logs(extracted_directory_name, file):
     output_file = "deps/binaries/cbl.txt"
     command = "{}/bin/cbl-log logcat {} {}".format(extracted_directory_name, file, output_file)
-    return_val = os.system(command)
-    if return_val != 0:
-        raise Exception("{0} failed".format(command))
+    try:
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as error:
+        print("The command {} failed with the following exception: ", command)
+        raise error
     assert not is_binary(output_file), "{} decoded file is still in binary".format(file)
 
 
