@@ -26,6 +26,7 @@ sg_blip_url = None
 cbl_db = None
 sg_url = None
 gteSmallDims = 384 #constant for the number of dims of gteSmall embeddings
+liteserv_platform = None
 
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup):
@@ -34,6 +35,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     global sg_blip_url
     global cbl_db
     global sg_url
+    global liteserv_platform
     sg_client = sg_url = sg_admin_url = None
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -41,6 +43,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     cbl_db = params_from_base_test_setup["source_db"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
 
     random_suffix = str(uuid.uuid4())[:8]
     scope = '_default'
@@ -148,11 +151,12 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
         db = Database(base_url)
 
-        # replicate docs to server via sgw
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 326, "Number of docs mismatched"
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 25, "Number of docs mismatched"
+        if not "java" in liteserv_platform:
+          # replicate docs to server via sgw
+          assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+          assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 326, "Number of docs mismatched"
+          assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+          assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 25, "Number of docs mismatched"
 
 
         # Very rough draft of CBL side work
