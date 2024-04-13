@@ -73,8 +73,10 @@ def vector_search_test_fixture(params_from_base_test_setup):
     c = cluster.Cluster(config=cluster_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
+    db = Database(base_url)
     vsHandler = VectorSearch(base_url)
     sg_client = MobileRestClient()
+    db.deleteDB(db)
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
