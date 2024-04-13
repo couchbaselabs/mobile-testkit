@@ -76,7 +76,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     db = Database(base_url)
     vsHandler = VectorSearch(base_url)
     sg_client = MobileRestClient()
-    db.deleteDBbyName("cbl-test")
+    db.close(cbl_db)
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
