@@ -76,9 +76,9 @@ class VectorSearch(object):
     def loadDatabase(self, dbPath=None, directory=None):
         args = Args()
         if dbPath:
-            args.addString("dbPath", dbPath)
+            args.setString("dbPath", dbPath)
         if directory:
-            args.addString("directory", directory)
+            args.setString("directory", directory)
         return self._client.invokeMethod("vectorSearch_loadDatabase", args)
 
     def regenerateWordEmbeddings(self):
