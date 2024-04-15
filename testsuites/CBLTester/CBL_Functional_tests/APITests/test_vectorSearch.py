@@ -151,6 +151,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # setup
         base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
         db = Database(base_url)
+        db.configure()
 
         # Check that all 4 collections on CBL exist
         cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
