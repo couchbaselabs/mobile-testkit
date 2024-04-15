@@ -106,7 +106,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     if "java" in liteserv_platform:
           directory = "~/javatestserver"
     # load vsTestDatabase on cbl
-    vsTestDatabase = vsHandler.loadDatabase(directory)
+    vsTestDatabase = vsHandler.loadDatabase(directory=directory)
 
     channels = ["ABC"]
     user_scopes_collections = {scope: {
