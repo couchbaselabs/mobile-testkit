@@ -73,8 +73,13 @@ class VectorSearch(object):
 
         return self._client.invokeMethod("vectorSearch_query", args)
     
-    def loadDatabase(self, ):
-        return self._client.invokeMethod("vectorSearch_loadDatabase")
+    def loadDatabase(self, dbPath=None, directory=None):
+        args = Args()
+        if dbPath:
+            args.addString("dbPath", dbPath)
+        if directory:
+            args.addString("directory", directory)
+        return self._client.invokeMethod("vectorSearch_loadDatabase", args)
 
     def regenerateWordEmbeddings(self):
         return self._client.invokeMethod("vectorSearch_regenerateWordEmbeddings")
