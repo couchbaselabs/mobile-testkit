@@ -102,11 +102,11 @@ def vector_search_test_fixture(params_from_base_test_setup):
         admin_client.delete_db(sg_db)
     admin_client.create_db(sg_db, data)
 
-    directory = None
-    if "java" in liteserv_platform:
-          directory = "~/javatestserver"
     # load vsTestDatabase on cbl
-    vsTestDatabase = vsHandler.loadDatabase(directory=directory)
+    if "java" in liteserv_platform:
+          vsTestDatabase = vsHandler.loadDatabase(platform="java")
+    else:
+          vsTestDatabase = vsHandler.loadDatabase()
 
     channels = ["ABC"]
     user_scopes_collections = {scope: {
