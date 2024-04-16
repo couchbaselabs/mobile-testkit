@@ -186,7 +186,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              indexName = "docBodyVectorsIndex",
              expression = "vector",
              dimensions = gteSmallDims,
-             centroids = 8,
+             centroids = 4,
              metric = "euclidean",
              minTrainingSize = 25 * 8, #default training size values (25* 256*), need to adjust handler so values are optional
              maxTrainingSize = 256 * 8)
