@@ -361,6 +361,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
+        print("************************************GILAD THE TEST PASSED!!!!!!")
         
 
 def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
