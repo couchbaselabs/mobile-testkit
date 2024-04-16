@@ -164,13 +164,11 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
         assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
 
-
-        if not "java" in liteserv_platform:
-          # replicate docs to server via sgw
-          assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
-          assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 326, "Number of docs mismatched"
-          assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
-          assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 25, "Number of docs mismatched"
+        # replicate docs to server via sgw
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 326, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+        assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 25, "Number of docs mismatched"
 
 
         # Very rough draft of CBL side work
@@ -239,9 +237,9 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                              "AND catid=\"cat2\""),
                         database=vsTestDatabase)
         
-        print(f"Index vector query all: {len(ivQueryAll)}")
+       # print(f"Index vector query all: {len(ivQueryAll)}")
         print(f"Document body vector query all: {len(dbvQueryAll)}")
-        print(f"Index vector query cat3: {len(ivQueryCat3)}")
+       # print(f"Index vector query cat3: {len(ivQueryCat3)}")
         print(f"Document body vector query cat1: {len(dbvQueryCat1)}")
         print(f"Document body vector query cat2: {len(dbvQueryCat2)}")
 
