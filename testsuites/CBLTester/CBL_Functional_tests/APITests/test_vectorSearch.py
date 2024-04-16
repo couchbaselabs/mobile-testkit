@@ -413,7 +413,7 @@ def test_vector_search_sanity(vector_search_test_fixture):
              indexName = "indexVectorsIndex",
              expression = "prediction(gteSmall, {\"word\": word}).vector",
              dimensions = gteSmallDims,
-             centroids = 8, 
+             centroids = 4,
              metric = "cosine",
              minTrainingSize = 25 * 8,
              maxTrainingSize = 256 * 8)
