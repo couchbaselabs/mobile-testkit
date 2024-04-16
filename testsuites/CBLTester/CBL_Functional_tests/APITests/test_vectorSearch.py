@@ -360,9 +360,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # we should do further checks on the documents being returned by the query, i.e. verify that categories are correct etc.
 
         db.close(vsTestDatabase)
-        db.deleteDBbyName("vsTestDatabase")
-        print("*****************************GILAD THE TEST PASSESD")
-
 
 def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
         db = Database(base_url)
