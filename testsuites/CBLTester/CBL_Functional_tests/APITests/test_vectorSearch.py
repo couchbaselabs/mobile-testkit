@@ -119,7 +119,8 @@ def vector_search_test_fixture(params_from_base_test_setup):
         sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
 
     yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username
-
+    db.close(vsTestDatabase)
+    db.deleteDBbyName("vsTestDatabase")
 
 def test_vector_search_index_correctness(vector_search_test_fixture):
         '''
@@ -357,8 +358,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert len(dbvQueryCat2) == 50, "wrong number of docs returned from query on docBody vectors cat2"
 
         # we should do further checks on the documents being returned by the query, i.e. verify that categories are correct etc.
-        db.close(vsTestDatabase)
-        db.deleteDBbyName("vsTestDatabase")
 def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
         db = Database(base_url)
         createdCollection = db.createCollection(cbl_db, collection, scope)
