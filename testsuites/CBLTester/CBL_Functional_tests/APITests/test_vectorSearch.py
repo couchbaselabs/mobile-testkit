@@ -164,11 +164,13 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
         assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
 
-        # replicate docs to server via sgw
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 326, "Number of docs mismatched"
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
-        assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 25, "Number of docs mismatched"
+
+        if not "java" in liteserv_platform:
+          # replicate docs to server via sgw
+          assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+          assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 326, "Number of docs mismatched"
+          assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+          assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 25, "Number of docs mismatched"
 
 
         # Very rough draft of CBL side work
@@ -191,24 +193,24 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              maxTrainingSize = 256 * 8)
 
         # worth checking an index with subquantizers? fine for now but dbl check in future
-       # vsHandler.createIndex(
-       #      database = vsTestDatabase,
-       #      scopeName = "_default",
-       #      collectionName = "indexVectors",
-       #      indexName = "indexVectorsIndex",
-       #      expression = "prediction(gteSmall, {\"word\": word}).vector",
-       #      dimensions = gteSmallDims,
-       #      centroids = 8, 
-       #      metric = "cosine",
-       #      minTrainingSize = 25 * 8,
-       #      maxTrainingSize = 256 * 8)
+        vsHandler.createIndex(
+             database = vsTestDatabase,
+             scopeName = "_default",
+             collectionName = "indexVectors",
+             indexName = "indexVectorsIndex",
+             expression = "prediction(gteSmall, {\"word\": word}).vector",
+             dimensions = gteSmallDims,
+             centroids = 8, 
+             metric = "cosine",
+             minTrainingSize = 25 * 8,
+             maxTrainingSize = 256 * 8)
         
         # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
-      #  ivQueryAll = vsHandler.query(term="dinner",
-      #                  sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-      #                       "FROM indexVectors "
-      #                       "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
-      #                  database=vsTestDatabase)
+        ivQueryAll = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                        database=vsTestDatabase)
         
         dbvQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
@@ -216,12 +218,12 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                              "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
                         database=vsTestDatabase)
 
-       # ivQueryCat3 = vsHandler.query(term="dinner",
-       #                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-       #                      "FROM indexVectors "
-       #                      "WHERE vector_match(indexVectorsIndex, $vector, 300) "
-       #                      "AND catid=\"cat3\""),
-       #                 database=vsTestDatabase)
+        ivQueryCat3 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat3\""),
+                        database=vsTestDatabase)
         
         dbvQueryCat1 = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
@@ -237,15 +239,15 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                              "AND catid=\"cat2\""),
                         database=vsTestDatabase)
         
-       # print(f"Index vector query all: {len(ivQueryAll)}")
+        print(f"Index vector query all: {len(ivQueryAll)}")
         print(f"Document body vector query all: {len(dbvQueryAll)}")
-       # print(f"Index vector query cat3: {len(ivQueryCat3)}")
+        print(f"Index vector query cat3: {len(ivQueryCat3)}")
         print(f"Document body vector query cat1: {len(dbvQueryCat1)}")
         print(f"Document body vector query cat2: {len(dbvQueryCat2)}")
 
-       # assert len(ivQueryAll) == 295, "wrong number of docs returned from query on index vectors"
+        assert len(ivQueryAll) == 295, "wrong number of docs returned from query on index vectors"
         assert len(dbvQueryAll) == 280, "wrong number of docs returned from query on docBody vectors"
-       # assert len(ivQueryCat3) == 45, "wrong number of docs returned from query on index vectors cat3"
+        assert len(ivQueryCat3) == 45, "wrong number of docs returned from query on index vectors cat3"
         assert len(dbvQueryCat1) == 40, "wrong number of docs returned from query on docBody vectors cat1"
         assert len(dbvQueryCat2) == 40, "wrong number of docs returned from query on docBody vectors cat2"
 
@@ -310,11 +312,11 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         # takes around 50-100ms per word so should cover all the words with this
         time.sleep(15)
              
-       # ivQueryAll = vsHandler.query(term="dinner",
-       #                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-       #                      "FROM indexVectors "
-       #                      "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
-       #                 database=vsTestDatabase)
+        ivQueryAll = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
+                        database=vsTestDatabase)
         
         dbvQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
@@ -322,12 +324,12 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                              "WHERE vector_match(docBodyVectorsIndex, $vector, 350)"),
                         database=vsTestDatabase)
 
-       # ivQueryCat3 = vsHandler.query(term="dinner",
-       #                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-       #                      "FROM indexVectors "
-       #                      "WHERE vector_match(indexVectorsIndex, $vector, 350) "
-       #                      "AND catid=\"cat3\""),
-       #                 database=vsTestDatabase)
+        ivQueryCat3 = vsHandler.query(term="dinner",
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 350) "
+                             "AND catid=\"cat3\""),
+                        database=vsTestDatabase)
         
         dbvQueryCat1 = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
@@ -343,15 +345,15 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                              "AND catid=\"cat2\""),
                         database=vsTestDatabase)
         
-       # print(f"Index vector query all: {len(ivQueryAll)}")
+        print(f"Index vector query all: {len(ivQueryAll)}")
         print(f"Document body vector query all: {len(dbvQueryAll)}")
-       # print(f"Index vector query cat3: {len(ivQueryCat3)}")
+        print(f"Index vector query cat3: {len(ivQueryCat3)}")
         print(f"Document body vector query cat1: {len(dbvQueryCat1)}")
         print(f"Document body vector query cat2: {len(dbvQueryCat2)}")
 
-       # assert len(ivQueryAll) == 300, "wrong number of docs returned from query on index vectors"
+        assert len(ivQueryAll) == 300, "wrong number of docs returned from query on index vectors"
         assert len(dbvQueryAll) == 290, "wrong number of docs returned from query on docBody vectors"
-       # assert len(ivQueryCat3) == 60, "wrong number of docs returned from query on index vectors cat3"
+        assert len(ivQueryCat3) == 60, "wrong number of docs returned from query on index vectors cat3"
         assert len(dbvQueryCat1) == 50, "wrong number of docs returned from query on docBody vectors cat1"
         assert len(dbvQueryCat2) == 50, "wrong number of docs returned from query on docBody vectors cat2"
 
@@ -359,8 +361,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
         db.close(vsTestDatabase)
         db.deleteDBbyName("vsTestDatabase")
-        print("************************************GILAD THE TEST PASSED!!!!!!")
-        
 
 def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
         db = Database(base_url)
