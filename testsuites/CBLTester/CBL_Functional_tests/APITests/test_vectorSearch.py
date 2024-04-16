@@ -187,23 +187,23 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              indexName = "docBodyVectorsIndex",
              expression = "vector",
              dimensions = gteSmallDims,
-             centroids = 4,
+             centroids = 8,
              metric = "euclidean",
              minTrainingSize = 25 * 8, #default training size values (25* 256*), need to adjust handler so values are optional
              maxTrainingSize = 256 * 8)
 
         # worth checking an index with subquantizers? fine for now but dbl check in future
-        #vsHandler.createIndex(
-        #     database = vsTestDatabase,
-        #     scopeName = "_default",
-        #     collectionName = "indexVectors",
-        #     indexName = "indexVectorsIndex",
-        #     expression = "prediction(gteSmall, {\"word\": word}).vector",
-        #     dimensions = gteSmallDims,
-        #     centroids = 8, 
-        #     metric = "cosine",
-        #     minTrainingSize = 25 * 8,
-        #     maxTrainingSize = 256 * 8)
+        vsHandler.createIndex(
+             database = vsTestDatabase,
+             scopeName = "_default",
+             collectionName = "indexVectors",
+             indexName = "indexVectorsIndex",
+             expression = "prediction(gteSmall, {\"word\": word}).vector",
+             dimensions = gteSmallDims,
+             centroids = 8,
+             metric = "cosine",
+             minTrainingSize = 25 * 8,
+             maxTrainingSize = 256 * 8)
         
         # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
         #ivQueryAll = vsHandler.query(term="dinner",
