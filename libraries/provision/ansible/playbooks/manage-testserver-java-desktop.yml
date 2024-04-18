@@ -5,10 +5,10 @@
     package_name:
 
   tasks:
-  - debug: msg="JAVA_HOME location is {{ ansible_env.JAVA_HOME }}"
-  - debug: msg="JSVC_HOME location is {{ ansible_env.JSVC_HOME }}"
+  - debug: msg="JAVA_HOME location is /usr/lib/jvm/java-17-openjdk-amd64"
+  - debug: msg="JSVC_HOME location is /usr/bin/jsvc"
 
   - name: Stop TestServer Java Daemon Service
-    shell: "~/javatestserver/daemon_manager.sh stop ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }}"
+    shell: "~/javatestserver/daemon_manager.sh stop ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output location is /usr/lib/jvm/java-17-openjdk-amd64 /usr/bin/jsvc"
     when: "{{ service_status | search('stop') }}"
     ignore_errors: yes
