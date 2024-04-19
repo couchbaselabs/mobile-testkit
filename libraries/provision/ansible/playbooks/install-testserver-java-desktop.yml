@@ -4,7 +4,7 @@
     package_name:
 
   tasks:
-  - debug: msg="JAVA_HOME location is /usr/lib/jvm/java-11-openjdk-amd64"
+  - debug: msg="JAVA_HOME location is /usr/lib/jvm/java-8-openjdk-amd64"
   - debug: msg="JSVC_HOME location is /usr/bin/jsvc"
 
   - name: Delete any cblite2 filed generated in previous tests
@@ -46,7 +46,7 @@
     ignore_errors: yes
 
   - name: Install and start TestServer Java Daemon Service
-    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output /usr/lib/jvm/java-11-openjdk-amd64 /usr/bin/jsvc ~/javatestserver/"
+    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output /usr/lib/jvm/java-8-openjdk-amd64 /usr/bin/jsvc ~/javatestserver/"
 #    when: ansible_distribution_major_version != "6"
 
 #  - name: Install and start TestServer Java Daemon Service
