@@ -56,25 +56,28 @@ class VectorSearch(object):
     def getEmbedding(self, input):
         args= Args()
         args.setString("input", input)
-        return self._client.invokeMethod("vectorSearch_getEmbedding", args) 
-    
+        return self._client.invokeMethod("vectorSearch_getEmbedding", args)
 
     def registerModel(self, key, name):
         args = Args()
         args.setString("key", key)
         args.setString("name", name)
         return self._client.invokeMethod("vectorSearch_registerModel", args)
-    
+
     def query(self, term, sql, database):
         args = Args()
         args.setString("term", term)
         args.setString("sql", sql)
         args.setMemoryPointer("database", database)
-
         return self._client.invokeMethod("vectorSearch_query", args)
-    
-    def loadDatabase(self, ):
-        return self._client.invokeMethod("vectorSearch_loadDatabase")
+
+    def loadDatabase(self, dbPath=None, platform=None):
+        args = Args()
+        if dbPath:
+            args.setString("dbPath", dbPath)
+        if platform:
+            args.setString("platform", platform)
+        return self._client.invokeMethod("vectorSearch_loadDatabase", args)
 
     def regenerateWordEmbeddings(self):
         return self._client.invokeMethod("vectorSearch_regenerateWordEmbeddings")
