@@ -73,12 +73,10 @@ class VectorSearch(object):
 
         return self._client.invokeMethod("vectorSearch_query", args)
     
-    def loadDatabase(self, dbPath=None, platform=None):
+    def loadDatabase(self, dbPath=None):
         args = Args()
         if dbPath:
             args.setString("dbPath", dbPath)
-        if platform:
-            args.setString("platform", platform)
         return self._client.invokeMethod("vectorSearch_loadDatabase", args)
 
     def regenerateWordEmbeddings(self):
