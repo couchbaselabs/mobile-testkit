@@ -390,7 +390,7 @@ class TestDatabase(object):
         assert documents == docs_in_db
         assert self.db_obj.deleteDB(db) == -1
 
-    pytest.skip("The test is causing donwstream tests to fail on iOS 3.1")
+    @pytest.mark.skip("The test is causing donwstream tests to fail on iOS 3.1")
     def test_update_document(self):
         doc_id_prefix = "cbl_doc"
         num_of_docs = 5
