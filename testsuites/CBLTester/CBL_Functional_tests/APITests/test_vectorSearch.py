@@ -153,6 +153,9 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         db = Database(base_url)
 
         # Check that all 4 collections on CBL exist
+        print("****DEBUG*********")
+        print(vsTestDatabase)
+        print("****DEBUG*********")
         cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
         # TODO check if _default counts towards this
         assert len(cbl_collections) == 5, "wrong number of collections returned"
