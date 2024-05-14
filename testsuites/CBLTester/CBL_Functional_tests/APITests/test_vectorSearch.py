@@ -266,6 +266,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         for docId, docBody in docsNeedEmbedding.items():
              word = docBody["word"]
              embedding = vsHandler.getEmbedding(word)
+             print(str(embedding))
              docBody["vector"] = embedding
              collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=docBody, doc_id=docId)
         
