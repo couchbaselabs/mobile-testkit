@@ -309,7 +309,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         print("Waiting for indexes to update")
         # TODO find a better way than sleep
         # takes around 50-100ms per word so should cover all the words with this
-        time.sleep(15)
+        time.sleep(30)
              
         ivQueryAll = vsHandler.query(term="dinner",
                         sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
