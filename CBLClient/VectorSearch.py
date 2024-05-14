@@ -82,8 +82,10 @@ class VectorSearch(object):
     def regenerateWordEmbeddings(self):
         return self._client.invokeMethod("vectorSearch_regenerateWordEmbeddings")
 
-    def register_model(self, key, name):
+    def register_model(self, key, name, database=None):
         args = Args()
         args.setString("key", key)
         args.setString("name", name)
+        if database:
+            args.setString("database", database)
         return self._client.invokeMethod("vectorSearch_registerModel", args)
