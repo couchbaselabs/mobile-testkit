@@ -116,7 +116,6 @@ def vector_search_test_fixture(params_from_base_test_setup):
         sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
 
     yield base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username
-    db.close(vsTestDatabase)
     db.deleteDB(vsTestDatabase)
 
 def test_vector_search_index_correctness(vector_search_test_fixture):
