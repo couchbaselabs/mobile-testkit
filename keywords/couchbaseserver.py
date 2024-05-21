@@ -1211,39 +1211,64 @@ class CouchbaseServer:
         data = {
             "type": "fulltext-index",
             "name": f"{bucket}.{scope}.{indexName}",
-            "sourceType": "gocbcore",
-            "sourceName": f"{bucket}",
-            "planParams": {
-                "maxPartitionsPerPIndex": 1024,
-                "indexPartitions": 1
-            },
             "params": {
-                "doc_config": {
-                "docid_prefix_delim": "",
-                "docid_regexp": "",
-                "mode": "scope.collection.type_field",
-                "type_field": "vector",
-                },
                 "mapping": {
-                    "analysis": {},
+                    "types": {
+                        "_default.docBodyVectors": {
+                            "enabled": True,
+                            "dynamic": False,
+                            "properties": {
+                                "vector": {
+                                    "enabled": True,
+                                    "dynamic": False,
+                                    "fields": [
+                                        {
+                                            "name": "vector",
+                                            "type": "vector",
+                                            "store": False,
+                                            "index": True,
+                                            "include_term_vectors": False,
+                                            "include_in_all": False,
+                                            "docvalues": False,
+                                            "similarity": "dot_product",
+                                            "vector_index_optimized_for": "recall",
+                                            "dims": 384
+                                        }
+                                    ]
+                                },
+                            },
+                        },
+                    },
+                    "default_mapping": {
+                        "enabled": False,
+                        "dynamic": True,
+                    },
+                    "default_type": "_default",
                     "default_analyzer": "standard",
                     "default_datetime_parser": "dateTimeOptional",
                     "default_field": "_all",
-                    "default_mapping": {
-                        "dynamic": True,
-                        "enabled": True
-                    },
-                    "default_type": "_default",
-                    "docvalues_dynamic": False,
-                    "index_dynamic": True,
                     "store_dynamic": False,
-                    "type_field": "_type"
+                    "index_dynamic": True,
+                    "docvalues_dynamic": False
                 },
                 "store": {
-                    "indexType": "scorch"
-                }
+                    "indexType": "scorch",
+                    "kvStoreName": ""
+                },
+                "doc_config": {
+                    "mode": "scope.collection.type_field",
+                    "type_field": "type"
+                },
+            },
+            "sourceType": "couchbase",
+            "sourceName": f"{bucket}",
+            "sourceParams": {},
+            "planParams": {
+                "numReplicas": 0,
+                "indexPartitions": 1
             },
         }
+
         return url
 
 
