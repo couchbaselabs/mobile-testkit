@@ -153,9 +153,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         db = Database(base_url)
 
         # Check that all 4 collections on CBL exist
-        print("****DEBUG*********")
-        print(vsTestDatabase)
-        print("****DEBUG*********")
         cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
         # TODO check if _default counts towards this
         assert len(cbl_collections) == 5, "wrong number of collections returned"
@@ -266,9 +263,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         for docId, docBody in docsNeedEmbedding.items():
              word = docBody["word"]
              embedding = vsHandler.getEmbedding(word)
-             print("QE-DEBUG")
-             print(embedding)
-             print("QE-DEBUG Embedding should be printed above")
              docBody["vector"] = embedding
              collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=docBody, doc_id=docId)
         
@@ -281,7 +275,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
              word = wordsToAdd[i-1]
              docBody = docsNeedWord[docId]
              docBody["word"] = word
-             print(docId, ":", docBody)
              collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=docBody, doc_id=docId)
         
         auxWordsIds = ["word" + str(i) for i in range(301,311)]
