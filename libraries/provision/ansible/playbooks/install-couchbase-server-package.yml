@@ -144,7 +144,12 @@
 
     - name: COUCHBASE SERVER | Configure cluster settings (4.7.X and up) | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --cluster-username={{ couchbase_server_admin }} --cluster-password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query,fts  --cluster-index-ramsize={{ couchbase_server_index_ram }} --cluster-fts-ramsize={{ couchbase_server_fts_ram }}  --index-storage-setting=default"
+      register: DEBUGTaskFlag
       when:  "not '4.0' in couchbase_server_package_name and not '4.1' in couchbase_server_package_name and not '4.5' in couchbase_server_package_name and not '4.6' in couchbase_server_package_name and not '3.0' in couchbase_server_package_name and not '3.1' in couchbase_server_package_name and not ipv6_enabled"
+
+    - debug:
+      msg: "Configuring Couchbase services: data, index, query, fts"
+      when: DEBUGTaskFlag is succeeded
 
     - name: COUCHBASE SERVER | Configure cluster settings (4.7.X and up) | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} --cluster-username={{ couchbase_server_admin }} --cluster-password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query,fts  --cluster-index-ramsize={{ couchbase_server_index_ram }} --cluster-fts-ramsize={{ couchbase_server_fts_ram }}  --index-storage-setting=default"
