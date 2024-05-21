@@ -1269,15 +1269,21 @@ class CouchbaseServer:
             },
         }
 
+        respCode = None
+        log_info(f"QE-DEBUG {url}")
+        log_info(f"QE-DEBUG")
+        log_info(f"{data}")
+        log_info(f"QE-DEBUG")
         try:
             resp = self._session.post(url=url, data=data)
             log_r(resp)
+            respCode = resp.status_code
             resp.raise_for_status()
         except Exception as ex:
             log_info("QE-DEBUG - got an error while creating vector search index")
             log_info(str(ex))
-
-        return resp.status_code
+        
+        return respCode
 
 
 def choose_connection_url(ssl_enabled, ipv6, host):

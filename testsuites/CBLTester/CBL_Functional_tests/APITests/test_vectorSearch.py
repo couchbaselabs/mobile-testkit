@@ -439,3 +439,7 @@ def test_vector_search_debug(vector_search_test_fixture):
 
     print(f"QE-DEBUG {str(resp)}")
 
+    # Delete vsTestDatabase
+    db.close(vsTestDatabase)
+    db.deleteDBbyName("vsTestDatabase")
+
