@@ -1269,7 +1269,15 @@ class CouchbaseServer:
             },
         }
 
-        return url
+        try:
+            resp = self._session.post(url=url, data=data)
+            log_r(resp)
+            resp.raise_for_status()
+        except Exception as ex:
+            log_info("QE-DEBUG - got an error while creating vector search index")
+            log_info(str(ex))
+
+        return resp.status_code
 
 
 def choose_connection_url(ssl_enabled, ipv6, host):

@@ -429,3 +429,13 @@ def test_vector_search_sanity(vector_search_test_fixture):
     db.deleteDBbyName("vsTestDatabase")
     
 
+@pytest.mark.sanity
+def test_vector_search_debug(vector_search_test_fixture):
+    base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
+
+    db = Database(base_url)
+
+    resp = cb_server.create_vector_search_index(bucket, "testIndexName", scope = "_default")
+
+    print(f"QE-DEBUG {str(resp)}")
+
