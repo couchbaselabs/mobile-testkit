@@ -94,5 +94,5 @@
   - name: Copy TestServer war files to Tomcat
     copy:
       src: "~/javatestserver/{{ war_package_name }}.war"
-      dest: /opt/tomcat/webapps/ROOT.war
+      dest: "{{ catalina_base }}/webapps/ROOT.war"
       remote_src: yes
