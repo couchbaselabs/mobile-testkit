@@ -166,7 +166,8 @@ class TestServerJavaWS(TestServerBase):
             # deploy jar/war files to Tomcat on non-Windows
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws.yml", extra_vars={
                 "war_package_name": self.package_name,
-                "core_package_name": self.cbl_core_lib_name
+                "core_package_name": self.cbl_core_lib_name,
+                "catalina_base": "/opt/tomcat"
             })
 
         if status == 0:
