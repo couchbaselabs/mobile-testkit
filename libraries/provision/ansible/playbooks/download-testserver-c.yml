@@ -33,3 +33,6 @@
 
   - name: Create symbolic link for the vector search library
     shell: ln -s ~/ctestserver/Extensions/libgomp.so.1.0.0 ~/ctestserver/Extensions/libgomp.so.1
+  
+  - name: set LD_LIBRARY_PATH
+    shell: export LD_LIBRARY_PATH="~/ctestserver/Extensions"
