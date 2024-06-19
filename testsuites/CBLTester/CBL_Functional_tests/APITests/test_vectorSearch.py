@@ -125,9 +125,9 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
             This collection will have 10 ducments with fields id, word and catid,
             where catid is an arbitrary category for testing queries with vector and non-vector conditions.
             All the docs in this collection will be cat3
-                
+
         c.  DocBodyVectors - contains documents with the vector embeddings contained
-            within the document themselves. Some documents in this collection will 
+            within the document themselves. Some documents in this collection will
             have no embeddings to begin with
             This collection has 300 documents with fields id, word, vector and catid.
             Some of these documents in cat1 and cat2 will have no vector
@@ -160,7 +160,6 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
     #   assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
     #   assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 25, "Number of docs mismatched"
 
-
     # Very rough draft of CBL side work
     # Register model
     vsHandler = VectorSearch(base_url)
@@ -174,11 +173,11 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         collectionName="docBodyVectors",
         indexName="docBodyVectorsIndex",
         expression="vector",
-        dimensions = gteSmallDims,
-        centroids = 8,
-        metric = "euclidean",
-        minTrainingSize = 25 * 8, #default training size values (25* 256*), need to adjust handler so values are optional
-        maxTrainingSize = 256 * 8)
+        dimensions=gteSmallDims,
+        centroids=8,
+        metric="euclidean",
+        minTrainingSize= 25 * 8, #default training size values (25* 256*), need to adjust handler so values are optional
+        maxTrainingSize= 256 * 8)
 
     # worth checking an index with subquantizers? fine for now but dbl check in future
     vsHandler.createIndex(
@@ -195,37 +194,37 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         
     # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
     ivQueryAll = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                             "FROM indexVectors "
-                             "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
-                        database=vsTestDatabase)
+                                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                      "FROM indexVectors "
+                                      "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                                 database=vsTestDatabase)
 
     dbvQueryAll = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                             "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
-                        database=vsTestDatabase)
+                                  sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                       "FROM docBodyVectors "
+                                       "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
+                                  database=vsTestDatabase)
 
     ivQueryCat3 = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                             "FROM indexVectors "
-                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
-                             "AND catid=\"cat3\""),
-                        database=vsTestDatabase)
+                                  sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                       "FROM indexVectors "
+                                       "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                                       "AND catid=\"cat3\""),
+                                  database=vsTestDatabase)
 
     dbvQueryCat1 = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                             "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
-                             "AND catid=\"cat1\""),
-                        database=vsTestDatabase)
+                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                        "FROM docBodyVectors "
+                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                                        "AND catid=\"cat1\""),
+                                   database=vsTestDatabase)
 
     dbvQueryCat2 = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                             "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
-                             "AND catid=\"cat2\""),
-                        database=vsTestDatabase)
+                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                        "FROM docBodyVectors "
+                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                                        "AND catid=\"cat2\""),
+                                   database=vsTestDatabase)
 
     print(f"Index vector query all: {len(ivQueryAll)}")
     print(f"Document body vector query all: {len(dbvQueryAll)}")
