@@ -50,6 +50,7 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
 
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_username = "vector_search_user" + random_suffix
+    sg_db = sg_db + random_suffix
     sg_password = "password"
     data = {
         "bucket": bucket, "scopes":
