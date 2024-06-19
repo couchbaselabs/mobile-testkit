@@ -176,8 +176,8 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         dimensions=gteSmallDims,
         centroids=8,
         metric="euclidean",
-        minTrainingSize= 25 * 8, #default training size values (25* 256*), need to adjust handler so values are optional
-        maxTrainingSize= 256 * 8)
+        minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
+        maxTrainingSize=256 * 8)
 
     # worth checking an index with subquantizers? fine for now but dbl check in future
     vsHandler.createIndex(
@@ -189,9 +189,9 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         dimensions=gteSmallDims,
         centroids=8,
         metric="cosine",
-        minTrainingSize= 25 * 8,
-        maxTrainingSize= 256 * 8)
-        
+        minTrainingSize=25 * 8,
+        maxTrainingSize=256 * 8)
+
     # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
     ivQueryAll = vsHandler.query(term="dinner",
                                  sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
@@ -240,13 +240,13 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
     collectionHandler = Collection(base_url)
     collectionDict = {
-            "_default": db.createCollection(vsTestDatabase, "_default", scope),
-            "docBodyVectors": db.createCollection(vsTestDatabase, "docBodyVectors", scope),
-            "indexVectors": db.createCollection(vsTestDatabase, "indexVectors", scope),
-            "auxiliaryWords": db.createCollection(vsTestDatabase, "auxiliaryWords", scope),
-            "searchTerms": db.createCollection(vsTestDatabase, "searchTerms", scope)
+        "_default": db.createCollection(vsTestDatabase, "_default", scope),
+        "docBodyVectors": db.createCollection(vsTestDatabase, "docBodyVectors", scope),
+        "indexVectors": db.createCollection(vsTestDatabase, "indexVectors", scope),
+        "auxiliaryWords": db.createCollection(vsTestDatabase, "auxiliaryWords", scope),
+        "searchTerms": db.createCollection(vsTestDatabase, "searchTerms", scope)
     }
-        
+
     docIdsNeedEmbedding = list(range(1, 11)) + list(range(51, 61))
     docIdsNeedEmbedding = ["word" + str(num) for num in docIdsNeedEmbedding]
     docsNeedEmbedding = collectionHandler.getDocuments(collection=collectionDict["docBodyVectors"], ids=docIdsNeedEmbedding)
@@ -256,19 +256,19 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         embedding = vsHandler.getEmbedding(word)
         docBody["vector"] = embedding
         collectionHandler.updateDocument(collection=collectionDict["docBodyVectors"], data=docBody, doc_id=docId)
-        
-    docIdsNeedWord = ["word" + str(num) for num in range(101,106)]
+
+    docIdsNeedWord = ["word" + str(num) for num in range(101, 106)]
     wordsToAdd = ["fizzy", "booze", "whiskey", "daiquiri", "drinking"]
     docsNeedWord = collectionHandler.getDocuments(collection=collectionDict["indexVectors"], ids=docIdsNeedWord)
 
-    for i in range(1,6):
+    for i in range(1, 6):
         docId = f"word{100+i}"
-        word = wordsToAdd[i-1]
+        word = wordsToAdd[i - 1]
         docBody = docsNeedWord[docId]
         docBody["word"] = word
         collectionHandler.updateDocument(collection=collectionDict["indexVectors"], data=docBody, doc_id=docId)
-        
-    auxWordsIds = ["word" + str(i) for i in range(301,311)]
+
+    auxWordsIds = ["word" + str(i) for i in range(301, 311)]
     auxWordsDocs = collectionHandler.getDocuments(collection=collectionDict["auxiliaryWords"], ids=auxWordsIds)
     documentHandler = Document(base_url)
 
@@ -276,7 +276,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         docMemoryObj = documentHandler.create(doc_id=docId, dictionary=docBody)
         collectionHandler.saveDocument(collection=collectionDict["indexVectors"], document=docMemoryObj)
 
-    docIdsCat4And5 = ["word" + str(i) for i in range(201,301)]
+    docIdsCat4And5 = ["word" + str(i) for i in range(201, 301)]
     deleteFromDbv = list(random.sample(docIdsCat4And5, 10))
     deleteFromIv = list(random.sample(docIdsCat4And5, 10))
 
@@ -285,51 +285,51 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         dbv = collectionDict["docBodyVectors"]
         docMemoryObj = collectionHandler.getDocument(collection=dbv, docId=id)
         docMemoryObj = documentHandler.toMutable(document=docMemoryObj)
-        documentHandler.remove(document=docMemoryObj,key="vector")
+        documentHandler.remove(document=docMemoryObj, key="vector")
         collectionHandler.saveDocument(collection=dbv, document=docMemoryObj)
-        
+
     for id in deleteFromIv:
         iv = collectionDict["indexVectors"]
         docMemoryObj = collectionHandler.getDocument(collection=iv, docId=id)
         collectionHandler.deleteDocument(collection=iv, doc=docMemoryObj)
-        
+
     print("Waiting for indexes to update")
     # TODO find a better way than sleep
     # takes around 50-100ms per word so should cover all the words with this
     time.sleep(15)
 
     ivQueryAll = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                             "FROM indexVectors "
-                             "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
-                        database=vsTestDatabase)
+                                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                      "FROM indexVectors "
+                                      "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
+                                 database=vsTestDatabase)
 
     dbvQueryAll = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                             "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350)"),
-                        database=vsTestDatabase)
+                                  sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                       "FROM docBodyVectors "
+                                       "WHERE vector_match(docBodyVectorsIndex, $vector, 350)"),
+                                  database=vsTestDatabase)
 
     ivQueryCat3 = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                             "FROM indexVectors "
-                             "WHERE vector_match(indexVectorsIndex, $vector, 350) "
-                             "AND catid=\"cat3\""),
-                        database=vsTestDatabase)
+                                  sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                       "FROM indexVectors "
+                                       "WHERE vector_match(indexVectorsIndex, $vector, 350) "
+                                       "AND catid=\"cat3\""),
+                                  database=vsTestDatabase)
 
     dbvQueryCat1 = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                             "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
-                             "AND catid=\"cat1\""),
-                        database=vsTestDatabase)
+                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                        "FROM docBodyVectors "
+                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
+                                        "AND catid=\"cat1\""),
+                                   database=vsTestDatabase)
 
     dbvQueryCat2 = vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                             "FROM docBodyVectors "
-                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
-                             "AND catid=\"cat2\""),
-                        database=vsTestDatabase)
+                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                        "FROM docBodyVectors "
+                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
+                                        "AND catid=\"cat2\""),
+                                    database=vsTestDatabase)
 
     print(f"Index vector query all: {len(ivQueryAll)}")
     print(f"Document body vector query all: {len(dbvQueryAll)}")
