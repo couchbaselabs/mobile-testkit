@@ -94,7 +94,6 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
     # sgw database creation
     if admin_client.does_db_exist(sg_db) is False:
         admin_client.create_db(sg_db, data)
-   
 
     # load vsTestDatabase on cbl
     vsTestDatabase = vsHandler.loadDatabase()
