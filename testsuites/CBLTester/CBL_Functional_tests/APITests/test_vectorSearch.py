@@ -50,7 +50,6 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
 
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_username = "vector_search_user" + random_suffix
-    sg_db = sg_db + random_suffix
     sg_password = "password"
     data = {
         "bucket": bucket, "scopes":
@@ -93,9 +92,9 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
     cb_server.create_collection(bucket, scope, aw_col_name)
 
     # sgw database creation
-    if admin_client.does_db_exist(sg_db) is True:
-        admin_client.delete_db(sg_db)
-    admin_client.create_db(sg_db, data)
+    if admin_client.does_db_exist(sg_db) is False:
+        admin_client.create_db(sg_db, data)
+   
 
     # load vsTestDatabase on cbl
     vsTestDatabase = vsHandler.loadDatabase()
