@@ -2,10 +2,8 @@ import pytest
 import time
 import uuid
 import random
-from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
-from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.admin import Admin
@@ -16,16 +14,15 @@ from CBLClient.VectorSearch import VectorSearch
 from CBLClient.Collection import Collection
 from CBLClient.Document import Document
 
-
-
 bucket = "travel-sample"
 sync_function = "function(doc){channel(doc.channels);}"
 sg_admin_url = None
 sg_db = "db"
 sg_blip_url = None
 sg_url = None
-gteSmallDims = 384 #constant for the number of dims of gteSmall embeddings
+gteSmallDims = 384  # constant for the number of dims of gteSmall embeddings
 liteserv_platform = None
+
 
 @pytest.fixture
 def vector_search_test_fixture(params_from_base_test_setup, params_from_base_suite_setup):
@@ -55,15 +52,17 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
     sg_username = "vector_search_user" + random_suffix
     sg_password = "password"
     data = {
-          "bucket": bucket, "scopes": {scope: {
-            "collections": {
-                def_col : {"sync": sync_function},
-                st_col_name: {"sync": sync_function},
-                dbv_col_name: {"sync": sync_function},
-                aw_col_name: {"sync": sync_function},
-                iv_col_name: {"sync": sync_function}
+        "bucket": bucket, "scopes":
+        {
+            scope: {
+                "collections": {
+                    def_col: {"sync": sync_function},
+                    st_col_name: {"sync": sync_function},
+                    dbv_col_name: {"sync": sync_function},
+                    aw_col_name: {"sync": sync_function},
+                    iv_col_name: {"sync": sync_function}
+                }
             }
-          }
         }, "num_index_replicas": 0 # This might need to change idk what vectors are
     }
 
