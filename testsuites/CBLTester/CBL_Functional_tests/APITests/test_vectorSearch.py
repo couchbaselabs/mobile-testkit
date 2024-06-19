@@ -23,7 +23,6 @@ sync_function = "function(doc){channel(doc.channels);}"
 sg_admin_url = None
 sg_db = "db"
 sg_blip_url = None
-cbl_db = None
 sg_url = None
 gteSmallDims = 384 #constant for the number of dims of gteSmall embeddings
 liteserv_platform = None
@@ -33,7 +32,6 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
     global sg_admin_url
     global sg_db
     global sg_blip_url
-    global cbl_db
     global sg_url
     global liteserv_platform
     sg_client = sg_url = sg_admin_url = None
@@ -43,10 +41,6 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
-    # Get the cbl database, depending on which flag was used: --create-db-per-suite or --create-db-per-test
-    cbl_db = params_from_base_test_setup["source_db"]
-    if cbl_db == None:
-        cbl_db = params_from_base_suite_setup["suite_source_db"]
 
     random_suffix = str(uuid.uuid4())[:8]
     scope = '_default'
@@ -80,10 +74,8 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
     vsHandler = VectorSearch(base_url)
     sg_client = MobileRestClient()
     db_config = db.configure()
-    # db.deleteDB(cbl_db)
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-
     if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with sg version below 3.1')
 
