@@ -29,7 +29,7 @@ gteSmallDims = 384 #constant for the number of dims of gteSmall embeddings
 liteserv_platform = None
 
 @pytest.fixture
-def vector_search_test_fixture(params_from_base_test_setup):
+def vector_search_test_fixture(params_from_base_test_setup, params_from_base_suite_setup):
     global sg_admin_url
     global sg_db
     global sg_blip_url
@@ -42,8 +42,11 @@ def vector_search_test_fixture(params_from_base_test_setup):
     sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
-    cbl_db = params_from_base_test_setup["source_db"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    # Get the cbl database, depending on which flag was used: --create-db-per-suite or --create-db-per-test
+    cbl_db = params_from_base_test_setup["source_db"]
+    if cbl_db == None:
+        cbl_db = params_from_base_suite_setup["suite_source_db"]
 
     random_suffix = str(uuid.uuid4())[:8]
     scope = '_default'
