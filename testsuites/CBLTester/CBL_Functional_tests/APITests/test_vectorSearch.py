@@ -299,38 +299,38 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         time.sleep(15)
 
         ivQueryAll = vsHandler.query(term="dinner",
-                                     sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                                          "FROM indexVectors "
-                                          "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
-                                     database=vsTestDatabase)
-
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
+                        database=vsTestDatabase)
+        
         dbvQueryAll = vsHandler.query(term="dinner",
-                                      sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                                           "FROM docBodyVectors "
-                                           "WHERE vector_match(docBodyVectorsIndex, $vector, 350)"),
-                                      database=vsTestDatabase)
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350)"),
+                        database=vsTestDatabase)
 
         ivQueryCat3 = vsHandler.query(term="dinner",
-                                      sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                                           "FROM indexVectors "
-                                           "WHERE vector_match(indexVectorsIndex, $vector, 350) "
-                                           "AND catid=\"cat3\""),
-                                      database=vsTestDatabase)
-
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 350) "
+                             "AND catid=\"cat3\""),
+                        database=vsTestDatabase)
+        
         dbvQueryCat1 = vsHandler.query(term="dinner",
-                                       sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                                            "FROM docBodyVectors "
-                                            "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
-                                            "AND catid=\"cat1\""),
-                                       database=vsTestDatabase)
-
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
+                             "AND catid=\"cat1\""),
+                        database=vsTestDatabase)
+        
         dbvQueryCat2 = vsHandler.query(term="dinner",
-                                       sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
-                                            "FROM docBodyVectors "
-                                            "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
-                                            "AND catid=\"cat2\""),
-                                       database=vsTestDatabase)
-
+                        sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                             "FROM docBodyVectors "
+                             "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
+                             "AND catid=\"cat2\""),
+                        database=vsTestDatabase)
+        
         print(f"Index vector query all: {len(ivQueryAll)}")
         print(f"Document body vector query all: {len(dbvQueryAll)}")
         print(f"Index vector query cat3: {len(ivQueryCat3)}")
@@ -343,30 +343,28 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         assert len(dbvQueryCat1) == 50, "wrong number of docs returned from query on docBody vectors cat1"
         assert len(dbvQueryCat2) == 50, "wrong number of docs returned from query on docBody vectors cat2"
 
-
-# we should do further checks on the documents being returned by the query, i.e. verify that categories are correct etc.
+        # we should do further checks on the documents being returned by the query, i.e. verify that categories are correct etc.
 def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
-    db = Database(base_url)
-    createdCollection = db.createCollection(cbl_db, collection, scope)
-    channels_sg = ["ABC"]
-    # setup replicator and replicate
-    replicator = Replication(base_url)
-    collections = []
-    collections_configuration = []
-    collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=createdCollection))
-    collections.append(createdCollection)
-    try:
-        session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
-    except Exception as e:
-        pytest.fail("Replication failed due to " + str(e))
+        db = Database(base_url)
+        createdCollection = db.createCollection(cbl_db, collection, scope)
+        channels_sg = ["ABC"]
+        # setup replicator and replicate
+        replicator = Replication(base_url)
+        collections = []
+        collections_configuration = []
+        collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=createdCollection))
+        collections.append(createdCollection)
+        try:
+            session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
+        except Exception as e:
+            pytest.fail("Replication failed due to " + str(e))
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
-    sg_docs = sg_docs["rows"]
-    return len(sg_docs)
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
+        sg_docs = sg_docs["rows"]
+        return len(sg_docs)
 
-
-# TODO might be worth checking if a. this test case is small enough for vector search and
-#
+# TODO might be worth checking if a. this test case is small enough for vector search and 
+# 
 # b. whether this is an appropriate fixture for a sanity test
 # TODO make this test only pull documents from server that have embeddings then query them
 @pytest.mark.sanity
@@ -389,30 +387,30 @@ def test_vector_search_sanity(vector_search_test_fixture):
     # Create Index
     # This function requires an index name, expression (strings), number of dimensions and centroids (ints)
     vsHandler.createIndex(
-        database=vsTestDatabase,
-        scopeName="_default",
-        collectionName="indexVectors",
-        indexName="indexVectorsIndex",
-        expression="prediction(gteSmall, {\"word\": word}).vector",
-        dimensions=gteSmallDims,
-        centroids=4,
-        metric="cosine",
-        minTrainingSize=25 * 8,
-        maxTrainingSize=256 * 8)
+             database = vsTestDatabase,
+             scopeName = "_default",
+             collectionName = "indexVectors",
+             indexName = "indexVectorsIndex",
+             expression = "prediction(gteSmall, {\"word\": word}).vector",
+             dimensions = gteSmallDims,
+             centroids = 4,
+             metric = "cosine",
+             minTrainingSize = 25 * 8,
+             maxTrainingSize = 256 * 8)
 
     # Queries - we query indexVector collection
     queryAll = vsHandler.query(term="dinner",
-                               sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                                    "FROM indexVectors "
-                                    "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
-                               database=vsTestDatabase)
-
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                        database=vsTestDatabase)
+    
     queryCat2 = vsHandler.query(term="dinner",
-                                sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                                     "FROM indexVectors "
-                                     "WHERE vector_match(indexVectorsIndex, $vector, 300) "
-                                     "AND catid=\"cat2\""),
-                                database=vsTestDatabase)
+                        sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                             "FROM indexVectors "
+                             "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                             "AND catid=\"cat2\""),
+                        database=vsTestDatabase)
 
     assert len(queryAll) == 295, len(queryAll) + " documents returned, 295 expected"
     assert len(queryCat2) == 50, len(queryCat2) + " documents returned, 50 expected"
