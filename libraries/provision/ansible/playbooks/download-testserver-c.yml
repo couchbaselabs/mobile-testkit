@@ -30,6 +30,3 @@
 
   - name: Unzip Couchbase Lite Library and remove .zip
     unarchive: src=~/ctestserver/{{ package_name }}.zip dest=~/ctestserver copy=no
-
-  - name: Create symbolic link for the vector search library
-    shell: ln -s ~/ctestserver/Extensions/libgomp.so.1.0.0 ~/ctestserver/Extensions/libgomp.so.1
