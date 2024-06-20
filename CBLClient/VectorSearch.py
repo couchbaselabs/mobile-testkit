@@ -1,6 +1,7 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 
+
 class VectorSearch(object):
     _client = None
 
@@ -19,16 +20,16 @@ class VectorSearch(object):
         if input is not None:
             args.setString("input", input)
         return self._client.invokeMethod("vectorSearch_testTokeniser", args)
-    
+
     def testDecode(self, input=None):
         args = Args()
         if input is not None:
             args.setString("input", input)
         return self._client.invokeMethod("vectorSearch_testDecode", args)
-    
+
     # USEFUL FUNCTIONS
-    def createIndex(self, database, scopeName, collectionName, indexName, expression, 
-                    dimensions, centroids, scalarEncoding=None, subquantizers=None, bits=None, 
+    def createIndex(self, database, scopeName, collectionName, indexName, expression,
+                    dimensions, centroids, scalarEncoding=None, subquantizers=None, bits=None,
                     metric=None, minTrainingSize=None, maxTrainingSize=None):
         args = Args()
         args.setMemoryPointer("database", database)
@@ -52,19 +53,17 @@ class VectorSearch(object):
             args.setInt("maxTrainingSize", maxTrainingSize)
         return self._client.invokeMethod("vectorSearch_createIndex", args)
 
-
     def getEmbedding(self, input):
-        args= Args()
+        args = Args()
         args.setString("input", input)
-        return self._client.invokeMethod("vectorSearch_getEmbedding", args) 
-    
+        return self._client.invokeMethod("vectorSearch_getEmbedding", args)
 
     def registerModel(self, key, name):
         args = Args()
         args.setString("key", key)
         args.setString("name", name)
         return self._client.invokeMethod("vectorSearch_registerModel", args)
-    
+
     def query(self, term, sql, database):
         args = Args()
         args.setString("term", term)
@@ -72,7 +71,7 @@ class VectorSearch(object):
         args.setMemoryPointer("database", database)
 
         return self._client.invokeMethod("vectorSearch_query", args)
-    
+
     def loadDatabase(self, dbPath=None):
         args = Args()
         if dbPath:
