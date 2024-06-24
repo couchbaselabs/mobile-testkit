@@ -8,3 +8,4 @@
   become: yes
   yum: pkg=nginx state=absent
   ignore_errors: yes
+  when: ansible_distribution == "CentOS"
