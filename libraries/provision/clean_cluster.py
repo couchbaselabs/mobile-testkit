@@ -5,7 +5,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info
 
 
-def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="centos", cbs_platform="centos"):
+def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="debian", cbs_platform="debian"):
 
     log_info("Cleaning cluster: {}".format(cluster_config))
     ansible_runner = AnsibleRunner(config=cluster_config)
