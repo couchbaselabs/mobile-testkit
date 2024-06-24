@@ -12,7 +12,11 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="d
     if "centos" in sg_platform:
         status = ansible_runner.run_ansible_playbook("remove-sg-centos.yml")
     else:
-        status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
+        extra_vars = {}
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+        extra_vars["ansible_distribution"] = "Debian"
+        extra_vars["ansible_os_family"] = "Linux"
+        status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml", extra_vars)
 
     if status != 0:
         raise ProvisioningError("Failed to removed previous installs")
