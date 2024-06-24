@@ -103,7 +103,7 @@ def install_nginx(cluster_config, customize_proxy=False, sg_platform="debian"):
         if customize_proxy:
             extra_vars["keepalive_timeout"] = "keepalive_timeout 60s 60s;"
             extra_vars["proxy_send_timeout"] = "proxy_send_timeout 60s;"
-            extra_vars["proxy_read_timeout"] = "proxy_read_timeout 60s"
+            extra_vars["proxy_read_timeout"] = "proxy_read_timeout 60s;"
             extra_vars["proxy_socket_keepalive"] = "proxy_socket_keepalive on;"
 
             status = ansible_runner.run_ansible_playbook(
