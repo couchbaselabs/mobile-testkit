@@ -76,7 +76,6 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
-
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     log_info("disable_admin_auth flag: {}".format(disable_admin_auth))
 
@@ -218,7 +217,7 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
-    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "debian", False)
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
