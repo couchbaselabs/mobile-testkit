@@ -30,8 +30,6 @@ def setup_teardown_test(params_from_base_test_setup):
 
 
 @pytest.mark.replication
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("android"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1167")
 def test_replication_heartbeat(params_from_base_test_setup):
     """
         @summary:
