@@ -117,7 +117,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     )
 
     # Install nginx
-    install_nginx(cluster_config)
+    install_nginx(cluster_config, sg_platform=sg_platform)
 
     log_info(">>> Done provisioning cluster...")
 

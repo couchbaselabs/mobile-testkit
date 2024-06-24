@@ -50,10 +50,11 @@ def test_replication_heartbeat(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     db_config = params_from_base_test_setup["db_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
     # Reset nginx with shorter keep_alive frequency config
     from libraries.provision.install_nginx import install_nginx
-    install_nginx(cluster_config, True)
+    install_nginx(cluster_config, True, sg_platform=sg_platform)
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
