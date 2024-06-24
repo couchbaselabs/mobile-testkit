@@ -682,22 +682,29 @@ class SyncGateway(object):
                 db_config_json = ""
                 send_dbconfig_as_restCall(cluster_config, db_config_json, c_cluster.sync_gateways, sgw_config_data) """
 
-    def stop_sync_gateways(self, cluster_config, url=None):
+    def stop_sync_gateways(self, cluster_config, sg_platform="centos7", url=None):
         """ Stop sync gateways in a cluster. If url is passed, shut down
         shut down the sync gateway at that url
         """
         ansible_runner = AnsibleRunner(cluster_config)
+        extra_vars={}
+        if "debian" in sg_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+            extra_vars["ansible_distribution"] = "Debian"
+            extra_vars["ansible_os_family"] = "Linux"
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Shutting down sync_gateway on {} ...".format(target))
             status = ansible_runner.run_ansible_playbook(
                 "stop-sync-gateway.yml",
-                subset=target
+                subset=target,
+                extra_vars=extra_vars
             )
         else:
             log_info("Shutting down all sync_gateways")
             status = ansible_runner.run_ansible_playbook(
                 "stop-sync-gateway.yml",
+                extra_vars=extra_vars
             )
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")
