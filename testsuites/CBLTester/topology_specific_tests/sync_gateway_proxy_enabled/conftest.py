@@ -80,8 +80,9 @@ def params_from_base_suite_setup(request):
     log_info("disable_admin_auth flag: {}".format(disable_admin_auth))
 
     sg_ssl = ""
-
     test_name = request.node.name
+    sgw_platform = "debian"
+    cbs_platform = "debian"
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -217,7 +218,7 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
-    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "debian", False)
+    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sgw_platform, False)
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
@@ -238,6 +239,8 @@ def params_from_base_suite_setup(request):
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
+                sg_platform=sgw_platform,
+                cbs_platform=cbs_platform,
                 cbs_ce=cbs_ce,
                 sg_ce=sg_ce
             )
