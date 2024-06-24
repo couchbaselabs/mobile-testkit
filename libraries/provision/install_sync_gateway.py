@@ -234,7 +234,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             "disable_tls_server": "",
             "disable_admin_auth": ""
         }
-
+        if "debian" in sg_platform.lower():
+            playbook_vars["ansible_distribution"] = sg_platform.capitalize()
+            playbook_vars["ansible_os_family"] = "Linux"
+            playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         if version >= "2.1.0":
             logging_config = choose_logging_level(cluster_config)
             try:
