@@ -6,7 +6,7 @@ from utilities.cluster_config_utils import is_load_balancer_with_two_clusters_en
 from utilities.cluster_config_utils import load_cluster_config_json, get_sg_platform
 
 
-def install_nginx(cluster_config, customize_proxy=False, sg_platform="debian"):
+def install_nginx(cluster_config, customize_proxy=False):
     """
     Deploys nginx to nodes with the load_balancer tag
 
@@ -33,6 +33,7 @@ def install_nginx(cluster_config, customize_proxy=False, sg_platform="debian"):
     upstream_definition = ""
     upstream_definition_admin = ""
     ansible_runner = AnsibleRunner(cluster_config)
+    sg_platform = get_sg_platform(cluster_config)
     extra_vars = initialize_extra_vars(cluster_config)
     if "debian" in sg_platform.lower():
         extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"

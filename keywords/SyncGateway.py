@@ -682,11 +682,12 @@ class SyncGateway(object):
                 db_config_json = ""
                 send_dbconfig_as_restCall(cluster_config, db_config_json, c_cluster.sync_gateways, sgw_config_data) """
 
-    def stop_sync_gateways(self, cluster_config, sg_platform="centos7", url=None):
+    def stop_sync_gateways(self, cluster_config, url=None):
         """ Stop sync gateways in a cluster. If url is passed, shut down
         shut down the sync gateway at that url
         """
         ansible_runner = AnsibleRunner(cluster_config)
+        sg_platform = get_sg_platform(cluster_config)
         extra_vars={}
         if "debian" in sg_platform.lower():
             extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
