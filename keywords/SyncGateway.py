@@ -688,7 +688,7 @@ class SyncGateway(object):
         """
         ansible_runner = AnsibleRunner(cluster_config)
         sg_platform = get_sg_platform(cluster_config)
-        extra_vars={}
+        extra_vars = {}
         if "debian" in sg_platform.lower():
             extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             extra_vars["ansible_distribution"] = "Debian"

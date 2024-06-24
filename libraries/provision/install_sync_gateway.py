@@ -441,7 +441,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             )
         if status != 0:
             raise ProvisioningError("Failed to install sg_accel package")
-    extra_vars={}
+    extra_vars = {}
     if "debian" in sg_platform.lower():
         extra_vars["ansible_distribution"] = sg_platform.capitalize()
         extra_vars["ansible_os_family"] = "Linux"
