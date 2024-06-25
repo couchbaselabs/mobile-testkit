@@ -50,7 +50,7 @@
 
   - name: NGINX | Append admin password
     shell: 
-      cmd: echo "Administrator:password;" >> /etc/nginx/{{ admin_auth_basic_user_file }}
+      cmd: echo "Administrator:password;" > /etc/nginx/{{ admin_auth_basic_user_file }}
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
