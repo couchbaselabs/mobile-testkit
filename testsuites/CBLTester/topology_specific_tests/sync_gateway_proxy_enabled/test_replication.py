@@ -53,7 +53,7 @@ def test_replication_heartbeat(params_from_base_test_setup):
 
     # Reset nginx with shorter keep_alive frequency config
     from libraries.provision.install_nginx import install_nginx
-    install_nginx(cluster_config, True)
+    install_nginx(cluster_config, True, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD)
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
