@@ -42,7 +42,7 @@
       owner=root
       group=root
   - name: NGINX | Create password file
-    shell: echo "{{ proxy_user_name }}:{{ proxy_password }}" > {{ auth_basic_user_file }}
+    shell: echo "{{ proxy_user_name }}:{{ proxy_password }}" >> {{ auth_basic_user_file }}
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
