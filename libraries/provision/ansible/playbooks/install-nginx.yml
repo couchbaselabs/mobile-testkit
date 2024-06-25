@@ -11,7 +11,7 @@
     proxy_socket_keepalive: "proxy_socket_keepalive off;"
     user_auth_basic: "on;"
     user_auth_basic_user_file: "user_nginx_auth_file;"
-    admin_auth_basic: "on;"
+    admin_auth_basic: "off;"
     admin_auth_basic_user_file: "admin_nginx_auth_file;"
     proxy_user_name:
     proxy_password:
