@@ -46,7 +46,7 @@
 
   - name: NGINX | Create password file
     shell: 
-      cmd: echo "nginx_user:password;" > /etc/nginx/{{user_auth_basic_user_file }}
+      cmd: echo "nginx_user:password;" > /etc/nginx/{{ user_auth_basic_user_file }}
 
   - name: NGINX | Append admin password
     shell: 
