@@ -3,7 +3,6 @@ import time
 import uuid
 import random
 from CBLClient.Database import Database
-from CBLClient.Replication import Replication
 from libraries.testkit import cluster
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.admin import Admin
@@ -25,7 +24,7 @@ liteserv_platform = None
 
 
 @pytest.fixture
-def vector_search_test_fixture(params_from_base_test_setup, params_from_base_suite_setup):
+def vector_search_test_fixture(params_from_base_test_setup):
     global sg_admin_url
     global sg_db
     global sg_blip_url
@@ -114,6 +113,7 @@ def vector_search_test_fixture(params_from_base_test_setup, params_from_base_sui
     db.deleteDB(vsTestDatabase)
 
 
+@pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
 def test_vector_search_index_correctness(vector_search_test_fixture):
     '''
     @summary: Modifying and pulling documents leads to correct vector embeddings
@@ -155,6 +155,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
     assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
     assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
 
+    # Leaving this code commented for future reference. If we end up not using replication, it can be deleted
     # replicate docs to server via sgw
     #   assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
     #   assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 326, "Number of docs mismatched"
@@ -344,32 +345,32 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
     assert len(dbvQueryCat1) == 50, "wrong number of docs returned from query on docBody vectors cat1"
     assert len(dbvQueryCat2) == 50, "wrong number of docs returned from query on docBody vectors cat2"
 
-
+# Leaving this code commented for future reference. If we end up not using replication, it can be deleted
 # we should do further checks on the documents being returned by the query, i.e. verify that categories are correct etc.
-def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
-    db = Database(base_url)
-    createdCollection = db.createCollection(cbl_db, collection, scope)
-    channels_sg = ["ABC"]
+# def replicateDocs(cbl_db, collection, base_url, sg_client, sg_username, scope):
+#    db = Database(base_url)
+#    createdCollection = db.createCollection(cbl_db, collection, scope)
+#    channels_sg = ["ABC"]
     # setup replicator and replicate
-    replicator = Replication(base_url)
-    collections = []
-    collections_configuration = []
-    collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=createdCollection))
-    collections.append(createdCollection)
-    try:
-        session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
-    except Exception as e:
-        pytest.fail("Replication failed due to " + str(e))
+#    replicator = Replication(base_url)
+#    collections = []
+#    collections_configuration = []
+#    collections_configuration.append(replicator.collectionConfigure(channels=channels_sg, collection=createdCollection))
+#    collections.append(createdCollection)
+#    try:
+#        session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=None, collections=collections, collection_configuration=collections_configuration)
+#    except Exception as e:
+#        pytest.fail("Replication failed due to " + str(e))
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
-    sg_docs = sg_docs["rows"]
-    return len(sg_docs)
+#    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
+#    sg_docs = sg_docs["rows"]
+#    return len(sg_docs)
 
 
 # TODO might be worth checking if a. this test case is small enough for vector search and
 # b. whether this is an appropriate fixture for a sanity test
 # TODO make this test only pull documents from server that have embeddings then query them
-@pytest.mark.skip(reason="Waiting for all the test apps chanegs to be merged")
+@pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
 @pytest.mark.sanity
 def test_vector_search_sanity(vector_search_test_fixture):
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
