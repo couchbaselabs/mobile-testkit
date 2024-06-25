@@ -108,8 +108,8 @@ def install_nginx(cluster_config, customize_proxy=False, userName=None, password
             extra_vars["proxy_read_timeout"] = "proxy_read_timeout 60s;"
             extra_vars["proxy_socket_keepalive"] = "proxy_socket_keepalive on;"
         if userName:
-            extra_vars["auth_basic"] = "Authentication Required"
-            extra_vars["auth_basic_user_file"] = NGINX_BASIC_AUTH_FILE_LINUX
+            extra_vars["auth_basic"] = "\"Authentication Required\";"
+            extra_vars["auth_basic_user_file"] = NGINX_BASIC_AUTH_FILE_LINUX + ";"
             extra_vars["proxy_user_name"] = NGINX_SGW_USER_NAME
             extra_vars["proxy_password"] = NGINX_SGW_PASSWORD
             status = ansible_runner.run_ansible_playbook(
