@@ -80,8 +80,8 @@ http {
             {{ keepalive_timeout }}
             {{ proxy_send_timeout }}
             {{ proxy_read_timeout }}
-            {{ auth_basic }}
-            {{ auth_basic_user_file }}
+            auth_basic              {{ auth_basic }}
+            auth_basic_user_file    {{ auth_basic_user_file }}
             proxy_set_header        Upgrade $http_upgrade;
             proxy_set_header        Connection "Upgrade";
             add_header              Set-Cookie "test=mobile" always;
