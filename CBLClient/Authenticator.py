@@ -19,44 +19,52 @@ class Authenticator(object):
         args = Args()
         args.setString("username", username)
         args.setString("password", password)
-        return self._client.invokeMethod("basicAuthenticator_create",
-                                         args)
+        return self._client.invokeMethod("basicAuthenticator_create", args)
+
+    def proxyAuthenticator_create(self, username, password):
+        args = Args()
+        args.setString("username", username)
+        args.setString("password", password)
+        return self._client.invokeMethod("proxyAuthenticator_create", args)
 
     def basicAuthenticator_getPassword(self, authenticator):
         args = Args()
         args.setMemoryPointer("authenticator", authenticator)
-        return self._client.invokeMethod("basicAuthenticator_getPassword",
-                                         args)
+        return self._client.invokeMethod("basicAuthenticator_getPassword", args)
 
     def basicAuthenticator_getUsername(self, authenticator):
         args = Args()
         args.setMemoryPointer("authenticator", authenticator)
-        return self._client.invokeMethod("basicAuthenticator_getUsername",
-                                         args)
+        return self._client.invokeMethod("basicAuthenticator_getUsername", args)
 
     def sessionAuthenticator_create(self, session_id, cookie_name):
         args = Args()
         args.setString("sessionId", session_id)
         args.setString("cookieName", cookie_name)
-        return self._client.invokeMethod("sessionAuthenticator_create",
-                                         args)
+        return self._client.invokeMethod("sessionAuthenticator_create", args)
 
     def sessionAuthenticator_getSessionId(self, session):
         args = Args()
         args.setMemoryPointer("session", session)
-        return self._client.invokeMethod("sessionAuthenticator_getSessionId",
-                                         args)
+        return self._client.invokeMethod("sessionAuthenticator_getSessionId", args)
 
     def sessionAuthenticator_getCookieName(self, session):
         args = Args()
         args.setMemoryPointer("session", session)
-        return self._client.invokeMethod("sessionAuthenticator_getCookieName",
-                                         args)
+        return self._client.invokeMethod("sessionAuthenticator_getCookieName", args)
 
     def authentication(self, session_id=None, cookie=None, username=None, password=None, authentication_type="basic"):
         args = Args()
         args.setString("authentication_type", authentication_type)
         if authentication_type == "session":
             return self.sessionAuthenticator_create(session_id, cookie)
+        elif authentication_type == "proxy":
+            return self.proxyAuthenticator_create(username, password)
         else:
             return self.basicAuthenticator_create(username, password)
+
+    def basicAuthenticator_create(self, username, password):
+        args = Args()
+        args.setString("username", username)
+        args.setString("password", password)
+        return self._client.invokeMethod("proxyAuthenticator_create", args)

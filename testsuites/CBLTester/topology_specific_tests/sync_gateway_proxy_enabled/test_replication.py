@@ -82,7 +82,7 @@ def test_replication_heartbeat(params_from_base_test_setup):
     # 3. create a push_pull continuous replicator, start replication
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="proxy")
     if heartbeat == "default":
         repl = replicator.configure_and_replicate(source_db=cbl_db,
                                                   target_url=sg_blip_url,
