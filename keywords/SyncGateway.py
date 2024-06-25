@@ -601,6 +601,10 @@ class SyncGateway(object):
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
+            if "debian" in sg_platform.lower():
+                block_http_vars["ansible_distribution"] = sg_platform.capitalize()
+                block_http_vars["ansible_os_family"] = "Linux"
+                block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port
@@ -683,17 +687,25 @@ class SyncGateway(object):
         shut down the sync gateway at that url
         """
         ansible_runner = AnsibleRunner(cluster_config)
+        sg_platform = get_sg_platform(cluster_config)
+        extra_vars = {}
+        if "debian" in sg_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+            extra_vars["ansible_distribution"] = "Debian"
+            extra_vars["ansible_os_family"] = "Linux"
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Shutting down sync_gateway on {} ...".format(target))
             status = ansible_runner.run_ansible_playbook(
                 "stop-sync-gateway.yml",
-                subset=target
+                subset=target,
+                extra_vars=extra_vars
             )
         else:
             log_info("Shutting down all sync_gateways")
             status = ansible_runner.run_ansible_playbook(
                 "stop-sync-gateway.yml",
+                extra_vars=extra_vars
             )
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")

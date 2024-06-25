@@ -234,7 +234,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             "disable_tls_server": "",
             "disable_admin_auth": ""
         }
-
+        if "debian" in sg_platform.lower():
+            playbook_vars["ansible_distribution"] = sg_platform.capitalize()
+            playbook_vars["ansible_os_family"] = "Linux"
+            playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         if version >= "2.1.0":
             logging_config = choose_logging_level(cluster_config)
             try:
@@ -287,6 +290,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
+            if "debian" in sg_platform.lower():
+                block_http_vars["ansible_distribution"] = sg_platform.capitalize()
+                block_http_vars["ansible_os_family"] = "Linux"
+                block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port
@@ -434,11 +441,15 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             )
         if status != 0:
             raise ProvisioningError("Failed to install sg_accel package")
-
+    extra_vars = {}
+    if "debian" in sg_platform.lower():
+        extra_vars["ansible_distribution"] = sg_platform.capitalize()
+        extra_vars["ansible_os_family"] = "Linux"
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
     # Configure aws cloudwatch logs forwarder
     status = ansible_runner.run_ansible_playbook(
         "configure-sync-gateway-awslogs-forwarder.yml",
-        extra_vars={}
+        extra_vars=extra_vars
     )
     if status != 0:
         raise ProvisioningError("Failed to configure sync_gateway awslogs forwarder")

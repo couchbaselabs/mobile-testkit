@@ -118,6 +118,12 @@ class Cluster:
     def reset(self, sg_config_path, bucket_list=[], use_config=False, sgdb_creation=True):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
+        sg_platform = get_sg_platform(self._cluster_config)
+        extra_vars = {}
+        if "debian" in sg_platform.lower():
+            extra_vars["ansible_distribution"] = sg_platform.capitalize()
+            extra_vars["ansible_os_family"] = "Linux"
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
 
         log_info(">>> Reseting cluster ...")
         log_info(">>> CBS SSL enabled: {}".format(self.cbs_ssl))
@@ -125,7 +131,7 @@ class Cluster:
 
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
-        status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
+        status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml", extra_vars=extra_vars)
         assert status == 0, "Failed to stop sync gateway"
 
         # Stop sync_gateway accels
@@ -218,7 +224,6 @@ class Cluster:
                 "disable_admin_auth": ""
             }
 
-            sg_platform = get_sg_platform(self._cluster_config)
             if get_sg_version(self._cluster_config) >= "2.1.0":
                 logging_config = choose_logging_level(self._cluster_config)
                 try:
@@ -272,6 +277,7 @@ class Cluster:
                 if "debian" in sg_platform.lower():
                     block_http_vars["ansible_distribution"] = sg_platform.capitalize()
                     block_http_vars["ansible_os_family"] = "Linux"
+                    block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
                 port_list = ["8091:8096,11210:11211"]
                 for port in port_list:
                     block_http_vars["port"] = port
@@ -499,6 +505,7 @@ class Cluster:
             if "debian" in sg_platform.lower():
                 block_http_vars["ansible_distribution"] = sg_platform.capitalize()
                 block_http_vars["ansible_os_family"] = "Linux"
+                block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port

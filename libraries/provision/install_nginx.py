@@ -33,7 +33,12 @@ def install_nginx(cluster_config, customize_proxy=False):
     upstream_definition = ""
     upstream_definition_admin = ""
     ansible_runner = AnsibleRunner(cluster_config)
+    sg_platform = get_sg_platform(cluster_config)
     extra_vars = initialize_extra_vars(cluster_config)
+    if "debian" in sg_platform.lower():
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+        extra_vars["ansible_distribution"] = "Debian"
+        extra_vars["ansible_os_family"] = "Linux"
 
     if is_load_balancer_with_two_clusters_enabled(cluster_config):
         upstream_definition2 = ""
@@ -99,7 +104,7 @@ def install_nginx(cluster_config, customize_proxy=False):
         if customize_proxy:
             extra_vars["keepalive_timeout"] = "keepalive_timeout 60s 60s;"
             extra_vars["proxy_send_timeout"] = "proxy_send_timeout 60s;"
-            extra_vars["proxy_read_timeout"] = "proxy_read_timeout 60s"
+            extra_vars["proxy_read_timeout"] = "proxy_read_timeout 60s;"
             extra_vars["proxy_socket_keepalive"] = "proxy_socket_keepalive on;"
 
             status = ansible_runner.run_ansible_playbook(

@@ -9,16 +9,20 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
 
     log_info("Cleaning cluster: {}".format(cluster_config))
     ansible_runner = AnsibleRunner(config=cluster_config)
+    sg_extra_vars = {}
     if "centos" in sg_platform:
         status = ansible_runner.run_ansible_playbook("remove-sg-centos.yml")
     else:
-        status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
+        sg_extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+        sg_extra_vars["ansible_distribution"] = "Debian"
+        sg_extra_vars["ansible_os_family"] = "Linux"
+        status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml", sg_extra_vars)
 
     if status != 0:
         raise ProvisioningError("Failed to removed previous installs")
 
     # Reset to ntp time . Required for x509 tests to clock sync for couchbase server and sync gateway
-    status = ansible_runner.run_ansible_playbook("reset-hosts.yml")
+    status = ansible_runner.run_ansible_playbook("reset-hosts.yml", sg_extra_vars)
     if status != 0:
         raise ProvisioningError("Failed to reset hosts")
     extra_vars = {}
