@@ -41,10 +41,14 @@
       dest=/etc/nginx/nginx.conf
       owner=root
       group=root
-  
+
   - name: NGINX | Create password file
     shell: 
       cmd: echo "nginx_user:password;" > {{ auth_basic_user_file }}
+
+    - name: NGINX | Create password file
+    shell: 
+      cmd: echo "Administrator:password;" >> {{ auth_basic_user_file }}
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
