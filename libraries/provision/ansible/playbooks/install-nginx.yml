@@ -10,7 +10,7 @@
     proxy_read_timeout: "proxy_read_timeout 600s;"
     proxy_socket_keepalive: "proxy_socket_keepalive off;"
     auth_basic: "off;"
-    auth_basic_user_file: "/etc/nginx/nginx_auth_file"
+    auth_basic_user_file: "nginx_auth_file"
     proxy_user_name:
     proxy_password:
 
@@ -44,11 +44,11 @@
 
   - name: NGINX | Create password file
     shell: 
-      cmd: echo "nginx_user:password;" > {{ auth_basic_user_file }}
+      cmd: echo "nginx_user:password;" > /etc/nginx/{{ auth_basic_user_file }}
 
   - name: NGINX | Append admin password
     shell: 
-      cmd: echo "Administrator:password;" >> {{ auth_basic_user_file }}
+      cmd: echo "Administrator:password;" >> /etc/nginx/{{ auth_basic_user_file }}
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
