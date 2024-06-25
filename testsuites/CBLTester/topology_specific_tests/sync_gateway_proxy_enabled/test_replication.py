@@ -7,7 +7,7 @@ from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
-from keywords.constants import RBAC_FULL_ADMIN
+from keywords.constants import RBAC_FULL_ADMIN, NGINX_SGW_PASSWORD, NGINX_SGW_USER_NAME
 
 
 @pytest.fixture(scope="function")
@@ -61,8 +61,8 @@ def test_replication_heartbeat(params_from_base_test_setup):
 
     sg_db = "db"
     channels = ["ABC"]
-    username = "autotest"
-    password = "password"
+    username = NGINX_SGW_USER_NAME
+    password = NGINX_SGW_PASSWORD
     user_auth = (username, password)
 
     sg_client = MobileRestClient()

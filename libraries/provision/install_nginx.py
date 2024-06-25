@@ -1,12 +1,13 @@
 import os
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info
+from keywords.constants import NGINX_BASIC_AUTH_FILE_LINUX, NGINX_SGW_PASSWORD, NGINX_SGW_USER_NAME
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_load_balancer_with_two_clusters_enabled
 from utilities.cluster_config_utils import load_cluster_config_json, get_sg_platform
 
 
-def install_nginx(cluster_config, customize_proxy=False):
+def install_nginx(cluster_config, customize_proxy=False, userName=None, password=None):
     """
     Deploys nginx to nodes with the load_balancer tag
 
@@ -106,7 +107,11 @@ def install_nginx(cluster_config, customize_proxy=False):
             extra_vars["proxy_send_timeout"] = "proxy_send_timeout 60s;"
             extra_vars["proxy_read_timeout"] = "proxy_read_timeout 60s;"
             extra_vars["proxy_socket_keepalive"] = "proxy_socket_keepalive on;"
-
+        if userName:
+            extra_vars["auth_basic"] = "Authentication Required"
+            extra_vars["auth_basic_user_file"] = NGINX_BASIC_AUTH_FILE_LINUX
+            extra_vars["proxy_user_name"] = NGINX_SGW_USER_NAME
+            extra_vars["proxy_password"] = NGINX_SGW_PASSWORD
             status = ansible_runner.run_ansible_playbook(
                 "install-nginx.yml",
                 extra_vars=extra_vars

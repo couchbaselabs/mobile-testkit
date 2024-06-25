@@ -9,6 +9,10 @@
     proxy_send_timeout: "proxy_send_timeout 600s;"
     proxy_read_timeout: "proxy_read_timeout 600s;"
     proxy_socket_keepalive: "proxy_socket_keepalive off;"
+    auth_basic: "off;"
+    auth_basic_user_file:
+    proxy_user_name:
+    proxy_password:
 
   tasks:
   - name: NGINX | Stop nginx service
@@ -37,6 +41,8 @@
       dest=/etc/nginx/nginx.conf
       owner=root
       group=root
+  - name: NGINX | Create password file
+    shell: echo "{{proxy_user_name}}:{{proxy_password}}" > {{auth_basic_user_file}}
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
