@@ -62,9 +62,3 @@ class Authenticator(object):
             return self.proxyAuthenticator_create(username, password)
         else:
             return self.basicAuthenticator_create(username, password)
-
-    def basicAuthenticator_create(self, username, password):
-        args = Args()
-        args.setString("username", username)
-        args.setString("password", password)
-        return self._client.invokeMethod("proxyAuthenticator_create", args)
