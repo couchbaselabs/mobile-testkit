@@ -63,6 +63,7 @@ def test_replication_heartbeat(params_from_base_test_setup):
     channels = ["ABC"]
     username = "autotest"
     password = "password"
+    user_auth = (username, password)
 
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
@@ -77,7 +78,7 @@ def test_replication_heartbeat(params_from_base_test_setup):
     db.create_bulk_docs(db=cbl_db, number=10, id_prefix="cbl_batch_1", channels=channels)
 
     # 2. create 15 docs on SGW
-    sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=auth_session)
+    sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=user_auth)
 
     # 3. create a push_pull continuous replicator, start replication
     replicator = Replication(base_url)
