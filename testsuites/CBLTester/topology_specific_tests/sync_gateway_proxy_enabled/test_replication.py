@@ -7,8 +7,7 @@ from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
-from keywords.ClusterKeywords import ClusterKeywords
-from keywords.constants import RBAC_FULL_ADMIN, NGINX_SGW_PASSWORD, NGINX_SGW_USER_NAME
+from keywords.constants import RBAC_FULL_ADMIN, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD
 
 
 @pytest.fixture(scope="function")
@@ -52,15 +51,18 @@ def test_replication_heartbeat(params_from_base_test_setup):
     db_config = params_from_base_test_setup["db_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
+    # Reset nginx with shorter keep_alive frequency config
+    from libraries.provision.install_nginx import install_nginx
+    install_nginx(cluster_config, True)
+
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
     sg_db = "db"
     channels = ["ABC"]
-    username = NGINX_SGW_USER_NAME
-    password = NGINX_SGW_PASSWORD
-    user_auth = (username, password)
+    username = "autotest"
+    password = "password"
 
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
@@ -76,14 +78,11 @@ def test_replication_heartbeat(params_from_base_test_setup):
 
     # 2. create 15 docs on SGW
     sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=auth_session)
-    # Reset nginx with shorter keep_alive frequency config
-    from libraries.provision.install_nginx import install_nginx
-    install_nginx(cluster_config, True, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD)
 
     # 3. create a push_pull continuous replicator, start replication
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     if heartbeat == "default":
         repl = replicator.configure_and_replicate(source_db=cbl_db,
                                                   target_url=sg_blip_url,
@@ -129,7 +128,6 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
-    sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
     db_config = params_from_base_test_setup["db_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
