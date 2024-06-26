@@ -145,7 +145,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     proxy_url = topology["load_balancers"][0].replace("http", "ws")
     # c.reset(sg_config_path=sg_config)
     sg_db = "db"
-    print("-----------------------------proxy_url=" + proxy_url + ":4984" + sg_db)
+    print("-----------------------------proxy_url=" + proxy_url + ":4984/" + sg_db)
     print("===============================sg_blip_url=" + sg_blip_url)
     channels = ["ABC"]
     username = NGINX_SGW_USER_NAME
@@ -163,7 +163,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(username=username, password="zhovna", authentication_type="basic")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                              target_url=proxy_url + ":4984" + sg_db,
+                                              target_url=proxy_url + ":4984/" + sg_db,
                                               continuous=True,
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="pushAndPull"
