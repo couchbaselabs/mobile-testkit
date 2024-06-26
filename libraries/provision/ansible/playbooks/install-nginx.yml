@@ -44,7 +44,7 @@
 
   - name: NGINX | Create password file
     shell: 
-      cmd: echo "{{ proxy_user_name }}:{{ proxy_password }};" > /etc/nginx/{{ user_auth_basic_user_file }}
+      cmd: echo "{{ proxy_user_name }}:{{ proxy_password }}" > /etc/nginx/{{ user_auth_basic_user_file }}
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
