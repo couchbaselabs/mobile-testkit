@@ -36,13 +36,11 @@ def install_nginx(cluster_config, customize_proxy=False, userName=None, password
     ansible_runner = AnsibleRunner(cluster_config)
     sg_platform = get_sg_platform(cluster_config)
     extra_vars = initialize_extra_vars(cluster_config)
-    print("----------------------------userName=" + userName)
     if "debian" in sg_platform.lower():
         extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         extra_vars["ansible_distribution"] = "Debian"
         extra_vars["ansible_os_family"] = "Linux"
     if userName is not None:
-        print("----------------------------INSIDE_IFa debug print")
         extra_vars["user_auth_basic"] = "\"Authentication Required\";"
         extra_vars["user_auth_basic_user_file"] = NGINX_BASIC_AUTH_FILE_LINUX + ";"
         extra_vars["proxy_user_name"] = userName
