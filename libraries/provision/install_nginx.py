@@ -41,7 +41,7 @@ def install_nginx(cluster_config, customize_proxy=False, userName=None, password
         extra_vars["ansible_distribution"] = "Debian"
         extra_vars["ansible_os_family"] = "Linux"
     if userName is not None:
-        extra_vars["user_auth_basic"] = "\"Authentication Required\";"
+        extra_vars["user_auth_basic"] = "\"Authentication Required\""
         extra_vars["proxy_user_name"] = userName
         extra_vars["proxy_password"] = password
     if is_load_balancer_with_two_clusters_enabled(cluster_config):
