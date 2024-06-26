@@ -124,7 +124,12 @@ def test_replication_heartbeat(params_from_base_test_setup):
 
 
 def test_proxy_authentication(params_from_base_test_setup):
-
+    """
+    @summary: Testing that proxy authetication works. The test does not check data validity,
+    just that the repliacation works with Proxy authentication
+    1. Start nginx with basic authentication
+    2. Configure replication with Proxy authentication and start it
+    """
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -133,24 +138,25 @@ def test_proxy_authentication(params_from_base_test_setup):
     db_config = params_from_base_test_setup["db_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     # Reset cluster to ensure no data in system
-    c = cluster.Cluster(config=cluster_config)
+    # c = cluster.Cluster(config=cluster_config)
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
     proxy_url = topology["load_balancers"][0].replace("http", "ws")
-    c.reset(sg_config_path=sg_config)
+    # c.reset(sg_config_path=sg_config)
 
     sg_db = "db"
     channels = ["ABC"]
     username = NGINX_SGW_USER_NAME
     password = NGINX_SGW_PASSWORD
-    # Reset nginx with shorter keep_alive frequency config
+
+    # 1. Start nginx with basic authentication
     install_nginx(cluster_config, True, userName=username, password=password)
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
     cbl_db_name = "proxyAuth-" + str(time.time())
     cbl_db = db.create(cbl_db_name, db_config)
-    # 3. create a push_pull continuous replicator, start replication
+    # 2. Configure replication with Proxy authentication and start it
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
