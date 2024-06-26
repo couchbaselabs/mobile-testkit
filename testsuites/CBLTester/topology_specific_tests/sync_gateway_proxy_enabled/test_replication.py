@@ -142,6 +142,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     username = NGINX_SGW_USER_NAME
     password = NGINX_SGW_PASSWORD
 
+     # Reset nginx with shorter keep_alive frequency config
+    from libraries.provision.install_nginx import install_nginx
+    install_nginx(cluster_config, True, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD)
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
