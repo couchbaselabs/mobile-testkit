@@ -153,7 +153,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     # 3. create a push_pull continuous replicator, start replication
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic")
+    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                                 target_url=sg_blip_url,
                                                 continuous=True,
