@@ -51,10 +51,6 @@ def test_replication_heartbeat(params_from_base_test_setup):
     db_config = params_from_base_test_setup["db_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
-    # Reset nginx with shorter keep_alive frequency config
-    from libraries.provision.install_nginx import install_nginx
-    install_nginx(cluster_config, True, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD)
-
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -79,6 +75,9 @@ def test_replication_heartbeat(params_from_base_test_setup):
 
     # 2. create 15 docs on SGW
     sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=user_auth)
+    # Reset nginx with shorter keep_alive frequency config
+    from libraries.provision.install_nginx import install_nginx
+    install_nginx(cluster_config, True, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD)
 
     # 3. create a push_pull continuous replicator, start replication
     replicator = Replication(base_url)
