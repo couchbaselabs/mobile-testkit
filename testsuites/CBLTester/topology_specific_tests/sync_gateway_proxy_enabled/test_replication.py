@@ -136,6 +136,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
+    lb1_ip = cluster["load_balancers"][0]["ip"]
+    proxy_url = "http://{0}:4984".format(lb1_ip)
 
     sg_db = "db"
     channels = ["ABC"]
@@ -155,7 +157,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                                target_url=sg_blip_url,
+                                                target_url=proxy_url,
                                                 continuous=True,
                                                 replicator_authenticator=replicator_authenticator,
                                                 replication_type="pushAndPull"
