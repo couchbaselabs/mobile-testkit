@@ -9,6 +9,8 @@
     proxy_send_timeout: "proxy_send_timeout 600s;"
     proxy_read_timeout: "proxy_read_timeout 600s;"
     proxy_socket_keepalive: "proxy_socket_keepalive off;"
+    user_auth_basic_user_file:
+    user_auth_basic:
     proxy_user_name:
     proxy_password:
 

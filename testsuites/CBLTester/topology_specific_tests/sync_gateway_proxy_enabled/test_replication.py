@@ -8,6 +8,7 @@ from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
 from keywords.constants import RBAC_FULL_ADMIN, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD
+from keywords.ClusterKeywords import ClusterKeywords
 
 
 @pytest.fixture(scope="function")
