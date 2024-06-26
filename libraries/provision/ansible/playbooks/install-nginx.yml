@@ -9,7 +9,7 @@
     proxy_send_timeout: "proxy_send_timeout 600s;"
     proxy_read_timeout: "proxy_read_timeout 600s;"
     proxy_socket_keepalive: "proxy_socket_keepalive off;"
-    user_auth_basic_user_file: "nginx_credentials_file"
+    user_auth_basic_user_file: ".htpasswd"
     user_auth_basic: "off"
     proxy_user_name: "default_user"
     proxy_password: "default_password"
