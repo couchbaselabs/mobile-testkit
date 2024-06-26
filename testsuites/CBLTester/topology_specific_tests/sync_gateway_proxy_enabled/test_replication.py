@@ -137,8 +137,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     c = cluster.Cluster(config=cluster_config)
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
-    c.reset(sg_config_path=sg_config)
+    print("*****************************************GILAD" + str(topology["load_balancers"]))
     lb1_ip = topology["load_balancers"][0]["ip"]
+    c.reset(sg_config_path=sg_config)
     proxy_url = "http://{0}:4984".format(lb1_ip)
 
     sg_db = "db"
