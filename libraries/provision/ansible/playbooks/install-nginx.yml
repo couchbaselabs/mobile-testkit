@@ -45,6 +45,7 @@
   - name: NGINX | Create password file
     shell: 
       cmd: echo "nginx_user:password;" > /etc/nginx/{{ user_auth_basic_user_file }}
+    when:  user_auth_basic_user_file | length > 0
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
