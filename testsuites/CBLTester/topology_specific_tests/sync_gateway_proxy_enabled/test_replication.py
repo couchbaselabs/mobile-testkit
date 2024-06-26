@@ -137,7 +137,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     c = cluster.Cluster(config=cluster_config)
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
-    proxy_url = topology["load_balancers"][0]
+    proxy_url = topology["load_balancers"][0].replace("http", "ws")
     c.reset(sg_config_path=sg_config)
 
     sg_db = "db"
