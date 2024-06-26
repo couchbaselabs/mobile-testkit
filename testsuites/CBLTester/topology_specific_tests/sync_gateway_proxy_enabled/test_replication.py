@@ -143,8 +143,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     topology = cluster_util.get_cluster_topology(cluster_config)
     proxy_url = topology["load_balancers"][0].replace("http", "ws")
     # c.reset(sg_config_path=sg_config)
-    print("-----------------------------proxy_url=" + proxy_url + ":4894/" + sg_db)
     sg_db = "db"
+    print("-----------------------------proxy_url=" + proxy_url + ":4894/" + sg_db)
     channels = ["ABC"]
     username = NGINX_SGW_USER_NAME
     password = NGINX_SGW_PASSWORD
