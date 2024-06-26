@@ -74,7 +74,7 @@ def test_replication_heartbeat(params_from_base_test_setup):
     db.create_bulk_docs(db=cbl_db, number=10, id_prefix="cbl_batch_1", channels=channels)
 
     # 2. create 15 docs on SGW
-    sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=user_auth)
+    sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=auth_session)
     # Reset nginx with shorter keep_alive frequency config
     from libraries.provision.install_nginx import install_nginx
     install_nginx(cluster_config, True, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD)
