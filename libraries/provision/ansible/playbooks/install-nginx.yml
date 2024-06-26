@@ -9,10 +9,10 @@
     proxy_send_timeout: "proxy_send_timeout 600s;"
     proxy_read_timeout: "proxy_read_timeout 600s;"
     proxy_socket_keepalive: "proxy_socket_keepalive off;"
-    user_auth_basic_user_file:
-    user_auth_basic:
-    proxy_user_name:
-    proxy_password:
+    user_auth_basic_user_file: "nginx_credentials_file"
+    user_auth_basic: "off"
+    proxy_user_name: "default_user"
+    proxy_password: "default_password"
 
   tasks:
   - name: NGINX | Stop nginx service
@@ -44,8 +44,7 @@
 
   - name: NGINX | Create password file
     shell: 
-      cmd: echo "nginx_user:password;" > /etc/nginx/{{ user_auth_basic_user_file }}
-      when: "{{ user_auth_basic_user_file | length > 0 }}"
+      cmd: echo "{{ proxy_user_name }}:{{ proxy_password }};" > /etc/nginx/{{ user_auth_basic_user_file }}
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
