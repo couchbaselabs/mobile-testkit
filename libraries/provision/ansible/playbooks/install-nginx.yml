@@ -44,7 +44,7 @@
 
   - name: NGINX | Create password file
     shell: 
-      cmd: echo "{{ proxy_user_name }}:{{ proxy_password }}" > /etc/nginx/{{ user_auth_basic_user_file }}
+      cmd: "rm -f /etc/nginx/.htpasswd && apt install -y apache2-utils && htpasswd -b -c /etc/nginx/.htpasswd {{ proxy_user_name }} {{ proxy_password }}"
 
   - name: NGINX | Start nginx service
     service: name=nginx state=started
