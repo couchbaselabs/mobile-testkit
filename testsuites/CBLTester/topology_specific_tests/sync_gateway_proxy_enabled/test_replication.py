@@ -163,7 +163,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(username=username, password="zhovna", authentication_type="basic")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                              target_url=proxy_url + ":4894" + sg_db,
+                                              target_url=proxy_url + ":4984" + sg_db,
                                               continuous=True,
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="pushAndPull"
