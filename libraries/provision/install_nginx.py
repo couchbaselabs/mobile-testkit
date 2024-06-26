@@ -107,7 +107,7 @@ def install_nginx(cluster_config, customize_proxy=False, userName=None, password
             extra_vars["proxy_send_timeout"] = "proxy_send_timeout 60s;"
             extra_vars["proxy_read_timeout"] = "proxy_read_timeout 60s;"
             extra_vars["proxy_socket_keepalive"] = "proxy_socket_keepalive on;"
-        if userName:
+        if userName is not  None:
             extra_vars["user_auth_basic"] = "\"Authentication Required\";"
             extra_vars["user_auth_basic_user_file"] = NGINX_BASIC_AUTH_FILE_LINUX + ";"
             extra_vars["proxy_user_name"] = NGINX_SGW_USER_NAME
