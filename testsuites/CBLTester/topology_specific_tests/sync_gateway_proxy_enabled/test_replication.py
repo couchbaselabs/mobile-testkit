@@ -7,6 +7,7 @@ from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
+from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import RBAC_FULL_ADMIN, NGINX_SGW_PASSWORD, NGINX_SGW_USER_NAME
 
 
@@ -132,11 +133,12 @@ def test_proxy_authentication(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     db_config = params_from_base_test_setup["db_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
+    cluster_util = ClusterKeywords(cluster_config)
+    topology = cluster_util.get_cluster_topology(cluster_config)
     c.reset(sg_config_path=sg_config)
-    lb1_ip = c["load_balancers"][0]["ip"]
+    lb1_ip = topology["load_balancers"][0]["ip"]
     proxy_url = "http://{0}:4984".format(lb1_ip)
 
     sg_db = "db"
