@@ -1,7 +1,7 @@
 import os
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info
-from keywords.constants import NGINX_BASIC_AUTH_FILE_LINUX, NGINX_SGW_PASSWORD, NGINX_SGW_USER_NAME
+from keywords.constants import NGINX_BASIC_AUTH_FILE_LINUX
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_load_balancer_with_two_clusters_enabled
 from utilities.cluster_config_utils import load_cluster_config_json, get_sg_platform
