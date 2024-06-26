@@ -9,6 +9,7 @@ from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
 from keywords.constants import RBAC_FULL_ADMIN, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD
 from keywords.ClusterKeywords import ClusterKeywords
+from libraries.provision.install_nginx import install_nginx
 
 
 @pytest.fixture(scope="function")
@@ -127,7 +128,6 @@ def test_proxy_authentication(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     db_config = params_from_base_test_setup["db_config"]
@@ -144,8 +144,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     username = NGINX_SGW_USER_NAME
     password = NGINX_SGW_PASSWORD
 
-     # Reset nginx with shorter keep_alive frequency config
-    from libraries.provision.install_nginx import install_nginx
+    # Reset nginx with shorter keep_alive frequency config
     install_nginx(cluster_config, True, NGINX_SGW_USER_NAME, NGINX_SGW_PASSWORD)
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
@@ -157,9 +156,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                                target_url=proxy_url,
-                                                continuous=True,
-                                                replicator_authenticator=replicator_authenticator,
-                                                replication_type="pushAndPull"
-                                            )
+                                              target_url=proxy_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="pushAndPull"
+                                              )
     replicator.stop(repl)
