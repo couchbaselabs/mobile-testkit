@@ -119,3 +119,42 @@ def test_replication_heartbeat(params_from_base_test_setup):
 
     assert len(sg_docs) == len(cbl_db_docs)
     replicator.stop(repl)
+
+
+def test_proxy_authentication(params_from_base_test_setup):
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    db = params_from_base_test_setup["db"]
+    db_config = params_from_base_test_setup["db_config"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_db = "db"
+    channels = ["ABC"]
+    username = NGINX_SGW_USER_NAME
+    password = NGINX_SGW_PASSWORD
+
+    sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cbl_db_name = "proxyAuth-" + str(time.time())
+    cbl_db = db.create(cbl_db_name, db_config)
+    # 3. create a push_pull continuous replicator, start replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                                target_url=sg_blip_url,
+                                                continuous=True,
+                                                replicator_authenticator=replicator_authenticator,
+                                                replication_type="pushAndPull"
+                                            )
+    replicator.stop(repl)
