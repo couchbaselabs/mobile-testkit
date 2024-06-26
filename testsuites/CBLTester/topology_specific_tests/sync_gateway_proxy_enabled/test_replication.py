@@ -142,6 +142,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
     proxy_url = topology["load_balancers"][0].replace("http", "ws")
+    print("-----------------------------proxy_url=" + proxy_url + ":4894/" + sg_db)
     # c.reset(sg_config_path=sg_config)
 
     sg_db = "db"
@@ -159,9 +160,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     # 2. Configure replication with Proxy authentication and start it
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
+    replicator_authenticator = authenticator.authentication(username=username, password="zhovna", authentication_type="basic")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                              target_url=proxy_url,
+                                              target_url=proxy_url + ":4894/" + sg_db,
                                               continuous=True,
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="pushAndPull"
