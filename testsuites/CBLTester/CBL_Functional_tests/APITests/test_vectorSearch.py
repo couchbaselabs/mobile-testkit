@@ -113,7 +113,6 @@ def vector_search_test_fixture(params_from_base_test_setup):
     db.deleteDB(vsTestDatabase)
 
 
-@pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
 def test_vector_search_index_correctness(vector_search_test_fixture):
     '''
     @summary: Modifying and pulling documents leads to correct vector embeddings
