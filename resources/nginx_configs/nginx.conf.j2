@@ -61,6 +61,10 @@ http {
             auth_basic_user_file    {{ user_auth_basic_user_file }};
             proxy_set_header        Upgrade $http_upgrade;
             proxy_set_header        Connection "Upgrade";
+            proxy_set_header        Sec-Websocket-Extensions $http_sec_websocket_extensions;
+            proxy_set_header        Sec-Websocket-Key $http_sec_websocket_key;
+            proxy_set_header        Sec-Websocket-Protocol $http_sec_websocket_protocol;
+            proxy_set_header        Sec-Websocket-Version $http_sec_websocket_version;
             add_header              Set-Cookie "test=mobile" always;
         }
     }
