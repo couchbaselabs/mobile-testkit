@@ -31,7 +31,7 @@ class Replication(object):
                   documentIDs=None, replicator_authenticator=None,
                   headers=None, filter_callback_func='', conflict_resolver='',
                   heartbeat=None, max_retries=None, max_retry_wait_time=None,
-                  auto_purge=None, encryptor=None, collection=None):
+                  auto_purge=None, encryptor=None, collection=None, auth=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
@@ -84,7 +84,7 @@ class Replication(object):
         if collection is not None:
             args.setArray("collections", collection)
 
-        return self._client.invokeMethod("replicatorConfiguration_configure", args)
+        return self._client.invokeMethod("replicatorConfiguration_configure", args, auth=auth)
 
     """def create(self, source_db, target_db=None, target_url=None):
         args = Args()
@@ -253,10 +253,10 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_toString", args)
 
-    def start(self, replicator):
+    def start(self, replicator, auth=None):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        return self._client.invokeMethod("replicator_start", args)
+        return self._client.invokeMethod("replicator_start", args, auth=auth)
 
     def stop(self, replicator, max_times=15):
         args = Args()
@@ -306,13 +306,13 @@ class Replication(object):
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
-                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None, auto_purge=None, encryptor=None):
+                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None, auto_purge=None, encryptor=None, auth=None):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge, encryptor=encryptor)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge, encryptor=encryptor, auth=auth)
         else:
             repl_config = self.configure(source_db, target_db=target_db, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge, encryptor=encryptor)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge, encryptor=encryptor, auth=auth)
         repl = self.create(repl_config)
         self.start(repl)
         if wait_until_idle:

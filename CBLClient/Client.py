@@ -13,7 +13,7 @@ class Client(object):
         self.base_url = base_url
         self.session = Session()
 
-    def invokeMethod(self, method, args=None, ignore_deserialize=False):
+    def invokeMethod(self, method, args=None, ignore_deserialize=False, auth=None):
         resp = Response()
         try:
             # Create body from args.
@@ -27,6 +27,8 @@ class Client(object):
                     body[k] = val
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
+            if auth is not None:
+                self.auth = auth
             self.session.headers = headers
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()

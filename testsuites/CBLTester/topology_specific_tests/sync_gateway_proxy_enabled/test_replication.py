@@ -166,6 +166,7 @@ def test_proxy_authentication(params_from_base_test_setup):
                                               target_url=sg_blip_url,
                                               continuous=True,
                                               replicator_authenticator=replicator_authenticator,
-                                              replication_type="pushAndPull"
+                                              replication_type="pushAndPull",
+                                              auth=(username, password)
                                               )
     replicator.stop(repl)
