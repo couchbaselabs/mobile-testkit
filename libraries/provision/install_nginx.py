@@ -48,6 +48,8 @@ def install_nginx(cluster_config, customize_proxy=False, userName=None, password
         sg_ip_port = topology["sync_gateways"][0]["public"].replace("http://", "")
         ip = sg_ip_port.split(":")[0]
         port = sg_ip_port.split(":")[1]
+        print("***********************************************GILAD=" + sg_ip_port)
+        slkdflksdjfkldsj
         extra_vars["config"] = "nginx_proxy.conf.j2"
         extra_vars["upstream_cbl"] = "server " + base_url.replace("http://", "") + ";"
         extra_vars["sync_gateway_url_resolver"] = ip + " " + port + ";"
