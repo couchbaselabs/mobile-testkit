@@ -32,7 +32,7 @@ events {
 #       }
 
 http {
-    upstream sync_gateway {
+    upstream cbl_test_app {
        {{ upstream_cbl }}
     }
 
@@ -41,7 +41,7 @@ http {
         server_name  myservice.example.org;
         client_max_body_size 200m;
         location / {
-            resolver {{ upstream_sync_gatways }}
+            resolver {{ sync_gateway_url_resolver }}
             proxy_pass_request_headers on;
             proxy_pass              {{ upstream_cbl }}
             proxy_next_upstream     error timeout invalid_header http_500 http_502 http_503 http_504;

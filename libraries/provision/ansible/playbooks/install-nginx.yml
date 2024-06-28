@@ -15,6 +15,7 @@
     proxy_password: "default_password"
     config: "nginx.conf.j2"
     upstream_cbl:
+    sync_gateway_url_resolver:
 
   tasks:
   - name: NGINX | Stop nginx service
