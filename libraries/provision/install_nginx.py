@@ -47,7 +47,7 @@ def install_nginx(cluster_config, customize_proxy=False, userName=None, password
     if base_url is not None:
         extra_vars["config"] = "nginx_proxy.conf.j2"
         extra_vars["upstream_cbl"] = "server " + base_url.replace("http://", "") + ";"
-        extra_vars["sync_gateway_url_resolver"] = topology["sync_gateways"][0].replace("http://", "")
+        extra_vars["sync_gateway_url_resolver"] = topology["sync_gateways"][0]["public"].replace("http://", "")
     if is_load_balancer_with_two_clusters_enabled(cluster_config):
         upstream_definition2 = ""
         upstream_definition_admin2 = ""
