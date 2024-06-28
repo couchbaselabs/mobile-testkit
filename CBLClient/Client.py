@@ -27,9 +27,9 @@ class Client(object):
                     body[k] = val
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
-            if auth is not None:
-                self.auth = auth
             self.session.headers = headers
+            if auth is not None:
+                self.session.auth = auth
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
             responseCode = resp.status_code
