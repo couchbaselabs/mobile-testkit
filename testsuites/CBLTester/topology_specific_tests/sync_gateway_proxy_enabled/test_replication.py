@@ -143,6 +143,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
     proxy_url = topology["load_balancers"][0]
+    sg = topology["sync_gateways"][0]
     # c.reset(sg_config_path=sg_config)
     sg_db = "db"
     channels = ["ABC"]
@@ -153,7 +154,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     install_nginx(cluster_config, True, userName=username, password=password, base_url=base_url)
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(sg["admin"], sg_db, username, password=password, channels=channels, auth=auth)
     cbl_db_name = "proxyAuth-" + str(time.time())
     cbl_db = db.create(cbl_db_name, db_config)
     # 2. Configure replication with Proxy authentication and start it
