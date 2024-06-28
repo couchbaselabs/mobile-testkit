@@ -13,6 +13,8 @@
     user_auth_basic: "off"
     proxy_user_name: "default_user"
     proxy_password: "default_password"
+    config: "nginx.conf.j2"
+    upstream_cbl:
 
   tasks:
   - name: NGINX | Stop nginx service
@@ -37,7 +39,7 @@
 
   - name: NGINX | Render and deploy nginx config
     template:
-      src=../../../../resources/nginx_configs/nginx.conf.j2
+      src=../../../../resources/nginx_configs/{{ config }}
       dest=/etc/nginx/nginx.conf
       owner=root
       group=root

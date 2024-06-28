@@ -7,7 +7,7 @@ from utilities.cluster_config_utils import is_load_balancer_with_two_clusters_en
 from utilities.cluster_config_utils import load_cluster_config_json, get_sg_platform
 
 
-def install_nginx(cluster_config, customize_proxy=False, userName=None, password=None):
+def install_nginx(cluster_config, customize_proxy=False, userName=None, password=None, base_url=None):
     """
     Deploys nginx to nodes with the load_balancer tag
 
@@ -44,6 +44,9 @@ def install_nginx(cluster_config, customize_proxy=False, userName=None, password
         extra_vars["user_auth_basic"] = "\"Authentication Required\""
         extra_vars["proxy_user_name"] = userName
         extra_vars["proxy_password"] = password
+    if base_url is not None:
+        extra_vars["config"] = "nginx_proxy.conf"
+        extra_vars["upstream_cbl"] = base_url
     if is_load_balancer_with_two_clusters_enabled(cluster_config):
         upstream_definition2 = ""
         upstream_definition_admin2 = ""

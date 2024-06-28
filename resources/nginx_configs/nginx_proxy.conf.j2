@@ -1,0 +1,64 @@
+# user  nobody;
+#Defines which Linux system user will own and run the Nginx server
+
+worker_processes  1;
+#Referes to single threaded process. Generally set to be equal to the number of CPUs or cores.
+
+#error_log  logs/error.log; #error_log  logs/error.log  notice;
+#Specifies the file where server logs.
+
+#pid        logs/nginx.pid;
+#nginx will write its master process ID(PID).
+
+events {
+    worker_connections  1024;
+    # worker_processes and worker_connections allows you to calculate maxclients value:
+    # max_clients = worker_processes * worker_connections
+}
+
+# Need to render the template to the following format.
+#  This is done in the libraries/provision/install_nginx.py script
+#  Expected output for the upstream definitions on the load balancer
+#  node(s) should look like the format
+#
+#       upstream sync_gateway {
+#           server 192.168.33.11:4984;
+#           server 192.168.33.12:4984;
+#       }
+#
+#       upstream sync_gateway_admin {
+#           server 192.168.33.11:4985;
+#           server 192.168.33.12:4985;
+#       }
+
+http {
+    upstream sync_gateway {
+       {{ upstream_cbl }}
+    }
+
+    server {
+        listen 8080;
+        server_name  myservice.example.org;
+        client_max_body_size 200m;
+        location / {
+            resolver {{ upstream_sync_gatways }}
+            proxy_pass_request_headers on;
+            proxy_pass              {{ upstream_cbl }}
+            proxy_next_upstream     error timeout invalid_header http_500 http_502 http_503 http_504;
+            proxy_connect_timeout   2;
+            proxy_pass_header       Accept;
+            proxy_pass_header       Server;
+            proxy_http_version      1.1;
+            keepalive_requests      1000;
+            {{ proxy_socket_keepalive}}
+            {{ keepalive_timeout }}
+            {{ proxy_send_timeout }}
+            {{ proxy_read_timeout }}
+            auth_basic              {{ user_auth_basic }};
+            auth_basic_user_file    {{ user_auth_basic_user_file }};
+            proxy_set_header        Upgrade $http_upgrade;
+            proxy_set_header        Connection "Upgrade";
+            add_header              Set-Cookie "test=mobile" always;
+        }
+    }
+}
