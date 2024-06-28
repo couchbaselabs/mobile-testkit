@@ -141,8 +141,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     # Reset cluster to ensure no data in system
     # c = cluster.Cluster(config=cluster_config)
     cluster_util = ClusterKeywords(cluster_config)
-    topology = cluster_util.get_cluster_topology(cluster_config)
+    topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
     proxy_url = topology["load_balancers"][0]
+    topology = cluster_util.get_cluster_topology(cluster_config)
     sg = topology["sync_gateways"][0]
     # c.reset(sg_config_path=sg_config)
     sg_db = "db"
