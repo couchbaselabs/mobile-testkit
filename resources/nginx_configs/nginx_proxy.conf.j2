@@ -43,7 +43,7 @@ http {
         location / {
             resolver {{ sync_gateway_url_resolver }}
             proxy_pass_request_headers on;
-            proxy_pass              {{ upstream_cbl }}
+            proxy_pass              {{ cbl_url }}
             proxy_next_upstream     error timeout invalid_header http_500 http_502 http_503 http_504;
             proxy_connect_timeout   2;
             proxy_pass_header       Accept;
