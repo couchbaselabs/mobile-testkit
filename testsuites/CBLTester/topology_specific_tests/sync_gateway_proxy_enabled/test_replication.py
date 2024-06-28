@@ -150,7 +150,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     password = NGINX_SGW_PASSWORD
 
     # 1. Start nginx with basic authentication
-    install_nginx(cluster_config, True, userName=username, password=password)
+    install_nginx(cluster_config, True, userName=username, password=password, base_url=base_url)
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
