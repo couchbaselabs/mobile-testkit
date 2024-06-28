@@ -45,7 +45,7 @@ def install_nginx(cluster_config, customize_proxy=False, userName=None, password
         extra_vars["proxy_user_name"] = userName
         extra_vars["proxy_password"] = password
     if base_url is not None:
-        extra_vars["config"] = "nginx_proxy.conf"
+        extra_vars["config"] = "nginx_proxy.conf.j2"
         extra_vars["upstream_cbl"] = base_url
     if is_load_balancer_with_two_clusters_enabled(cluster_config):
         upstream_definition2 = ""
