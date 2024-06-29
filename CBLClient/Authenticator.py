@@ -6,9 +6,9 @@ class Authenticator(object):
     _client = None
     base_url = None
 
-    def __init__(self, base_url):
+    def __init__(self, base_url, auth=None):
         self.base_url = base_url
-
+        self.auth=auth # A tuple of name/password
         # If no base url was specified, raise an exception
         if self.base_url is None:
             raise Exception("No base_url specified")
@@ -25,7 +25,7 @@ class Authenticator(object):
         args = Args()
         args.setString("username", username)
         args.setString("password", password)
-        return self._client.invokeMethod("proxyAuthenticator_create", args)
+        return self._client.invokeMethod("proxyAuthenticator_create", args, auth=self.auth)
 
     def basicAuthenticator_getPassword(self, authenticator):
         args = Args()
