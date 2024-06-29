@@ -160,7 +160,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     cbl_db = db.create(cbl_db_name, db_config)
     # 2. Configure replication with Proxy authentication and start it
     replicator = Replication(proxy_url + ":8080")
-    authenticator = Authenticator(base_url)
+    authenticator = Authenticator(proxy_url + ":8080", auth=(username, password))
     replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
