@@ -166,7 +166,8 @@ def test_proxy_authentication(params_from_base_test_setup):
                                        target_url=sg_blip_url,
                                        continuous=True,
                                        replicator_authenticator=replicator_authenticator,
-                                       replication_type="pushAndPull")
+                                       replication_type="pushAndPull",
+                                       auth=(username, password))
     proxy_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
     repl_config = repl_config.setProxyAuthenticator(repl_config, proxy_authenticator)
     repl = replicator.create(repl_config)

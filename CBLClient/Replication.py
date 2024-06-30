@@ -31,7 +31,8 @@ class Replication(object):
                   documentIDs=None, replicator_authenticator=None,
                   headers=None, filter_callback_func='', conflict_resolver='',
                   heartbeat=None, max_retries=None, max_retry_wait_time=None,
-                  auto_purge=None, encryptor=None, collection=None):
+                  auto_purge=None, encryptor=None, collection=None,
+                  auth=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
@@ -84,7 +85,7 @@ class Replication(object):
         if collection is not None:
             args.setArray("collections", collection)
 
-        return self._client.invokeMethod("replicatorConfiguration_configure", args)
+        return self._client.invokeMethod("replicatorConfiguration_configure", args, auth=auth)
 
     """def create(self, source_db, target_db=None, target_url=None):
         args = Args()
