@@ -169,7 +169,7 @@ def test_proxy_authentication(params_from_base_test_setup):
                                        replication_type="pushAndPull",
                                        auth=(username, password))
     proxy_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy")
-    repl_config = repl_config.setProxyAuthenticator(repl_config, proxy_authenticator)
+    repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=True)

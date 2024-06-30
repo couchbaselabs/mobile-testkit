@@ -159,6 +159,13 @@ class Replication(object):
         return self._client.invokeMethod("replicatorConfiguration_setAuthenticator",
                                          args)
 
+    def setProxyAuthenticator(self, configuration, authenticator):
+        args = Args()
+        args.setMemoryPointer("configuration", configuration)
+        args.setMemoryPointer("authenticator", authenticator)
+        return self._client.invokeMethod("replicatorConfiguration_setProxyAuthenticator",
+                                         args)
+
     def setChannels(self, configuration, channels):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
