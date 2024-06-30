@@ -14,11 +14,11 @@ class Authenticator(object):
 
         self._client = Client(base_url)
 
-    def basicAuthenticator_create(self, username, password):
+    def basicAuthenticator_create(self, username, password, auth=None):
         args = Args()
         args.setString("username", username)
         args.setString("password", password)
-        return self._client.invokeMethod("basicAuthenticator_create", args)
+        return self._client.invokeMethod("basicAuthenticator_create", args, auth=auth)
 
     def proxyAuthenticator_create(self, username, password, auth):
         args = Args()
@@ -52,12 +52,12 @@ class Authenticator(object):
         args.setMemoryPointer("session", session)
         return self._client.invokeMethod("sessionAuthenticator_getCookieName", args)
 
-    def authentication(self, session_id=None, cookie=None, username=None, password=None, authentication_type="basic"):
+    def authentication(self, session_id=None, cookie=None, username=None, password=None, authentication_type="basic", auth=None):
         args = Args()
         args.setString("authentication_type", authentication_type)
         if authentication_type == "session":
             return self.sessionAuthenticator_create(session_id, cookie)
         elif authentication_type == "proxy":
-            return self.proxyAuthenticator_create(username, password)
+            return self.proxyAuthenticator_create(username, password, auth=auth)
         else:
-            return self.basicAuthenticator_create(username, password)
+            return self.basicAuthenticator_create(username, password, auth=auth)
