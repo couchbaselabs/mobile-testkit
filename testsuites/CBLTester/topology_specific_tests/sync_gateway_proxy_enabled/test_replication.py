@@ -132,8 +132,6 @@ def test_proxy_authentication(params_from_base_test_setup):
     """
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
-    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     db_config = params_from_base_test_setup["db_config"]
@@ -146,8 +144,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     proxy_url = topology["load_balancers"][0]
     topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
     sg = topology["sync_gateways"][0]
+    sg_admin_url = sg["admin"]
+    sg_url = sg["public"]
     print("**************************************toplogy=" + str(topology))
-    lskdjflksdjfklsdjflkjsdklfsdj
     # c.reset(sg_config_path=sg_config)
     sg_db = "db"
     channels = ["ABC"]
