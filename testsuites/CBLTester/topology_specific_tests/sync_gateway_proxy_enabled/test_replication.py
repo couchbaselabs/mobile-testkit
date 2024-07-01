@@ -153,13 +153,15 @@ def test_proxy_authentication(params_from_base_test_setup):
     channels = ["ABC"]
     username = NGINX_SGW_USER_NAME
     password = NGINX_SGW_PASSWORD
+    sgw_user = "proxy-auth-test1"
+    sgw_password = "password"
 
     # 1. Start nginx with basic authentication
     # install_nginx(cluster_config, True, userName=username, password=password, base_url=base_url)
     install_nginx(cluster_config, True)
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, sgw_user, password=sgw_password, channels=channels, auth=auth)
     # cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     # auth_session = cookie, session_id
     # sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=auth_session)
@@ -176,7 +178,7 @@ def test_proxy_authentication(params_from_base_test_setup):
                                        replicator_authenticator=replicator_authenticator,
                                        replication_type="pushAndPull"
                                       )
-    proxy_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy", auth=(username, password))
+    proxy_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy", auth=(sgw_user, sgw_password))
     # repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
