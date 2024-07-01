@@ -133,6 +133,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     db_config = params_from_base_test_setup["db_config"]
@@ -156,6 +157,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg["admin"], sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    auth_session = cookie, session_id
+    sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=auth_session)
     cbl_db_name = "proxyAuth-" + str(time.time())
     cbl_db = db.create(cbl_db_name, db_config)
     # 2. Configure replication with Proxy authentication and start it
@@ -166,7 +170,7 @@ def test_proxy_authentication(params_from_base_test_setup):
                                        target_url=sg_blip_url,
                                        continuous=True,
                                        replicator_authenticator=replicator_authenticator,
-                                       replication_type="pushAndPull",
+                                       replication_type="pull",
                                        auth=(username, password))
     proxy_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy", auth=(username, password))
     # repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
