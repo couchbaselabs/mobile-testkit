@@ -170,7 +170,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     # 2. Configure replication with Proxy authentication and start it
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic", auth=(username, password))
+    print("-----------------target_url=" + proxy_url + ":4984")
+    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic", auth=(sgw_user, sgw_password))
     repl_config = replicator.configure(source_db=cbl_db,
                                        # target_url=proxy_url + ":8080",
                                        target_url=proxy_url + ":4984",
@@ -178,7 +179,7 @@ def test_proxy_authentication(params_from_base_test_setup):
                                        replicator_authenticator=replicator_authenticator,
                                        replication_type="pushAndPull"
                                       )
-    proxy_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy", auth=(sgw_user, sgw_password))
+    proxy_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy", auth=(username, password))
     # repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
