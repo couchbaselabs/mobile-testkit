@@ -171,7 +171,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic", auth=(username, password))
     repl_config = replicator.configure(source_db=cbl_db,
-                                       target_url=proxy_url + ":8080",
+                                       # target_url=proxy_url + ":8080",
                                        target_db=cbl_db2,
                                        continuous=True,
                                        replicator_authenticator=replicator_authenticator,
