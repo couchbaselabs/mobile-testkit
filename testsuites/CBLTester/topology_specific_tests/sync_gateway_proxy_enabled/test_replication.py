@@ -142,6 +142,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
     proxy_url = topology["load_balancers"][0]
+    proxy_url = proxy_url.replace("http", "ws")
     topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
     sg = topology["sync_gateways"][0]
     sg_admin_url = sg["admin"]
