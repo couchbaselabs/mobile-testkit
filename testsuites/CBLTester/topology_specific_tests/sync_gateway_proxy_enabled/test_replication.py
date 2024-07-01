@@ -163,12 +163,14 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="sg_batch_1", channels=channels, auth=auth_session)
     cbl_db_name = "proxyAuth-" + str(time.time())
     cbl_db = db.create(cbl_db_name, db_config)
+    cbl_db_name2 = "cbl_db2" + str(time.time())
+    cbl_db2 = db.create(cbl_db_name2, db_config)
     # 2. Configure replication with Proxy authentication and start it
     replicator = Replication(proxy_url + ":8080")
     authenticator = Authenticator(proxy_url + ":8080", auth=(username, password))
     replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic", auth=(username, password))
     repl_config = replicator.configure(source_db=cbl_db,
-                                       target_url=sg_blip_url,
+                                       target_db=cbl_db2,
                                        continuous=True,
                                        replicator_authenticator=replicator_authenticator,
                                        replication_type="pull",
