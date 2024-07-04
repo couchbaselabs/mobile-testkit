@@ -367,6 +367,34 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 #    return len(sg_docs)
 
 
+
+
+def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
+
+    # setup
+    base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
+    db = Database(base_url)
+    vsHandler = VectorSearch(base_url)
+    vsHandler.register_model(key="word", name="gteSmall")
+    print("Registered model gteSmall on field 'word'")
+
+    # create indexes
+    vsHandler.createIndex(
+        database=vsTestDatabase,
+        scopeName="_default",
+        collectionName="docBodyVectors",
+        indexName="docBodyVectorsIndex",
+        expression="vector",
+        dimensions=gteSmallDims,
+        centroids=8,
+        metric="euclidean",
+        minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
+        maxTrainingSize=256 * 8,
+        isLazy=True)
+
+
+
+
 # TODO might be worth checking if a. this test case is small enough for vector search and
 # b. whether this is an appropriate fixture for a sanity test
 # TODO make this test only pull documents from server that have embeddings then query them

@@ -30,7 +30,7 @@ class VectorSearch(object):
     # USEFUL FUNCTIONS
     def createIndex(self, database, scopeName, collectionName, indexName, expression,
                     dimensions, centroids, scalarEncoding=None, subquantizers=None, bits=None,
-                    metric=None, minTrainingSize=None, maxTrainingSize=None):
+                    metric=None, minTrainingSize=None, maxTrainingSize=None, isLazy=None):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("collectionName", collectionName)
@@ -51,6 +51,8 @@ class VectorSearch(object):
             args.setInt("minTrainingSize", minTrainingSize)
         if maxTrainingSize:
             args.setInt("maxTrainingSize", maxTrainingSize)
+        if isLazy:
+            args.setBoolean("isLazy", isLazy)
         return self._client.invokeMethod("vectorSearch_createIndex", args)
 
     def getEmbedding(self, input):
