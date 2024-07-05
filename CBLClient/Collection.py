@@ -141,3 +141,9 @@ class Collection(object):
         args = Args()
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("collection_collectionInstances", args)
+
+    def getIndex(self, collection, indexName):
+        args = Args()
+        args.setString("indexName", indexName)
+        args.setMemoryPointer("collection", collection)
+        return self._client.invokeMethod("collection_getIndex", args)

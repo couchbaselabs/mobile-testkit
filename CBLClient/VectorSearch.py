@@ -71,7 +71,6 @@ class VectorSearch(object):
         args.setString("term", term)
         args.setString("sql", sql)
         args.setMemoryPointer("database", database)
-
         return self._client.invokeMethod("vectorSearch_query", args)
 
     def loadDatabase(self, dbPath=None):
@@ -80,11 +79,13 @@ class VectorSearch(object):
             args.setString("dbPath", dbPath)
         return self._client.invokeMethod("vectorSearch_loadDatabase", args)
 
-    def regenerateWordEmbeddings(self):
-        return self._client.invokeMethod("vectorSearch_regenerateWordEmbeddings")
-
     def register_model(self, key, name):
         args = Args()
         args.setString("key", key)
         args.setString("name", name)
         return self._client.invokeMethod("vectorSearch_registerModel", args)
+
+    def updateQueryIndex(self, index):
+        args = Args()
+        args.setMemoryPointer("index", index)
+        return self._client.invokeMethod("vectorSearch_updateQueryIndex", args)
