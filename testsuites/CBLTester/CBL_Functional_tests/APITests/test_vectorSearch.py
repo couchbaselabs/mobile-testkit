@@ -373,17 +373,18 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
 
     # setup
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
+    indexName = "updateIndex"
     db = Database(base_url)
     vsHandler = VectorSearch(base_url)
+    collectionHandler = Collection(base_url)
     vsHandler.register_model(key="word", name="gteSmall")
     print("Registered model gteSmall on field 'word'")
-
     # create indexes
     vsHandler.createIndex(
         database=vsTestDatabase,
         scopeName="_default",
         collectionName="docBodyVectors",
-        indexName="docBodyVectorsIndex",
+        indexName=indexName,
         expression="vector",
         dimensions=gteSmallDims,
         centroids=8,
@@ -391,6 +392,14 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
         maxTrainingSize=256 * 8,
         isLazy=True)
+    print("After create index")
+    docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
+    db.create_bulk_docs(2, "doc_to_update_embeddings_for", db=db, collection=docBodyVectorCollection)
+    print("After uploading documents")
+    index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
+    vsHandler.updateQueryIndex(index)
+    print("After update index")
+
 
 
 
