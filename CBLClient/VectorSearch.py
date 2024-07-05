@@ -51,7 +51,7 @@ class VectorSearch(object):
             args.setInt("minTrainingSize", minTrainingSize)
         if maxTrainingSize:
             args.setInt("maxTrainingSize", maxTrainingSize)
-        if isLazy:
+        if isLazy is not None:
             args.setBoolean("isLazy", isLazy)
         return self._client.invokeMethod("vectorSearch_createIndex", args)
 
