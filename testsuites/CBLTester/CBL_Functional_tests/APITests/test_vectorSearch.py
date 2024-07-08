@@ -379,6 +379,17 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     collectionHandler = Collection(base_url)
     vsHandler.register_model(key="word", name="gteSmall")
     print("Registered model gteSmall on field 'word'")
+
+    # Check that all 4 collections on CBL exist
+    cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
+    # TODO check if _default counts towards this
+    assert len(cbl_collections) == 5, "wrong number of collections returned"
+    assert dbv_col_name in cbl_collections, "no CBL collection found for doc body vectors"
+    assert st_col_name in cbl_collections, "no CBL collection found for search terms"
+    assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
+    assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
+
+
     # create indexes
     vsHandler.createIndex(
         database=vsTestDatabase,
@@ -394,7 +405,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         isLazy=True)
     print("After create index")
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
-    db.create_bulk_docs(2, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
+    # db.create_bulk_docs(2, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
     print("After uploading documents")
     index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
     vsHandler.updateQueryIndex(index)
