@@ -396,7 +396,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         scopeName="_default",
         collectionName="docBodyVectors",
         indexName=indexName,
-        expression="vector",
+        expression="word",
         dimensions=gteSmallDims,
         centroids=8,
         metric="euclidean",
