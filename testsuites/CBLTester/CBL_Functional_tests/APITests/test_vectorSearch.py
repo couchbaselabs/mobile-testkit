@@ -405,7 +405,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         isLazy=True)
     print("After create index")
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
-    # db.create_bulk_docs(2, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
+    db.create_bulk_docs(2, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
     print("After uploading documents")
     index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
     vsHandler.updateQueryIndex(index)
