@@ -407,10 +407,10 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         maxTrainingSize=256 * 8,
         isLazy=True)
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
-    initl_num_of_focs = collection.documentCount(docBodyVectorCollection)
+    initial_number_of_docs = collection.documentCount(docBodyVectorCollection)
     for updateIndex in range(1, total_num_of_docs_to_upload):
         db.create_bulk_docs(100, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
-        for i in range(1, floor(collection.documentCount(initl_num_of_focs)/5)):
+        for i in range(1, initial_number_of_docs):
             index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
             vsHandler.updateQueryIndex(index, loopNumber=updateIndex)
 
