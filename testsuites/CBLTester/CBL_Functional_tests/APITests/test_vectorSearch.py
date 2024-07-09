@@ -407,8 +407,9 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
     db.create_bulk_docs(2, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
     print("After uploading documents")
-    index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
-    vsHandler.updateQueryIndex(index)
+    for i in range(1,10):
+        index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
+        vsHandler.updateQueryIndex(index)
     print("After update index")
 
 
