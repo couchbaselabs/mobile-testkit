@@ -413,7 +413,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
    # for updateIndex in range(1, total_num_of_docs_to_upload):
     for i in range(1, 5):
         docBody = {}
-        docBody = docsNeedWord[i]
+        docBody = docsNeedWord[doc_ids[i]]
         docBody["word"] = str(i)
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
     for i in range(1, floor(initial_number_of_docs/5) + 1):
