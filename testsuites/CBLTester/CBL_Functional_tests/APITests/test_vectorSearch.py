@@ -411,7 +411,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     print("After uploading documents")
     for i in range(1, len(docsInCollection)):
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
-        vsHandler.updateQueryIndex(index)
+        vsHandler.updateQueryIndex(index, loopNumber=i)
     print("After update index")
 
 
