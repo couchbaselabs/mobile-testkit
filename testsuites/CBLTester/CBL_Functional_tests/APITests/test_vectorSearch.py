@@ -417,7 +417,9 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         docBody = docsNeedWord[doc_ids[i]]
         docBody["word"] = str(i)
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
+    print("===============================================more=" + floor(collection.documentCount(docBodyVectorCollection)/limit))
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
+        print("*********************************i=" + str(i))
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
         vsHandler.updateQueryIndex(index, loopNumber=limit)
 
