@@ -407,7 +407,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         metric="euclidean",
         minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
         maxTrainingSize=256 * 8,
-        isLazy=True)
+        isLazy=False)
     
    # for updateIndex in range(1, total_num_of_docs_to_upload):
    # 
