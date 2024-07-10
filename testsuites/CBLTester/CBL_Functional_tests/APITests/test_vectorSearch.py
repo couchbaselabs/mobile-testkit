@@ -408,36 +408,31 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
         maxTrainingSize=256 * 8,
         isLazy=True)
+    
+   # for updateIndex in range(1, total_num_of_docs_to_upload):
+   # 
+
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
     initial_number_of_docs = collection.documentCount(docBodyVectorCollection)
     doc_ids = db.create_bulk_docs(total_num_of_docs_to_upload, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
     docsNeedWord = collectionHandler.getDocuments(docBodyVectorCollection, ids=doc_ids)
-   # for updateIndex in range(1, total_num_of_docs_to_upload):
-   # with ThreadPoolExecutor(max_workers=2) as executor:
-   #     create_and_push_task = executor.submit(
-   #         create_and_push_docs,
-   #         sg_client,
-   #         sg1,
-   #         sg2,
-   #         DB1,
-   #         DB2,
-   #         sg2_username,
-   #         password,
-   #         repeats,
-   #         sleep_period_in_sec,
-   #         auth)
-    
-    
     for i in range(1, total_num_of_docs_to_upload):
         docBody = {}
         docBody = docsNeedWord[doc_ids[i]]
         docBody["word"] = str(i)
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
-    for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
-        index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
-        vsHandler.updateQueryIndex(index, loopNumber=limit)
-
-
+    update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, vsHandler)
+     # with ThreadPoolExecutor(max_workers=2) as executor:
+     #       create_and_push_task = executor.submit(
+     #       update_lazy_vector,
+     #       sg_client,
+     #       collectionHandler,
+     #       collection,
+     #       docBodyVectorCollection,
+     #       indexName,
+     #       vsHandler,
+     #       vsHandler
+     #       )
 
 
 
@@ -496,3 +491,10 @@ def test_vector_search_sanity(vector_search_test_fixture):
     # Delete vsTestDatabase
     db.close(vsTestDatabase)
     db.deleteDBbyName("vsTestDatabase")
+
+
+
+def update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, limit):
+    for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
+        index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
+        vsHandler.updateQueryIndex(index, loopNumber=limit)
