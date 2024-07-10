@@ -279,7 +279,9 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
 
     # 2. Upload docs to SG1 collections
     sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
-    sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
+    sg_client.add_docs(url=sg1_url, db=sg1["db"], number=2000, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
+    if 1:
+        exit(1)
 
     # 3. Start one-shot pull replication SG1->SG2, filtering one collection
     replicator_id = sg2["sg_obj"].start_replication2(
