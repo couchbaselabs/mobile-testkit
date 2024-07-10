@@ -421,7 +421,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         docBody = docsNeedWord[doc_ids[i]]
         docBody["word"] = str(i)
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
-    update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, vsHandler)
+    update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, limit)
      # with ThreadPoolExecutor(max_workers=2) as executor:
      #       create_and_push_task = executor.submit(
      #       update_lazy_vector,
@@ -496,5 +496,9 @@ def test_vector_search_sanity(vector_search_test_fixture):
 
 def update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, limit):
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
+        index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
+        vsHandler.updateQueryIndex(index, loopNumber=limit)
+
+        for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
         vsHandler.updateQueryIndex(index, loopNumber=limit)
