@@ -498,7 +498,3 @@ def update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, 
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
         vsHandler.updateQueryIndex(index, loopNumber=limit)
-
-        for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
-        index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
-        vsHandler.updateQueryIndex(index, loopNumber=limit)
