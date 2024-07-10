@@ -425,7 +425,6 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     with ThreadPoolExecutor(max_workers=2) as executor:
             create_and_push_task = executor.submit(
             update_lazy_vector,
-            sg_client,
             collectionHandler,
             collection,
             docBodyVectorCollection,
