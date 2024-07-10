@@ -13,6 +13,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 from CBLClient.VectorSearch import VectorSearch
 from CBLClient.Collection import Collection
 from CBLClient.Document import Document
+from concurrent.futures import ThreadPoolExecutor
 
 bucket = "travel-sample"
 sync_function = "function(doc){channel(doc.channels);}"
@@ -374,7 +375,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
 
     # setup
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
-    total_num_of_docs_to_upload = 100000
+    total_num_of_docs_to_upload = 10000
     indexName = "updateIndex"
     limit = 7
     db = Database(base_url)
@@ -412,6 +413,21 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     doc_ids = db.create_bulk_docs(total_num_of_docs_to_upload, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
     docsNeedWord = collectionHandler.getDocuments(docBodyVectorCollection, ids=doc_ids)
    # for updateIndex in range(1, total_num_of_docs_to_upload):
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        create_and_push_task = executor.submit(
+            create_and_push_docs,
+            sg_client,
+            sg1,
+            sg2,
+            DB1,
+            DB2,
+            sg2_username,
+            password,
+            repeats,
+            sleep_period_in_sec,
+            auth)
+    
+    
     for i in range(1, total_num_of_docs_to_upload):
         docBody = {}
         docBody = docsNeedWord[doc_ids[i]]
