@@ -437,7 +437,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
 
     for i in range(1, 10000):
         dbvQueryAll = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                  sql=("SELECT word, vector_distance(" + indexName + ") AS distance "
                                        "FROM docBodyVectors "
                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
                                   database=vsTestDatabase)
