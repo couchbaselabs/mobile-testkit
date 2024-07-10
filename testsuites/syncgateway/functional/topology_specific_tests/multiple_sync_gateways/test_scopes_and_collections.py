@@ -125,6 +125,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     except Exception as e:
         raise e
     finally:
+        print("DONE!!!")
         # potential error here, as we overwrite pre_test variables in the fixture for each db created
        # for key in sgs:
             # Cleanup everything that was created
