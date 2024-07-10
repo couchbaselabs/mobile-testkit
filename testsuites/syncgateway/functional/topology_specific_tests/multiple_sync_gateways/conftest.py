@@ -316,6 +316,8 @@ def params_from_base_suite_setup(request):
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
     # Stop all sync_gateway and sg_accels as test finished
+    if (1):
+        exit(1)
     c = cluster.Cluster(cluster_config)
     c.stop_sg_and_accel()
 
@@ -367,7 +369,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
-
+    if (1):
+        exit(1)
     # Verify all sync_gateways and sg_accels are reachable
     c = cluster.Cluster(cluster_config)
     errors = c.verify_alive(mode)
