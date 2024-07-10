@@ -411,6 +411,12 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     
    # for updateIndex in range(1, total_num_of_docs_to_upload):
    # 
+    dbvQueryAll = vsHandler.query(term="dinner",
+                                  sql=("SELECT word, vector_distance(updateIndex) AS distance "
+                                       "FROM docBodyVectors "
+                                       "WHERE vector_match(updateIndex, $vector, 300)"),
+                                  database=vsTestDatabase)
+    assert len(dbvQueryAll) == 280, "wrong number of docs returned from query on docBody vectors"
 
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
     initial_number_of_docs = collection.documentCount(docBodyVectorCollection)
