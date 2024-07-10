@@ -507,17 +507,18 @@ def test_vector_search_sanity(vector_search_test_fixture):
     db.deleteDBbyName("vsTestDatabase")
 
 
-
+# Fucntions for updating an index and  queering it at the same time
 def update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, limit):
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
         vsHandler.updateQueryIndex(index, loopNumber=limit)
 
 def queryIndex(vsHandler, vsTestDatabase):
-    for i in range(1, 10000):
+    for i in range(1, 1000):
+        print("Querying index 'updateIndex'")
         dbvQueryAll = vsHandler.query(term="dinner",
                                   sql=("SELECT word, vector_distance(updateIndex) AS distance "
                                        "FROM docBodyVectors "
                                        "WHERE vector_match(updateIndex, $vector, 300)"),
                                   database=vsTestDatabase)
-        print("query number=" + str(i))
+        assert len(dbvQueryAll) == 280, "wrong number of docs returned from query on docBody vectors"
