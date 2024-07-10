@@ -374,7 +374,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
 
     # setup
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
-    total_num_of_docs_to_upload = 100
+    total_num_of_docs_to_upload = 100000
     indexName = "updateIndex"
     limit = 7
     db = Database(base_url)
@@ -417,9 +417,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         docBody = docsNeedWord[doc_ids[i]]
         docBody["word"] = str(i)
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
-    print("===============================================more=" + str(floor(collection.documentCount(docBodyVectorCollection)/limit)))
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
-        print("*********************************i=" + str(i))
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
         vsHandler.updateQueryIndex(index, loopNumber=limit)
 
