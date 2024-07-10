@@ -423,7 +423,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
     # update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, limit)
     with ThreadPoolExecutor(max_workers=2) as executor:
-            create_and_push_task = executor.submit(
+            update_task = executor.submit(
             update_lazy_vector,
             collectionHandler,
             collection,
@@ -432,16 +432,21 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
             vsHandler,
             limit
             )
-    create_and_push_task.result()
-    print("********************************Querying index now")
+            query_task = executor.submit(
+                queryIndex,
+                vsHandler,
+                vsTestDatabase
+            )
+    update_task.result()
+    query_task.result()
 
-    for i in range(1, 10000):
-        dbvQueryAll = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(updateIndex) AS distance "
-                                       "FROM docBodyVectors "
-                                       "WHERE vector_match(updateIndex, $vector, 300)"),
-                                  database=vsTestDatabase)
-        print("query number=" + str(i))
+#    for i in range(1, 10000):
+#        dbvQueryAll = vsHandler.query(term="dinner",
+#                                  sql=("SELECT word, vector_distance(updateIndex) AS distance "
+#                                       "FROM docBodyVectors "
+#                                       "WHERE vector_match(updateIndex, $vector, 300)"),
+#                                  database=vsTestDatabase)
+#        print("query number=" + str(i))
 
 
 
@@ -507,3 +512,12 @@ def update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, 
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
         vsHandler.updateQueryIndex(index, loopNumber=limit)
+
+def queryIndex(vsHandler, vsTestDatabase):
+    for i in range(1, 10000):
+        dbvQueryAll = vsHandler.query(term="dinner",
+                                  sql=("SELECT word, vector_distance(updateIndex) AS distance "
+                                       "FROM docBodyVectors "
+                                       "WHERE vector_match(updateIndex, $vector, 300)"),
+                                  database=vsTestDatabase)
+        print("query number=" + str(i))
