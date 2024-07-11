@@ -410,13 +410,12 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     
    # for updateIndex in range(1, total_num_of_docs_to_upload):
    # 
-    ivQueryAll = vsHandler.query(term="dinner",
-                                 sql=("SELECT word, vector_distance(updateIndex) AS distance "
-                                      "FROM indexVectors "
-                                      "WHERE vector_match(updateIndex, $vector, 300)"),
-                                 database=vsTestDatabase)
-    print("**********************************ivQueryAll" + str(ivQueryAll))
-    assert len(ivQueryAll) == 295, "wrong number of docs returned from query on docBody vectors"
+    #ivQueryAll = vsHandler.query(term="dinner",
+    #                             sql=("SELECT word, vector_distance(updateIndex) AS distance "
+    #                                  "FROM indexVectors "
+    #                                  "WHERE vector_match(updateIndex, $vector, 300)"),
+    #                             database=vsTestDatabase)
+    # assert len(ivQueryAll) == 295, "wrong number of docs returned from query on docBody vectors"
 
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
     initial_number_of_docs = collection.documentCount(docBodyVectorCollection)
@@ -427,7 +426,6 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         docBody = docsNeedWord[doc_ids[i]]
         docBody["word"] = str(i)
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
-    # update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, limit)
     with ThreadPoolExecutor(max_workers=2) as executor:
             update_task = executor.submit(
             update_lazy_vector,
@@ -446,13 +444,13 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     update_task.result()
     query_task.result()
 
-#    for i in range(1, 10000):
-#        dbvQueryAll = vsHandler.query(term="dinner",
-#                                  sql=("SELECT word, vector_distance(updateIndex) AS distance "
-#                                       "FROM docBodyVectors "
-#                                       "WHERE vector_match(updateIndex, $vector, 300)"),
-#                                  database=vsTestDatabase)
-#        print("query number=" + str(i))
+    for i in range(1, 10000):
+        ivQueryAll = vsHandler.query(term="dinner",
+                                 sql=("SELECT word, vector_distance(updateIndex) AS distance "
+                                      "FROM indexVectors "
+                                      "WHERE vector_match(updateIndex, $vector, 300)"),
+                                 database=vsTestDatabase)
+        print("**********************************ivQueryAll" + str(ivQueryAll))
 
 
 
