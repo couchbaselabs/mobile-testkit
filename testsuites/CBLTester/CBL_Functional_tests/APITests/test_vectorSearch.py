@@ -446,7 +446,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
                                        "FROM docBodyVectors "
                                        "WHERE vector_match(updateIndex, $vector, 300)"),
                                   database=vsTestDatabase)
-        print("dbvQueryAll" + str(dbvQueryAll))
+        print("dbvQueryAll========" + str(dbvQueryAll))
 
 
 
