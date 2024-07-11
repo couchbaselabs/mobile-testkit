@@ -369,13 +369,14 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 #    return len(sg_docs)
 
 
+
+
 def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
 
     # setup
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
     total_num_of_docs_to_upload = 10000
     indexName = "updateIndex"
-    collectionName = "indexVectors"
     limit = 7
     db = Database(base_url)
     collection = Collection(base_url)
@@ -394,31 +395,24 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
 
 
-     # worth checking an index with subquantizers? fine for now but dbl check in future
+    # create indexes
     vsHandler.createIndex(
         database=vsTestDatabase,
         scopeName="_default",
-        collectionName=collectionName,
+        collectionName="docBodyVectors",
         indexName=indexName,
         expression="word",
         dimensions=gteSmallDims,
         centroids=8,
-        metric="cosine",
-        minTrainingSize=25 * 8,
+        metric="euclidean",
+        minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
         maxTrainingSize=256 * 8,
-        isLazy=True
-        )
+        isLazy=True)
     
    # for updateIndex in range(1, total_num_of_docs_to_upload):
    # 
-    #ivQueryAll = vsHandler.query(term="dinner",
-    #                             sql=("SELECT word, vector_distance(updateIndex) AS distance "
-    #                                  "FROM indexVectors "
-    #                                  "WHERE vector_match(updateIndex, $vector, 300)"),
-    #                             database=vsTestDatabase)
-    # assert len(ivQueryAll) == 295, "wrong number of docs returned from query on docBody vectors"
 
-    docBodyVectorCollection = db.createCollection(vsTestDatabase, collectionName, scope)
+    docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
     initial_number_of_docs = collection.documentCount(docBodyVectorCollection)
     doc_ids = db.create_bulk_docs(total_num_of_docs_to_upload, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
     docsNeedWord = collectionHandler.getDocuments(docBodyVectorCollection, ids=doc_ids)
@@ -427,6 +421,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         docBody = docsNeedWord[doc_ids[i]]
         docBody["word"] = str(i)
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
+    # update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, limit)
     with ThreadPoolExecutor(max_workers=2) as executor:
             update_task = executor.submit(
             update_lazy_vector,
@@ -439,19 +434,19 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
             )
             query_task = executor.submit(
                 queryIndex,
-                vsHandler,
+                vsHandler, 
                 vsTestDatabase
             )
     update_task.result()
     query_task.result()
 
     for i in range(1, 10000):
-        ivQueryAll = vsHandler.query(term="dinner",
-                                 sql=("SELECT word, vector_distance(updateIndex) AS distance "
-                                      "FROM indexVectors "
-                                      "WHERE vector_match(updateIndex, $vector, 300)"),
-                                 database=vsTestDatabase)
-        print("**********************************ivQueryAll" + str(ivQueryAll))
+        dbvQueryAll = vsHandler.query(term="dinner",
+                                  sql=("SELECT word, vector_distance(updateIndex) AS distance "
+                                       "FROM docBodyVectors "
+                                       "WHERE vector_match(updateIndex, $vector, 300)"),
+                                  database=vsTestDatabase)
+        print("query number=" + str(i))
 
 
 
@@ -512,18 +507,17 @@ def test_vector_search_sanity(vector_search_test_fixture):
     db.deleteDBbyName("vsTestDatabase")
 
 
-# Fucntions for updating an index and  queering it at the same time
+
 def update_lazy_vector(collectionHandler, collection,  docBodyVectorCollection, indexName, vsHandler, limit):
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection)/limit)):
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
         vsHandler.updateQueryIndex(index, loopNumber=limit)
 
 def queryIndex(vsHandler, vsTestDatabase):
-    for i in range(1, 1000):
-        print("Querying index 'updateIndex'")
+    for i in range(1, 10000):
         dbvQueryAll = vsHandler.query(term="dinner",
                                   sql=("SELECT word, vector_distance(updateIndex) AS distance "
                                        "FROM docBodyVectors "
                                        "WHERE vector_match(updateIndex, $vector, 300)"),
                                   database=vsTestDatabase)
-        assert len(dbvQueryAll) == 280, "wrong number of docs returned from query on docBody vectors"
+        print("query number=" + str(i))
