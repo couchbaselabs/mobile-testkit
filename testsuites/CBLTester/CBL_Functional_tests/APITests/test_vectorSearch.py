@@ -115,7 +115,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     db.deleteDB(vsTestDatabase)
 
 
-@pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
+# @pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
 def test_vector_search_index_correctness(vector_search_test_fixture):
     '''
     @summary: Modifying and pulling documents leads to correct vector embeddings
@@ -406,8 +406,8 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         centroids=8,
         metric="euclidean",
         minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
-        maxTrainingSize=256 * 8
-        )
+        maxTrainingSize=256 * 8,
+        isLazy=True)
     
    # for updateIndex in range(1, total_num_of_docs_to_upload):
    # 
