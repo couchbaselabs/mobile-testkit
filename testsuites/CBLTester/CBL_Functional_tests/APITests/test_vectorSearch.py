@@ -415,7 +415,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
                                       "FROM indexVectors "
                                       "WHERE vector_match(updateIndex, $vector, 300)"),
                                  database=vsTestDatabase)
-    print("**********************************ivQueryAll" + ivQueryAll)
+    print("**********************************ivQueryAll" + str(ivQueryAll))
     assert len(ivQueryAll) == 295, "wrong number of docs returned from query on docBody vectors"
 
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
