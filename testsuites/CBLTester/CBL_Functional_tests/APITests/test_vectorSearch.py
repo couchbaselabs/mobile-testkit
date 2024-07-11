@@ -115,7 +115,7 @@ def vector_search_test_fixture(params_from_base_test_setup):
     db.deleteDB(vsTestDatabase)
 
 
-# @pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
+@pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
 def test_vector_search_index_correctness(vector_search_test_fixture):
     '''
     @summary: Modifying and pulling documents leads to correct vector embeddings
@@ -367,6 +367,73 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 #    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=session, scope=scope, collection=collection)
 #    sg_docs = sg_docs["rows"]
 #    return len(sg_docs)
+
+
+
+
+ base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
+    db = Database(base_url)
+
+    # Check that all 4 collections on CBL exist
+    cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
+    # TODO check if _default counts towards this
+    assert len(cbl_collections) == 5, "wrong number of collections returned"
+    assert dbv_col_name in cbl_collections, "no CBL collection found for doc body vectors"
+    assert st_col_name in cbl_collections, "no CBL collection found for search terms"
+    assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
+    assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
+
+    # Leaving this code commented for future reference. If we end up not using replication, it can be deleted
+    # replicate docs to server via sgw
+    #   assert replicateDocs(cbl_db=vsTestDatabase, collection=dbv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+    #   assert replicateDocs(cbl_db=vsTestDatabase, collection=st_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 326, "Number of docs mismatched"
+    #   assert replicateDocs(cbl_db=vsTestDatabase, collection=iv_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 300, "Number of docs mismatched"
+    #   assert replicateDocs(cbl_db=vsTestDatabase, collection=aw_col_name, base_url=base_url, sg_client=sg_client, sg_username=sg_username, scope=scope) == 25, "Number of docs mismatched"
+
+    # Very rough draft of CBL side work
+    # Register model
+    vsHandler = VectorSearch(base_url)
+    vsHandler.register_model(key="word", name="gteSmall")
+    print("Registered model gteSmall on field 'word'")
+
+    # create indexes
+    vsHandler.createIndex(
+        database=vsTestDatabase,
+        scopeName="_default",
+        collectionName="docBodyVectors",
+        indexName="docBodyVectorsIndex",
+        expression="vector",
+        dimensions=gteSmallDims,
+        centroids=8,
+        metric="euclidean",
+        minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
+        maxTrainingSize=256 * 8)
+
+    # worth checking an index with subquantizers? fine for now but dbl check in future
+    vsHandler.createIndex(
+        database=vsTestDatabase,
+        scopeName="_default",
+        collectionName="indexVectors",
+        indexName="indexVectorsIndex",
+        expression="prediction(gteSmall, {\"word\": word}).vector",
+        dimensions=gteSmallDims,
+        centroids=8,
+        metric="cosine",
+        minTrainingSize=25 * 8,
+        maxTrainingSize=256 * 8)
+
+    # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
+    ivQueryAll = vsHandler.query(term="dinner",
+                                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                      "FROM indexVectors "
+                                      "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                                 database=vsTestDatabase)
+
+    dbvQueryAll = vsHandler.query(term="dinner",
+                                  sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                       "FROM docBodyVectors "
+                                       "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
+                                  database=vsTestDatabase)
 
 
 
