@@ -400,7 +400,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         scopeName="_default",
         collectionName=collectionName,
         indexName=indexName,
-        expression="prediction(gteSmall, {\"word\": word}).vector",
+        expression="word",
         dimensions=gteSmallDims,
         centroids=8,
         metric="cosine",
