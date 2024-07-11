@@ -375,6 +375,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
     total_num_of_docs_to_upload = 10000
     indexName = "updateIndex"
+    collectionName = "indexVectors"
     limit = 7
     db = Database(base_url)
     collection = Collection(base_url)
@@ -397,7 +398,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     vsHandler.createIndex(
         database=vsTestDatabase,
         scopeName="_default",
-        collectionName="indexVectors",
+        collectionName=collectionName,
         indexName=indexName,
         expression="prediction(gteSmall, {\"word\": word}).vector",
         dimensions=gteSmallDims,
@@ -417,7 +418,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     #                             database=vsTestDatabase)
     # assert len(ivQueryAll) == 295, "wrong number of docs returned from query on docBody vectors"
 
-    docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
+    docBodyVectorCollection = db.createCollection(vsTestDatabase, collectionName, scope)
     initial_number_of_docs = collection.documentCount(docBodyVectorCollection)
     doc_ids = db.create_bulk_docs(total_num_of_docs_to_upload, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
     docsNeedWord = collectionHandler.getDocuments(docBodyVectorCollection, ids=doc_ids)
