@@ -22,8 +22,13 @@ from utilities.scan_logs import scan_for_pattern, unzip_log_files
 
 
 def test_configure_audit_logging(params_from_base_test_setup):
-
-    
+    '''
+    @summary:
+    1. Enable audit logging by resetting the cluster
+    2. Randomly configure the tested events, to be recorded or not recorded
+    3. Trigger the tested events
+    4. Check that the events are are recorded/not recorded in the audit_log file
+    '''
     cluster_config = params_from_base_test_setup["cluster_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
@@ -39,19 +44,21 @@ def test_configure_audit_logging(params_from_base_test_setup):
     channels = ["audit_logging"]
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     db_config = {"bucket": "data-bucket", "num_index_replicas": 0}
+    # 1. Enable audit logging by resetting the cluster
     cluster = Cluster(config=cluster_config)
-    sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc", cpc=False)
+    sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
     cluster.reset(sg_config_path=sg_conf, use_config=True)
-
-    tested_ids = {"53281": bool(random.randint(0,1)), "53280": bool(random.randint(0,1))}
-    audit_config = {"enabled": True, "events": tested_ids}
     if admin_client.does_db_exist(sg_db) is False:
         admin_client.create_db(sg_db, db_config)
     if admin_client.does_user_exist(sg_db, username) is False:
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
-    conf = admin_client.get_db_config(sg_db)
+
+    # 2. Randomly configure the tested events, to be recorded or not recorded.
+    tested_ids = {"53281": bool(random.randint(0,1)), "53280": bool(random.randint(0,1))}
+    audit_config = {"enabled": True, "events": tested_ids}
     admin_client.replace_audit_config(sg_db, audit_config)
- 
+
+########################### 3. Trigger the tested events #########################################
     # Triggering event 53281: public API User authetication failed
     try:
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=("fake_user", "fake_password"))
@@ -59,8 +66,10 @@ def test_configure_audit_logging(params_from_base_test_setup):
         pass
     # Triggering event 53280: public API User authetication
     sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
-    audit_log_path = get_audit_log_path(cluster_config, tested_ids)
+########################### End of triggered events #########################################
 
+    # 4. Check that the events are are recorded/not recorded in the audit_log file
+    audit_log_path = get_audit_log_path(cluster_config, tested_ids)
     for id in tested_ids.keys():
         pattern =  ["\"id\":" + id]
         if tested_ids[id] is True: # we are expecting the id in the log
