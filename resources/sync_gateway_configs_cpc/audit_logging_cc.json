@@ -1,0 +1,21 @@
+{
+    "bootstrap": {
+
+        "use_tls_server": false,
+        "username": "bucket-admin",
+        "password": "password",
+
+
+
+        "group_id": "data-bucket",
+        "server":"couchbase://172.23.136.104:"
+    },
+    "logging": {"debug": {"enabled": true}, "audit": {"enabled": true}}, 
+    "api":{
+
+
+        "metrics_interface": ":4986",
+        "public_interface":":4984",
+        "admin_interface":"0.0.0.0:4985"
+    }
+}
