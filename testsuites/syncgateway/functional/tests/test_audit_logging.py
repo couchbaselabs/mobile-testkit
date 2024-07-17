@@ -136,6 +136,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
     assert len(stdout) == 0, "rotated_logs_size_limit was exceeded but the rotated logs were not deleted"
 
+
 def get_audit_log_folder(cluster_config):
     ansible_runner = AnsibleRunner(cluster_config)
 
