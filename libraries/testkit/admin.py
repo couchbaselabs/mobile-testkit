@@ -650,7 +650,7 @@ class Admin:
                 return db
         return None
 
-    def get_audit_logging_conf(self,db):
+    def get_audit_logging_conf(self, db):
         if not is_admin_auth_disabled(self.cluster_config):
             self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
