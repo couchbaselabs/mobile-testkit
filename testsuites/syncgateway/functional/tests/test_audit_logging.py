@@ -130,6 +130,7 @@ def test_configure_audit_logging(params_from_base_test_setup):
                 print("*** Checking if even id " + str(id) + " is in the audit log - not expecting it")
                 scan_for_pattern(audit_log_path + "/sg_audit.log", pattern)
 
+
 def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     '''
     @summary:
@@ -138,20 +139,13 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     3. Trigger the tested events
     4. Check that the events are are recorded/not recorded in the audit_log file
     '''
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-    cluster_helper = ClusterKeywords(cluster_config)
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
-
-
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     audit_config = {"enabled": True, "events": {"53280": True}}
     admin_client.update_audit_config(sg_db, audit_config)
 
     # Triggering event 53280: public API User authetication, to increaes the audit log size
-    for i in range (0, 1000):
+    for i in range(0, 1000):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
-
 
 
 def get_audit_log_path(cluster_config, tested_ids):
