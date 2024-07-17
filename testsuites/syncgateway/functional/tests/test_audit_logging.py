@@ -63,7 +63,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     yield sg_client, admin_client, sg_url, sg_admin_url
 
 
-def test_configure_audit_logging(params_from_base_test_setup):
+def test_configure_audit_logging(params_from_base_test_setup, audit_logging_fixture):
     '''
     @summary:
     1. Enable audit logging by resetting the cluster
