@@ -1,19 +1,13 @@
 {
     "bootstrap": {
-
         "use_tls_server": false,
         "username": "bucket-admin",
         "password": "password",
-
-
-
         "group_id": "data-bucket",
-        "server":"couchbase://172.23.136.104:"
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
     },
     "logging": {"log_file_path": "/home/sync_gateway/logs", "debug": {"enabled": true}, "audit": {"enabled": true, "audit_log_file_path": "/home/sync_gateway/logs"}},
     "api":{
-
-
         "metrics_interface": ":4986",
         "public_interface":":4984",
         "admin_interface":"0.0.0.0:4985"
