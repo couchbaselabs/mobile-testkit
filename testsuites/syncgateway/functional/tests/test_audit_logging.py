@@ -63,7 +63,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     yield sg_client, admin_client, sg_url, sg_admin_url
 
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
-    remote_executor("rm -rf /home/sync_gateway/logs")
+    remote_executor.execute("rm -rf /home/sync_gateway/logs")
 
 
 def test_configure_audit_logging(params_from_base_test_setup, audit_logging_fixture):
