@@ -12,10 +12,10 @@
     },
     "logging": { "debug": {"enabled": true},
                  "audit": {"enabled": true,
-                           "rotation": {"max_size": 1,
+                           "rotation": {"max_size": 2,
                                         "max_age": 0,
                                         "localtime": false,
-                                        "rotated_logs_size_limit": 1024
+                                        "rotated_logs_size_limit": 3
                                        }
                           }
                 },
