@@ -122,7 +122,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     admin_client.update_audit_config(sg_db, audit_config)
 
     # 2. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
-    for i in range(0, 4500):
+    for i in range(0, 6500):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
     # 3. Looking at the content of the logs directory and expecting it to contain an archive
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
@@ -131,7 +131,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     else:
         assert False, "The archive for the rotation was not found even though it was expected"
 
-    for i in range(0, 20000):
+    for i in range(0, 30000):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
     assert len(stdout) == 0, "rotated_logs_size_limit was exceeded but the rotated logs were not deleted"
