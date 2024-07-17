@@ -5,6 +5,7 @@ import pytest
 import random
 
 from keywords.ClusterKeywords import ClusterKeywords
+from keywords.remoteexecutor import RemoteExecutor
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
@@ -141,14 +142,17 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     '''
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
+    cluster = Cluster(config=cluster_config)
+    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+
     audit_config = {"enabled": True, "events": {"53280": True}}
     admin_client.update_audit_config(sg_db, audit_config)
 
     # Triggering event 53280: public API User authetication, to increaes the audit log size to more than 1MB
     for i in range(0, 3000):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
-    audit_log_path = get_audit_log_folder(cluster_config)
-    print("==========================================FILES=" + str(os.listdir(audit_log_path)))
+    _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
+    print("*******************************************" + str(stdout))
 
 
 def get_audit_log_folder(cluster_config):
