@@ -63,7 +63,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     yield sg_client, admin_client, sg_url, sg_admin_url
 
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
-    remote_executor.execute("rm -rf /home/sync_gateway/logs")
+    remote_executor.execute("rm -rf /home/sync_gateway/logs/audit_log*")
 
 
 def test_configure_audit_logging(params_from_base_test_setup, audit_logging_fixture):
@@ -126,7 +126,10 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
     # 3. Looking at the content of the logs directory and expecting it to contain an archive
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
-    assert ".log.gz" in stdout[0], "The archive for the rotation was not found even though it was expected"
+    if len(stdout) > 0:
+        assert ".log.gz" in stdout[0], "The archive for the rotation was not found even though it was expected"
+    else:
+        assert False, "The archive for the rotation was not found even though it was expected"
 
 
 def get_audit_log_folder(cluster_config):
