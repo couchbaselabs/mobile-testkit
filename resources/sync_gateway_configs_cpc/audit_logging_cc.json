@@ -17,9 +17,9 @@
                                         "localtime": false,
                                         "rotated_logs_size_limit": 1024,
                                         "rotation_interval": 0
-                                       },
-                          },
-                }
+                                       }
+                          }
+                },
     "api":{
         {{ disable_admin_auth }}
         {{ tls }}
