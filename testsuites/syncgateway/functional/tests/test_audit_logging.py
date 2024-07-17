@@ -5,20 +5,15 @@ import pytest
 import random
 
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.utils import log_info, host_for_url
+from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
-from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_sync_gateway_version
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
-from keywords.exceptions import LogScanningError, CollectionError
+from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.scan_logs import scan_for_pattern, unzip_log_files
-
-
-
-
-
+from utilities.scan_logs import scan_for_pattern
 
 
 def test_configure_audit_logging(params_from_base_test_setup):
@@ -44,6 +39,14 @@ def test_configure_audit_logging(params_from_base_test_setup):
     channels = ["audit_logging"]
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     db_config = {"bucket": "data-bucket", "num_index_replicas": 0}
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    if sync_gateway_version < "3.2.0":
+        pytest.skip('This test cannnot run with sg version below 3.2.0')
+    if xattrs_enabled:
+        pytest.skip('There is no need to run this test with xattrs_enabled')
+
     # 1. Enable audit logging by resetting the cluster
     cluster = Cluster(config=cluster_config)
     sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
@@ -54,29 +57,30 @@ def test_configure_audit_logging(params_from_base_test_setup):
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
 
     # 2. Randomly configure the tested events, to be recorded or not recorded.
-    tested_ids = {"53281": bool(random.randint(0,1)), "53280": bool(random.randint(0,1))}
+    tested_ids = {"53281": bool(random.randint(0, 1)), "53280": bool(random.randint(0, 1))}
     audit_config = {"enabled": True, "events": tested_ids}
     admin_client.replace_audit_config(sg_db, audit_config)
 
-########################### 3. Trigger the tested events #########################################
+    # 3. Trigger the tested events
     # Triggering event 53281: public API User authetication failed
     try:
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=("fake_user", "fake_password"))
-    except:
+    except (Exception):
         pass
     # Triggering event 53280: public API User authetication
     sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
-########################### End of triggered events #########################################
+
+    # End of triggered events
 
     # 4. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_path = get_audit_log_path(cluster_config, tested_ids)
     for id in tested_ids.keys():
-        pattern =  ["\"id\":" + id]
-        if tested_ids[id] is True: # we are expecting the id in the log
+        pattern = ["\"id\":" + id]
+        if tested_ids[id] is True:  # we are expecting the id in the log
             print("*** Expecting event " + str(id) + " to be in the logs")
             scan_for_pattern(audit_log_path + "/sg_audit.log", pattern)
-        else:
-            with pytest.raises(Exception) as e:
+        else:  # we are NOT expecting the id in the log
+            with pytest.raises(Exception):
                 print("*** Checking if even id " + str(id) + " is in the audit log - not expecting it")
                 scan_for_pattern(audit_log_path + "/sg_audit.log", pattern)
 
