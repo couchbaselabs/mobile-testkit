@@ -16,7 +16,7 @@
                                         "max_age": 0,
                                         "localtime": false,
                                         "rotated_logs_size_limit": 1024,
-                                        "rotation_interval": 0
+                                        "rotation_interval": "0"
                                        }
                           }
                 },
