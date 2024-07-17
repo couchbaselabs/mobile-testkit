@@ -72,36 +72,7 @@ def test_configure_audit_logging(params_from_base_test_setup):
     4. Check that the events are are recorded/not recorded in the audit_log file
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
-    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-    cluster_helper = ClusterKeywords(cluster_config)
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
-    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
-    cluster = Cluster(config=cluster_config)
-    admin_client = Admin(cluster.sync_gateways[0])
-    sg_url = cluster_hosts["sync_gateways"][0]["public"]
-    sg_db = "db"
-    sg_client = MobileRestClient()
-    username = 'audit-logging-user'
-    password = 'password'
-    channels = ["audit_logging"]
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    db_config = {"bucket": "data-bucket", "num_index_replicas": 0}
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
-
-    if sync_gateway_version < "3.2.0":
-        pytest.skip('This test cannnot run with sg version below 3.2.0')
-    if xattrs_enabled:
-        pytest.skip('There is no need to run this test with xattrs_enabled')
-
-    # 1. Enable audit logging by resetting the cluster
-    cluster = Cluster(config=cluster_config)
-    sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
-    cluster.reset(sg_config_path=sg_conf, use_config=True)
-    if admin_client.does_db_exist(sg_db) is False:
-        admin_client.create_db(sg_db, db_config)
-    if admin_client.does_user_exist(sg_db, username) is False:
-        sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
 
     # 2. Randomly configure the tested events, to be recorded or not recorded.
     tested_ids = {"53281": bool(random.randint(0, 1)), "53280": bool(random.randint(0, 1))}
@@ -116,7 +87,6 @@ def test_configure_audit_logging(params_from_base_test_setup):
         pass
     # Triggering event 53280: public API User authetication
     sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
-
     # End of triggered events
 
     # 4. Check that the events are are recorded/not recorded in the audit_log file
@@ -135,24 +105,25 @@ def test_configure_audit_logging(params_from_base_test_setup):
 def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     '''
     @summary:
-    1. Enable audit logging by resetting the cluster
-    2. Randomly configure the tested events, to be recorded or not recorded
-    3. Trigger the tested events
-    4. Check that the events are are recorded/not recorded in the audit_log file
+    1. Enable event 53280 - public API authetication
+    2. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
+    3. Looking at the content of the logs directory and expecting it to contain an archive
     '''
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     cluster = Cluster(config=cluster_config)
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
+    # 1. Enable event 53280 - public API authetication
     audit_config = {"enabled": True, "events": {"53280": True}}
     admin_client.update_audit_config(sg_db, audit_config)
 
-    # Triggering event 53280: public API User authetication, to increaes the audit log size to more than 1MB
+    # 2. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
     for i in range(0, 3000):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
+    # 3. Looking at the content of the logs directory and expecting it to contain an archive
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
-    print("*******************************************" + str(stdout))
+    assert ".log.gz" in stdout, "The archive for the rotation was not found even though it was expected"
 
 
 def get_audit_log_folder(cluster_config):
