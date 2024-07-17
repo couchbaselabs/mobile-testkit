@@ -131,7 +131,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     else:
         assert False, "The archive for the rotation was not found even though it was expected"
 
-    for i in range(0, 3000):
+    for i in range(0, 20000):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
     assert len(stdout) == 0, "rotated_logs_size_limit was exceeded but the rotated logs were not deleted"

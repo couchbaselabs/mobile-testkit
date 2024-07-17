@@ -15,7 +15,7 @@
                            "rotation": {"max_size": 2,
                                         "max_age": 0,
                                         "localtime": false,
-                                        "rotated_logs_size_limit": 3
+                                        "rotated_logs_size_limit": 10
                                        }
                           }
                 },
