@@ -144,7 +144,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     admin_client.update_audit_config(sg_db, audit_config)
 
     # Triggering event 53280: public API User authetication, to increaes the audit log size
-    for i in range(0, 1000):
+    for i in range(0, 3000):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
 
 
