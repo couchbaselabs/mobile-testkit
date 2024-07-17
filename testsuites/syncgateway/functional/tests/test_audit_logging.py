@@ -119,16 +119,16 @@ def test_configure_audit_logging(params_from_base_test_setup):
     # End of triggered events
 
     # 4. Check that the events are are recorded/not recorded in the audit_log file
-    audit_log_path = get_audit_log_path(cluster_config, tested_ids)
+    audit_log_folder = get_audit_log_folder(cluster_config)
     for id in tested_ids.keys():
         pattern = ["\"id\":" + id]
         if tested_ids[id] is True:  # we are expecting the id in the log
             print("*** Expecting event " + str(id) + " to be in the logs")
-            scan_for_pattern(audit_log_path + "/sg_audit.log", pattern)
+            scan_for_pattern(audit_log_folder + "/sg_audit.log", pattern)
         else:  # we are NOT expecting the id in the log
             with pytest.raises(Exception):
                 print("*** Checking if even id " + str(id) + " is in the audit log - not expecting it")
-                scan_for_pattern(audit_log_path + "/sg_audit.log", pattern)
+                scan_for_pattern(audit_log_folder + "/sg_audit.log", pattern)
 
 
 def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
@@ -140,15 +140,18 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     4. Check that the events are are recorded/not recorded in the audit_log file
     '''
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
+    cluster_config = params_from_base_test_setup["cluster_config"]
     audit_config = {"enabled": True, "events": {"53280": True}}
     admin_client.update_audit_config(sg_db, audit_config)
 
-    # Triggering event 53280: public API User authetication, to increaes the audit log size
+    # Triggering event 53280: public API User authetication, to increaes the audit log size to more than 1MB
     for i in range(0, 3000):
         sg_client.get_all_docs(url=sg_url, db=sg_db, auth=(username, password))
+    audit_log_path = get_audit_log_folder(cluster_config)
+    print("==========================================FILES=" + str(os.listdir(audit_log_path)))
 
 
-def get_audit_log_path(cluster_config, tested_ids):
+def get_audit_log_folder(cluster_config):
     ansible_runner = AnsibleRunner(cluster_config)
 
     log_info("Pulling sync_gateway / sg_accel logs")
