@@ -66,6 +66,30 @@ def audit_logging_fixture(params_from_base_test_setup):
     remote_executor.execute("rm -rf /home/sync_gateway/logs/audit_log*")
 
 
+def test_audit_logging_multiple_admin_users(params_from_base_test_setup, audit_logging_fixture):
+    '''
+    @summary:
+    1. Enable audit logging and add more admin users
+    2. Trigger tested events with multiple admin users
+    3. Check all events are logged idk man
+    '''
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
+
+    # 1. Add more admin users
+
+
+def test_audit_logging_multi_database(params_from_base_test_setup, audit_logging_fixture):
+    '''
+    @summary:
+    1. Enable sgw with multiple databases
+    2. Enable audit logging
+    3. Trigger tested events across all databases
+    4. Check that the recorded events have the correct databases recorded 
+    '''
+    pass
+
+
 def test_configure_audit_logging(params_from_base_test_setup, audit_logging_fixture):
     '''
     @summary:
