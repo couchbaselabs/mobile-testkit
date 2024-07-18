@@ -130,10 +130,6 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     cluster = Cluster(config=cluster_config)
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
-    # 1. Enable event 53280 - public API authetication
-    # audit_config = {"enabled": True, "events": {"53280": True}}
-    # admin_client.update_audit_config(sg_db, audit_config)
-
     # 1. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
     for i in range(0, 6500):
         trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
