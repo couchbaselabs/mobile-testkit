@@ -16,6 +16,7 @@ from libraries.testkit.cluster import Cluster
 from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.scan_logs import scan_for_pattern
+from keywords import couchbaseserver
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
@@ -27,6 +28,7 @@ password = 'password'
 is_audit_logging_set = False
 channels = ["audit_logging"]
 auth = None
+bucket2 = "audit-logging-bucket2"
 
 
 @pytest.fixture
@@ -38,6 +40,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     global is_audit_logging_set
     global channels
     global auth
+    global bucket2
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -53,6 +56,11 @@ def audit_logging_fixture(params_from_base_test_setup):
     db_config = {"bucket": "data-bucket", "num_index_replicas": 0}
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    cluster_helper = ClusterKeywords(cluster_config)
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    cbs_url = topology["couchbase_servers"][0]
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+ 
 
     if sync_gateway_version < "3.2.0":
         pytest.skip('This test cannnot run with sg version below 3.2.0')
@@ -62,6 +70,7 @@ def audit_logging_fixture(params_from_base_test_setup):
         cluster = Cluster(config=cluster_config)
         sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
         cluster.reset(sg_config_path=sg_conf, use_config=True)
+        cb_server.create_bucket(cluster_config, bucket2, 100)
         is_audit_logging_set = True
         if admin_client.does_db_exist(sg_db) is False:
             admin_client.create_db(sg_db, db_config)
@@ -146,7 +155,7 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     sg_client, admin_client, _, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db2 = "db2" + random_suffix
-    db_config = {"bucket": "data-bucket", "num_index_replicas": 0}
+    db_config = {"bucket": bucket2, "num_index_replicas": 0}
     db1_pattern = re.compile('\"db\":\"db\".*\"id\":54111')
     db2_pattern = re.compile('\"db\":\"db\".*\"id\":54100')
     if admin_client.does_db_exist(sg_db) is False:
