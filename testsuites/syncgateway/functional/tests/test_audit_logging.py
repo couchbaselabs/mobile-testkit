@@ -173,8 +173,8 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
         doc = docFile.read()
         db1_event = re.findall(db1_pattern, doc)
         db2_event = re.findall(db2_pattern, doc)
-        assert len(db1_event == 1), "The event for the first database was not recorded. The audit log file: " + str(doc)
-        assert len(db2_event == 1), "The event for the first database was not recorded. The audit log file: " + str(doc)
+        assert db1_event == True, "The event for the first database was not recorded. The audit log file: " + str(doc)
+        assert db2_event == True, "The event for the first database was not recorded. The audit log file: " + str(doc)
 
 
 def get_audit_log_folder(cluster_config):
