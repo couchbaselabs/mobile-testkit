@@ -162,10 +162,10 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
 def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     sg_client, admin_client, _, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
-    db1_pattern = re.compile('\"db\":\"{}\".*\"id\":54111'.format(sg_db))
+    db1_pattern = re.compile('\"db\":\"{}\".*\"id\":54110'.format(sg_db))
     db2_pattern = re.compile('\"db\":\"{}\".*\"id\":54100'.format(sg2_db))
 
-    trigger_event_54111(sg_client, sg_admin_url, role="db1_role")
+    trigger_event_54110(sg_client, sg_admin_url, role="db1_role", db=sg_db)
     trigger_event_54100(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=sg2_db)
 
     audit_log_folder = get_audit_log_folder(cluster_config)
