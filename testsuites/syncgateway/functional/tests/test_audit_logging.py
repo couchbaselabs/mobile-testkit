@@ -23,11 +23,13 @@ NOT_EXPECTED_IN_THE_LOGS = False
 
 random_suffix = str(uuid.uuid4())[:8]
 sg_db = "db" + random_suffix
+sg2_db = "db2" + random_suffix
 username = 'audit-logging-user'
 password = 'password'
 is_audit_logging_set = False
 channels = ["audit_logging"]
 auth = None
+bucket = "data-bucket"
 bucket2 = "audit-logging-bucket2"
 
 
@@ -53,25 +55,34 @@ def audit_logging_fixture(params_from_base_test_setup):
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    db_config = {"bucket": "data-bucket", "num_index_replicas": 0}
+    db_config = {"bucket": bucket, "num_index_replicas": 0}
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+
     if sync_gateway_version < "3.2.0":
         pytest.skip('This test cannnot run with sg version below 3.2.0')
     if xattrs_enabled:
         pytest.skip('There is no need to run this test with xattrs_enabled')
+
+    # Only reset the cluster to configure audit logging once, to save test time.
     if is_audit_logging_set is False:
         cluster = Cluster(config=cluster_config)
         sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
         cluster.reset(sg_config_path=sg_conf, use_config=True)
-        cb_server.create_bucket(cluster_config, bucket2, 100)
         is_audit_logging_set = True
+        # Creating buckets and SGW dbs
+        if bucket in cb_server.get_bucket_names():
+            cb_server.delete_bucket(bucket)
+        cb_server.create_bucket(cluster_config, bucket, 100)
+        cb_server.create_bucket(cluster_config, bucket2, 100)
         if admin_client.does_db_exist(sg_db) is False:
             admin_client.create_db(sg_db, db_config)
+        if admin_client.does_db_exist(sg2_db) is False:
+            admin_client.create_db(sg2_db, db_config)
         if admin_client.does_user_exist(sg_db, username) is False:
             sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
@@ -152,15 +163,11 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
 def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     sg_client, admin_client, _, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
-    db2 = "db2" + random_suffix
-    db_config = {"bucket": bucket2, "num_index_replicas": 0}
-    db1_pattern = re.compile('\"db\":\"db\".*\"id\":54111')
-    db2_pattern = re.compile('\"db\":\"db\".*\"id\":54100')
-    if admin_client.does_db_exist(sg_db) is False:
-        admin_client.create_db("db2" + random_suffix, db_config)
+    db1_pattern = re.compile('\"db\":\"{}\".*\"id\":54111'.format(sg_db))
+    db2_pattern = re.compile('\"db\":\"{}\".*\"id\":54100'.format(sg2_db))
 
     trigger_event_54111(sg_client, sg_admin_url, role="db1_role")
-    trigger_event_54100(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=db2)
+    trigger_event_54100(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=sg2_db)
 
     audit_log_folder = get_audit_log_folder(cluster_config)
     with open(audit_log_folder + "/sg_audit.log", mode="rt", encoding="utf-8") as docFile:
