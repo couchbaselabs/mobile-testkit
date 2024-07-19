@@ -99,7 +99,7 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     2. Check that the events are are recorded/not recorded in the audit_log file
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
+    sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix
     event_role = "role" + random_suffix
     tested_ids = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
@@ -143,7 +143,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     1. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
     2. Looking at the content of the logs directory and expecting it to contain an archive
     '''
-    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
+    sg_client, _, sg_url, _ = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     cluster = Cluster(config=cluster_config)
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
@@ -160,14 +160,21 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
 
 
 def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
-    sg_client, admin_client, _, sg_admin_url = audit_logging_fixture
+    '''
+    @summary:
+    1. Triggering 2 events in 2 different dbs
+    2. Checking that the right event was logged against the right db
+    '''
+    sg_client, _, _, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db1_pattern = re.compile('\"db\":\"{}\".*\"id\":54110'.format(sg_db))
-    db2_pattern = re.compile('\"db\":\"{}\".*\"id\":54100'.format(sg2_db))
+    db2_pattern = re.compile('\"db\":\"{}\".*\"id\":54101'.format(sg2_db))
 
+    # 1. Triggering 2 events in 2 different dbs
     trigger_event_54110(sg_client, sg_admin_url, role="db1_role", db=sg_db)
     trigger_event_54100(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=sg2_db)
 
+    # 2. Checking that the right event was logged against the right db
     audit_log_folder = get_audit_log_folder(cluster_config)
     with open(audit_log_folder + "/sg_audit.log", mode="rt", encoding="utf-8") as docFile:
         doc = docFile.read()
