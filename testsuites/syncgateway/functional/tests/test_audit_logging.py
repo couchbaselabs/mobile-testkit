@@ -171,10 +171,10 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     audit_log_folder = get_audit_log_folder(cluster_config)
     with open(audit_log_folder + "/sg_audit.log", mode="rt", encoding="utf-8") as docFile:
         doc = docFile.read()
-        db1_event = re.findall(db1_pattern, doc)
-        db2_event = re.findall(db2_pattern, doc)
-        assert db1_event == True, "The event for the first database was not recorded. The audit log file: " + str(doc)
-        assert db2_event == True, "The event for the first database was not recorded. The audit log file: " + str(doc)
+        is_db1_event_in_logs = re.findall(db1_pattern, doc)
+        is_db2_event_in_logs = re.findall(db2_pattern, doc)
+        assert is_db1_event_in_logs, "The event for db1 was not recorded properly. The audit log file: " + str(doc)
+        assert is_db2_event_in_logs, "The event for db2 was not recorded properly. The audit log file: " + str(doc)
 
 
 def get_audit_log_folder(cluster_config):
