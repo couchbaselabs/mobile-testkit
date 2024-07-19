@@ -248,6 +248,7 @@ def trigger_event_54111(sg_client, sg_admin_url, role, db=sg_db):
 def trigger_event_54112(sg_client, sg_admin_url, role, db=sg_db):
     sg_client.update_role(url=sg_admin_url, db=db, name=role)
 
+
 # Create session
 def trigger_event_53282(sg_client, sg_admin_url, db=sg_db):
     sg_client.create_session(url=sg_admin_url, db=db, name=username, auth=auth)
