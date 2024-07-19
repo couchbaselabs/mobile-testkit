@@ -168,7 +168,7 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     sg_client, _, _, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db1_pattern = re.compile('\"db\":\"{}\".*\"id\":54110'.format(sg_db))
-    db2_pattern = re.compile('\"db\":\"{}\".*\"id\":54101'.format(sg2_db))
+    db2_pattern = re.compile('\"db\":\"{}\".*\"id\":54100'.format(sg2_db))
 
     # 1. Triggering 2 events in 2 different dbs
     trigger_event_54110(sg_client, sg_admin_url, role="db1_role", db=sg_db)
@@ -248,6 +248,6 @@ def trigger_event_54111(sg_client, sg_admin_url, role, db=sg_db):
 def trigger_event_54112(sg_client, sg_admin_url, role, db=sg_db):
     sg_client.update_role(url=sg_admin_url, db=db, name=role)
 
-
+# Create session
 def trigger_event_53282(sg_client, sg_admin_url, db=sg_db):
     sg_client.create_session(url=sg_admin_url, db=db, name=username, auth=auth)
