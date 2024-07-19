@@ -3,6 +3,7 @@ import shutil
 import time
 import pytest
 import uuid
+import re
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.remoteexecutor import RemoteExecutor
@@ -19,13 +20,13 @@ from utilities.scan_logs import scan_for_pattern
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
 
-sg_db = "db"
+random_suffix = str(uuid.uuid4())[:8]
+sg_db = "db" + random_suffix
 username = 'audit-logging-user'
 password = 'password'
 is_audit_logging_set = False
 channels = ["audit_logging"]
 auth = None
-random_suffix = str(uuid.uuid4())[:8]
 
 
 @pytest.fixture
@@ -131,7 +132,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     # 1. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
-    for i in range(0, 500000):
+    for i in range(0, 6500):
         trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
     # 2. Looking at the content of the logs directory and expecting it to contain an archive
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
@@ -139,6 +140,28 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
         assert ".log.gz" in stdout[0], "The archive for the rotation was not found even though it was expected"
     else:
         assert False, "The archive for the rotation was not found even though it was expected"
+
+
+def events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
+    sg_client, admin_client, _, sg_admin_url = audit_logging_fixture
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    db2 = "db2" + random_suffix
+    db_config = {"bucket": "data-bucket", "num_index_replicas": 0}
+    db1_pattern = re.compile('\"db\":\"db\".*\"id\":54111')
+    db2_pattern = re.compile('\"db\":\"db\".*\"id\":54100')
+    if admin_client.does_db_exist(sg_db) is False:
+        admin_client.create_db("db2" + random_suffix, db_config)
+
+    trigger_event_54111(sg_client, sg_admin_url, role="db1_role")
+    trigger_event_54100(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=db2)
+
+    audit_log_folder = get_audit_log_folder(cluster_config)
+    with open(audit_log_folder + "/sg_audit.log", mode="rt", encoding="utf-8") as docFile:
+        doc = docFile.read()
+        db1_event = re.findall(db1_pattern, doc)
+        db2_event = re.findall(db2_pattern, doc)
+        assert len(db1_event == 1), "The event for the first database was not recorded. The audit log file: " + str(doc)
+        assert len(db2_event == 1), "The event for the first database was not recorded. The audit log file: " + str(doc)
 
 
 def get_audit_log_folder(cluster_config):
@@ -158,44 +181,53 @@ def get_audit_log_folder(cluster_config):
         return "{}/sg1".format(temp_log_path)
 
 
-def trigger_event_53281(sg_client, sg_url):
+# public API User authetication failed
+def trigger_event_53281(sg_client, sg_url, db=sg_db):
     try:
-        sg_client.get_all_docs(url=sg_url, db=sg_db, auth=("fake_user", "fake_password"))
+        sg_client.get_all_docs(url=sg_url, db=db, auth=("fake_user", "fake_password"))
     except (Exception):
         pass
 
 
-def trigger_event_53280(sg_client, sg_url, auth):
-    sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth)
+# public API User authetication
+def trigger_event_53280(sg_client, sg_url, auth, db=sg_db):
+    sg_client.get_all_docs(url=sg_url, db=db, auth=auth)
 
 
-def trigger_event_54100(sg_client, sg_admin_url, user):
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user, password=password, channels=channels, auth=auth)
+# Create user
+def trigger_event_54100(sg_client, sg_admin_url, user, db=sg_db):
+    sg_client.create_user(url=sg_admin_url, db=db, name=user, password=password, channels=channels, auth=auth)
 
 
-def trigger_event_54101(sg_client, sg_admin_url, user):
-    sg_client.get_user(url=sg_admin_url, db=sg_db, name=user, auth=auth)
+# Read user
+def trigger_event_54101(sg_client, sg_admin_url, user, db=sg_db):
+    sg_client.get_user(url=sg_admin_url, db=db, name=user, auth=auth)
 
 
-def trigger_event_54102(sg_client, sg_admin_url, user):
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=user, password="password1", auth=auth)
+# Update user
+def trigger_event_54102(sg_client, sg_admin_url, user, db=sg_db):
+    sg_client.update_user(url=sg_admin_url, db=db, name=user, password="password1", auth=auth)
 
 
-def trigger_event_54103(sg_client, sg_admin_url, user):
-    sg_client.delete_user(url=sg_admin_url, db=sg_db, name=user, auth=auth)
+# Delete user
+def trigger_event_54103(sg_client, sg_admin_url, user, db=sg_db):
+    sg_client.delete_user(url=sg_admin_url, db=db, name=user, auth=auth)
 
 
-def trigger_event_54110(sg_client, sg_admin_url, role):
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role)
+# Create role
+def trigger_event_54110(sg_client, sg_admin_url, role, db=sg_db):
+    sg_client.create_role(url=sg_admin_url, db=db, name=role)
 
 
-def trigger_event_54111(sg_client, sg_admin_url, role):
-    sg_client.get_role(url=sg_admin_url, db=sg_db, name=role)
+# Read role
+def trigger_event_54111(sg_client, sg_admin_url, role, db=sg_db):
+    sg_client.get_role(url=sg_admin_url, db=db, name=role)
 
 
-def trigger_event_54112(sg_client, sg_admin_url, role):
-    sg_client.update_role(url=sg_admin_url, db=sg_db, name=role)
+# Update role
+def trigger_event_54112(sg_client, sg_admin_url, role, db=sg_db):
+    sg_client.update_role(url=sg_admin_url, db=db, name=role)
 
 
-def trigger_event_53282(sg_client, sg_admin_url):
-    sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
+def trigger_event_53282(sg_client, sg_admin_url, db=sg_db):
+    sg_client.create_session(url=sg_admin_url, db=db, name=username, auth=auth)
