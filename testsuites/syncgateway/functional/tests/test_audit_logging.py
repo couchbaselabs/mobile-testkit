@@ -60,8 +60,6 @@ def audit_logging_fixture(params_from_base_test_setup):
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
- 
-
     if sync_gateway_version < "3.2.0":
         pytest.skip('This test cannnot run with sg version below 3.2.0')
     if xattrs_enabled:
