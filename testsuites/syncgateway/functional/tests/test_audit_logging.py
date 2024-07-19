@@ -55,7 +55,6 @@ def audit_logging_fixture(params_from_base_test_setup):
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    db_config = {"bucket": bucket, "num_index_replicas": 0}
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     cluster_helper = ClusterKeywords(cluster_config)
@@ -80,9 +79,9 @@ def audit_logging_fixture(params_from_base_test_setup):
         cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket2, 100)
         if admin_client.does_db_exist(sg_db) is False:
-            admin_client.create_db(sg_db, db_config)
+            admin_client.create_db(sg_db, {"bucket": bucket, "num_index_replicas": 0})
         if admin_client.does_db_exist(sg2_db) is False:
-            admin_client.create_db(sg2_db, db_config)
+            admin_client.create_db(sg2_db, {"bucket": bucket2, "num_index_replicas": 0})
         if admin_client.does_user_exist(sg_db, username) is False:
             sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
