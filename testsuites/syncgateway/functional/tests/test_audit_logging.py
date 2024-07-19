@@ -142,7 +142,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
         assert False, "The archive for the rotation was not found even though it was expected"
 
 
-def events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
+def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     sg_client, admin_client, _, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db2 = "db2" + random_suffix
