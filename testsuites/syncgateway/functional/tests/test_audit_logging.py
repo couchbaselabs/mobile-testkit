@@ -61,12 +61,12 @@ def audit_logging_fixture(params_from_base_test_setup):
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    print("*****************************************sync_gateway_version=" + str(sync_gateway_version))
     if sync_gateway_version < "3.2.0":
-        print("------------------------------------------------------------Inside condition")
-        pytest.skip('This test cannnot run with sg version below 3.2.0')
+        print('This test cannnot run with sg version below 3.2.0')
+        return
     if xattrs_enabled:
-        pytest.skip('There is no need to run this test with xattrs_enabled')
+        print('There is no need to run this test with xattrs_enabled')
+        return
 
     # Only reset the cluster to configure audit logging once, to save test time.
     if is_audit_logging_set is False:
