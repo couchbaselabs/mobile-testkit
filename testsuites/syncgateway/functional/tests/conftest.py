@@ -614,6 +614,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     use_views = params_from_base_suite_setup["use_views"]
     trace_logs = params_from_base_suite_setup["trace_logs"]
 
+    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + str(request.node.fspath))
     if "test_audit_logging" in request.node.fspath:
         if sync_gateway_version < "3.2.0":
             print("*****************************************Under 3.2.0")
