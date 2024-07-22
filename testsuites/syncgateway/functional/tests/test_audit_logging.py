@@ -55,17 +55,10 @@ def audit_logging_fixture(params_from_base_test_setup):
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-
-    if sync_gateway_version < "3.2.0":
-        pytest.skip('This test cannnot run with sg version below 3.2.0')
-    if xattrs_enabled:
-        pytest.skip('There is no need to run this test with xattrs_enabled')
 
     # Only reset the cluster to configure audit logging once, to save test time.
     if is_audit_logging_set is False:
@@ -99,6 +92,14 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     2. Check that the events are are recorded/not recorded in the audit_log file
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    if sync_gateway_version < "3.2.0":
+        pytest.skip('This test cannnot run with sg version below 3.2.0')
+    if xattrs_enabled:
+        pytest.skip('There is no need to run this test with xattrs_enabled')
+
+
     sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix
     event_role = "role" + random_suffix
