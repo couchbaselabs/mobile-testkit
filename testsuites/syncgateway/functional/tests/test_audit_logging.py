@@ -99,7 +99,6 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     if xattrs_enabled:
         pytest.skip('There is no need to run this test with xattrs_enabled')
 
-
     sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix
     event_role = "role" + random_suffix
