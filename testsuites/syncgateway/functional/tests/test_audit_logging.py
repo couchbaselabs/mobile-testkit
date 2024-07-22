@@ -55,18 +55,10 @@ def audit_logging_fixture(params_from_base_test_setup):
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    if sync_gateway_version < "3.2.0":
-        print('This test cannnot run with sg version below 3.2.0')
-        return
-    if xattrs_enabled:
-        print('There is no need to run this test with xattrs_enabled')
-        return
 
     # Only reset the cluster to configure audit logging once, to save test time.
     if is_audit_logging_set is False:
@@ -99,6 +91,8 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     1. Trigger the tested events
     2. Check that the events are are recorded/not recorded in the audit_log file
     '''
+    if should_skip_test(params_from_base_test_setup):
+        pytest.skip("Skipping the test, see the reason above")
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix
@@ -144,6 +138,8 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     1. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
     2. Looking at the content of the logs directory and expecting it to contain an archive
     '''
+    if should_skip_test(params_from_base_test_setup):
+        pytest.skip("Skipping the test, see the reason above")
     sg_client, _, sg_url, _ = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     cluster = Cluster(config=cluster_config)
@@ -166,6 +162,8 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     1. Triggering 2 events in 2 different dbs
     2. Checking that the right event was logged against the right db
     '''
+    if should_skip_test(params_from_base_test_setup):
+        pytest.skip("Skipping the test, see the reason above")
     sg_client, _, _, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db1_pattern = re.compile('\"db\":\"{}\".*\"id\":54110'.format(sg_db))
@@ -253,3 +251,15 @@ def trigger_event_54112(sg_client, sg_admin_url, role, db=sg_db):
 # Create session
 def trigger_event_53282(sg_client, sg_admin_url, db=sg_db):
     sg_client.create_session(url=sg_admin_url, db=db, name=username, auth=auth)
+
+
+def should_skip_test(params_from_base_test_setup):
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    if sync_gateway_version < "3.2.0":
+        print('This test cannnot run with sg version below 3.2.0')
+        return True
+    if xattrs_enabled:
+        print('There is no need to run this test with xattrs_enabled')
+        return True
+    return False
