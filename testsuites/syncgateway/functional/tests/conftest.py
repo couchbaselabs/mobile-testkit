@@ -617,12 +617,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_file = str(request.node.fspath)
     if "test_audit_logging" in test_file:
         if sync_gateway_version < "3.2.0":
-            print("*****************************************Under 3.2.0")
             pytest.skip('This test cannnot run with sg version below 3.2.0')
         if xattrs_enabled:
-            print("*********************************************xattrs")
             pytest.skip('There is no need to run this test with xattrs_enabled')
-    exit(1)
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
     sg = c.sync_gateways[0]
