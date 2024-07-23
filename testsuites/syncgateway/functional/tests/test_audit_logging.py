@@ -93,6 +93,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     yield sg_client, admin_client, sg_url, sg_admin_url
 
     remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log && systemctl restart sync_gateway")
+    time.sleep(5)
 
 
 @pytest.mark.parametrize("use_settings", [
