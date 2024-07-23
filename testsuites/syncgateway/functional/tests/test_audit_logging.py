@@ -4,6 +4,7 @@ import time
 import pytest
 import uuid
 import re
+import random
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.remoteexecutor import RemoteExecutor
@@ -83,7 +84,11 @@ def audit_logging_fixture(params_from_base_test_setup):
     remote_executor.execute("rm -rf /home/sync_gateway/logs/audit_log*")
 
 
-def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixture):
+@pytest.mark.parametrize("use_settings", [
+    ('default'),
+    ('filtered')
+])
+def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_settings):
     '''
     @summary:
     This test checks a selected number of events and checks that they are logged.
@@ -105,6 +110,9 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
                   "54111": EXPECTED_IN_LOGS,  # Read role
                   "54112": EXPECTED_IN_LOGS  # Update role
                   }
+    if use_settings == 'filtered':
+        for event in tested_ids.keys():
+            tested_ids[event] = bool(random.randint(0, 1))
 
     # 1. Trigger the tested events
     trigger_event_53281(sg_client=sg_client, sg_url=sg_url)
