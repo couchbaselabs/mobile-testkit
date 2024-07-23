@@ -73,7 +73,6 @@ def audit_logging_fixture(params_from_base_test_setup):
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
-    sg_helper = SyncGateway()
 
     # Only reset the cluster to configure audit logging once, to save test time.
     if is_audit_logging_set is False:
@@ -94,9 +93,6 @@ def audit_logging_fixture(params_from_base_test_setup):
             sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
-    remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log")
-    sg_helper.restart_sync_gateways(cluster_config, url=cluster_hosts["sync_gateways"][0]["public"])
-
 
 @pytest.mark.parametrize("use_settings", [
     ("default"),
@@ -110,10 +106,13 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_
     1. Trigger the tested events
     2. Check that the events are are recorded/not recorded in the audit_log file
     '''
+    sg_helper = SyncGateway()
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix + use_settings
     event_role = "role" + random_suffix + use_settings
+    remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log")
+    sg_helper.restart_sync_gateways(cluster_config, url=sg_url)
 
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
@@ -159,7 +158,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     # 1. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
-    for i in range(0, 5500):
+    for i in range(0, 3000):
         trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
     # 2. Looking at the content of the logs directory and expecting it to contain an archive
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
