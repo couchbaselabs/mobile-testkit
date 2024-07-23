@@ -85,8 +85,8 @@ def audit_logging_fixture(params_from_base_test_setup):
 
 
 @pytest.mark.parametrize("use_settings", [
-    ('default'),
-    ('filtered')
+    ("default"),
+    ("filtered")
 ])
 def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_settings):
     '''
@@ -98,8 +98,8 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
-    event_user = "user" + random_suffix
-    event_role = "role" + random_suffix
+    event_user = "user" + random_suffix + use_settings
+    event_role = "role" + random_suffix + use_settings
     tested_ids = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
                   "53280": EXPECTED_IN_LOGS,  # public API User authetication
                   "54100": EXPECTED_IN_LOGS,  # Create user
