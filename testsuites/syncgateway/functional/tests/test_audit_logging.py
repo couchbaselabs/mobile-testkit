@@ -18,7 +18,6 @@ from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.scan_logs import scan_for_pattern
 from keywords import couchbaseserver
-from keywords.SyncGateway import SyncGateway
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
@@ -93,8 +92,11 @@ def audit_logging_fixture(params_from_base_test_setup):
             sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
+    remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log && touch /home/sync_gateway/logs/sg_audit.log")
+
 
 @pytest.mark.parametrize("use_settings", [
+    ("default"),
     ("filtered")
 ])
 def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_settings):
@@ -105,12 +107,11 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_
     1. Trigger the tested events
     2. Check that the events are are recorded/not recorded in the audit_log file
     '''
-    sg_helper = SyncGateway()
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix + use_settings
     event_role = "role" + random_suffix + use_settings
- 
+
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
     if use_settings == 'filtered':
