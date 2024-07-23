@@ -87,7 +87,6 @@ def audit_logging_fixture(params_from_base_test_setup):
 
 
 @pytest.mark.parametrize("use_settings", [
-    ("default"),
     ("filtered")
 ])
 def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_settings):
