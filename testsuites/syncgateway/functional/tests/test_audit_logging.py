@@ -97,7 +97,7 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     2. Check that the events are are recorded/not recorded in the audit_log file
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
+    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix
     event_role = "role" + random_suffix
     tested_ids = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
@@ -113,6 +113,8 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     if use_settings == 'filtered':
         for event in tested_ids.keys():
             tested_ids[event] = bool(random.randint(0, 1))
+        audit_config = {"enabled": True, "events": tested_ids}
+        admin_client.replace_audit_config(sg_db, audit_config)
 
     # 1. Trigger the tested events
     trigger_event_53281(sg_client=sg_client, sg_url=sg_url)
