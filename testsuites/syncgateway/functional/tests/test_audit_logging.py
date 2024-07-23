@@ -83,7 +83,7 @@ def audit_logging_fixture(params_from_base_test_setup):
             sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
-    remote_executor.execute("rm -rf /home/sync_gateway/logs/audit_log*")
+    remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log")
 
 
 @pytest.mark.parametrize("use_settings", [
@@ -100,9 +100,6 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
-    # Delete the previous audit logging log at the beginning of each test
-    remote_executor.execute("rm -rf /home/sync_gateway/logs/audit_log*")
-    print("-------------------------------------Deleted the audit log file!!!!")
     event_user = "user" + random_suffix + use_settings
     event_role = "role" + random_suffix + use_settings
     tested_ids = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
