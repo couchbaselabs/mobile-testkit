@@ -18,6 +18,7 @@ from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.scan_logs import scan_for_pattern
 from keywords import couchbaseserver
+from keywords.SyncGateway import SyncGateway
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
@@ -48,7 +49,6 @@ def audit_logging_fixture(params_from_base_test_setup):
     global remote_executor
 
     cluster_config = params_from_base_test_setup["cluster_config"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
@@ -63,6 +63,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+    sg_helper = SyncGateway()
 
     # Only reset the cluster to configure audit logging once, to save test time.
     if is_audit_logging_set is False:
@@ -84,6 +85,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     yield sg_client, admin_client, sg_url, sg_admin_url
 
     remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log")
+    sg_helper.restart_sync_gateways(cluster_config, url=cluster_hosts["sync_gateways"][0]["public"])
 
 
 @pytest.mark.parametrize("use_settings", [
