@@ -22,6 +22,16 @@ from keywords.SyncGateway import SyncGateway
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
+DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
+                           "53280": EXPECTED_IN_LOGS,  # public API User authetication
+                           "54100": EXPECTED_IN_LOGS,  # Create user
+                           "54101": EXPECTED_IN_LOGS,  # Read user
+                           "54102": EXPECTED_IN_LOGS,  # Update user
+                           "54103": EXPECTED_IN_LOGS,  # Delete user
+                           "54110": EXPECTED_IN_LOGS,  # Create role
+                           "54111": EXPECTED_IN_LOGS,  # Read role
+                           "54112": EXPECTED_IN_LOGS  # Update role
+                           }
 
 random_suffix = str(uuid.uuid4())[:8]
 sg_db = "db" + random_suffix
@@ -92,7 +102,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     ("default"),
     ("filtered")
 ])
-def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_settings):
+def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_settings):
     '''
     @summary:
     This test checks a selected number of events and checks that they are logged.
@@ -104,16 +114,9 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix + use_settings
     event_role = "role" + random_suffix + use_settings
-    tested_ids = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
-                  "53280": EXPECTED_IN_LOGS,  # public API User authetication
-                  "54100": EXPECTED_IN_LOGS,  # Create user
-                  "54101": EXPECTED_IN_LOGS,  # Read user
-                  "54102": EXPECTED_IN_LOGS,  # Update user
-                  "54103": EXPECTED_IN_LOGS,  # Delete user
-                  "54110": EXPECTED_IN_LOGS,  # Create role
-                  "54111": EXPECTED_IN_LOGS,  # Read role
-                  "54112": EXPECTED_IN_LOGS  # Update role
-                  }
+
+    tested_ids = DEFAULT_EVENTS_SETTINGS
+    # randomise a selected filterable events in case we are not testing the default settings
     if use_settings == 'filtered':
         for event in tested_ids.keys():
             tested_ids[event] = bool(random.randint(0, 1))
