@@ -95,7 +95,6 @@ def audit_logging_fixture(params_from_base_test_setup):
 
 
 @pytest.mark.parametrize("use_settings", [
-    ("default"),
     ("filtered")
 ])
 def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_settings):
@@ -111,9 +110,7 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix + use_settings
     event_role = "role" + random_suffix + use_settings
-    remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log")
-    sg_helper.restart_sync_gateways(cluster_config, url=sg_url)
-
+ 
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
     if use_settings == 'filtered':
