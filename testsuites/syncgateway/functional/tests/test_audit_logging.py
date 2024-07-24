@@ -74,8 +74,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     # Only reset the cluster to configure audit logging once, to save test time.
-    # if is_audit_logging_set is False:
-    if True:
+    if is_audit_logging_set is False:
         cluster = Cluster(config=cluster_config)
         sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
         cluster.reset(sg_config_path=sg_conf, use_config=True)
@@ -92,6 +91,7 @@ def audit_logging_fixture(params_from_base_test_setup):
         if admin_client.does_user_exist(sg_db, username) is False:
             sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
+    remote_executor.execute("echo -n > /home/sync_gateway/logs/sg_audit.log")
 
 
 @pytest.mark.parametrize("use_settings", [
