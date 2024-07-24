@@ -93,6 +93,29 @@ def scan_for_pattern(logfile_path, pattern_list):
                 flag = True
     if flag is False:
         raise LogScanningError('{} Did not find the words !! Please review: {} '.format(pattern_list, logfile_path))
+    
+def count_pattern(logfile_path, pattern_list):
+    '''
+    Scans a log file line by line for a provided array of words,
+    and returns the number of lines that contain that word
+    '''
+    if not isinstance(pattern_list, list):
+        raise ValueError('error_strings must be a list')
+
+    
+    # List of counts for each word
+    count = []
+    for i, word in enumerate(pattern_list):
+        count[i] = 0
+
+    # Scan each line in the log file for the words to search for
+    for line in open(logfile_path):
+        for i, word in enumerate(pattern_list):
+            # convert the word to lowercase and the line to all lower case
+            if word.lower() in line.lower():
+                count[i] += 1
+    
+    return count
 
 
 if __name__ == '__main__':
