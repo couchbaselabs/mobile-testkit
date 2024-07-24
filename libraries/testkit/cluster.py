@@ -345,7 +345,7 @@ class Cluster:
             time.sleep(5)
             # time.sleep(30)
         if "macos" in sg_platform.lower():
-            block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+            playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars
