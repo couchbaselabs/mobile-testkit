@@ -13,7 +13,9 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
     if "centos" in sg_platform:
         status = ansible_runner.run_ansible_playbook("remove-sg-centos.yml")
     else:
-        if "debian" in sg_platform:
+        if "windows" in sg_platform:
+            sg_extra_vars["ansible_os_family"] = "Windows"
+        else:    
             sg_extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             sg_extra_vars["ansible_distribution"] = "Debian"
             sg_extra_vars["ansible_os_family"] = "Linux"
