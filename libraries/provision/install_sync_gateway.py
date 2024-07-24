@@ -452,6 +452,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         extra_vars["ansible_distribution"] = sg_platform.capitalize()
         extra_vars["ansible_os_family"] = "Linux"
         extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+    if "macos" in sg_platform.lower():
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
     # Configure aws cloudwatch logs forwarder
     status = ansible_runner.run_ansible_playbook(
         "configure-sync-gateway-awslogs-forwarder.yml",
