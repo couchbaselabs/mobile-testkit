@@ -697,6 +697,8 @@ class SyncGateway(object):
             extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             extra_vars["ansible_distribution"] = "Debian"
             extra_vars["ansible_os_family"] = "Linux"
+        if "macos" in sg_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Shutting down sync_gateway on {} ...".format(target))
