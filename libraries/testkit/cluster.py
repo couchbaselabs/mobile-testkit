@@ -143,7 +143,7 @@ class Cluster:
 
         # Deleting sync_gateway artifacts
         log_info(">>> Deleting sync_gateway artifacts")
-        status = ansible_runner.run_ansible_playbook("delete-sync-gateway-artifacts.yml")
+        status = ansible_runner.run_ansible_playbook("delete-sync-gateway-artifacts.yml", extra_vars=extra_vars)
         assert status == 0, "Failed to delete sync_gateway artifacts"
 
         # Deleting sg_accel artifacts
