@@ -92,7 +92,7 @@ def audit_logging_fixture(params_from_base_test_setup):
             sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
-    # remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log && systemctl restart sync_gateway")
+    remote_executor.execute("rm -f /home/sync_gateway/logs/sg_audit.log && systemctl stop sync_gateway && /opt/couchbase-sync-gateway/bin/sync_gateway /home/sync_gateway/sync_gateway.json")
 
 
 @pytest.mark.parametrize("use_settings", [
