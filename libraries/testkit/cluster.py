@@ -280,6 +280,8 @@ class Cluster:
                     block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
                 if "windows" in sg_platform.lower():
                     block_http_vars["ansible_os_family"] = "Windows"
+                if "macos" in sg_platform.lower():
+                    block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
                 port_list = ["8091:8096,11210:11211"]
                 for port in port_list:
                     block_http_vars["port"] = port
@@ -510,6 +512,8 @@ class Cluster:
                 block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             if "windows" in sg_platform.lower():
                 block_http_vars["ansible_os_family"] = "Windows"
+            if "macos" in sg_platform.lower():
+                block_http_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port
