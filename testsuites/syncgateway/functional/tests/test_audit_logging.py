@@ -14,7 +14,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.scan_logs import scan_for_pattern
+from utilities.scan_logs import scan_for_pattern, count_pattern
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
@@ -93,7 +93,94 @@ def test_audit_logging_multi_database(params_from_base_test_setup, audit_logging
     3. Trigger tested events across all databases
     4. Check that the recorded events have the correct databases recorded 
     '''
-    pass
+    # honestly not sure how I'd do 1/2, admin_client can create_db but do you need underlying bucket/collection?
+
+
+    
+
+
+def test_audit_logging_exclude_events(params_from_base_test_setup, audit_logging_fixture):
+    '''
+    @summary:
+    This test checks that excluded events are not logged,
+    while included events still are logged.
+    1. While included, trigger the tested events
+    2. Check that the events are recorded how we expect
+    3. Exclude some of the tested events
+    4. Trigger all the events again
+    5. Check that the newly excluded events were not recorded
+    '''
+    # Set up
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
+    event_user = "user" + random_suffix
+    event_role = "role" + random_suffix
+    
+    # each ID will have a count for how many of each log we expect
+    tested_ids = {"53281": 1,  # public API User authentication failed
+                  "53280": 1,  # public API User authentication
+                  "54100": 1,  # Create user
+                  "54101": 1,  # Read user
+                  "54102": 1,  # Update user
+                  "54103": 1,  # Delete user
+                  "54110": 1,  # Create role
+                  "54111": 1,  # Read role
+                  "54112": 1  # Update role
+                }
+    
+    # 1. Trigger the tested events
+    trigger_event_53281(sg_client=sg_client, sg_url=sg_url)
+    trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
+    trigger_event_54100(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_54101(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_54102(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_54103(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_54110(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
+    trigger_event_54111(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
+    trigger_event_54112(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
+
+    # 2. Check that events are recorded as we expect
+    audit_log_folder = get_audit_log_folder(cluster_config)
+    for id in tested_ids.keys():
+        pattern = ["\"id\":" + id]
+        count = count_pattern(audit_log_folder + "/sg_audit.log", pattern)
+        assert count[0] == tested_ids[id]
+
+    # 3. Exclude some of the tested events
+
+    audit_config_update = {
+        "enabled": True,
+        "events": {
+            "53281": False,
+            "53270": False,
+            "54100": False,
+            "54101": False
+        }
+    }
+    status = admin_client.update_audit_config(sg_db, audit_config_update)
+
+    assert status == 200
+
+    # 4. Trigger all events again
+    # Update all the events that we didn't exclude to indicate there should be another found event
+    tested_ids = {"53281": 1,  # public API User authentication failed
+                  "53280": 1,  # public API User authentication
+                  "54100": 1,  # Create user
+                  "54101": 1,  # Read user
+                  "54102": 2,  # Update user
+                  "54103": 2,  # Delete user
+                  "54110": 2,  # Create role
+                  "54111": 2,  # Read role
+                  "54112": 2  # Update role
+                }
+    
+    # 5. Check that the newly excluded events were not recorded
+    for id in tested_ids.keys():
+        pattern = ["\"id\":" + id]
+        count = count_pattern(audit_log_folder + "sg_audit.log", pattern)
+        assert count[0] == tested_ids[id]
+
+    
 
 
 def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixture):
