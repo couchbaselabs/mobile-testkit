@@ -387,7 +387,8 @@ class SyncGateway:
                     )
                     if status != 0:
                         raise ProvisioningError("Failed to block port on SGW")
-
+            if "macos" in sg_platform.lower():
+                playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars=playbook_vars,

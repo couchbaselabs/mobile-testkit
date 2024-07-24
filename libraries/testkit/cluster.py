@@ -124,8 +124,8 @@ class Cluster:
             extra_vars["ansible_distribution"] = sg_platform.capitalize()
             extra_vars["ansible_os_family"] = "Linux"
             extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
-            if "macos" in sg_platform.lower():
-                extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+        if "macos" in sg_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
 
         log_info(">>> Reseting cluster ...")
         log_info(">>> CBS SSL enabled: {}".format(self.cbs_ssl))
