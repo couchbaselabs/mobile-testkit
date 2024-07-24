@@ -8,12 +8,14 @@ from keywords.utils import log_info
 def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="centos", cbs_platform="centos"):
 
     log_info("Cleaning cluster: {}".format(cluster_config))
+    log_info("=================================================sg_platform=" + str(sg_platform))
     ansible_runner = AnsibleRunner(config=cluster_config)
     sg_extra_vars = {}
     if "centos" in sg_platform:
         status = ansible_runner.run_ansible_playbook("remove-sg-centos.yml")
     else:
         if "windows" in sg_platform:
+            log_info("=================================================INSIDE_WINDOWS")
             sg_extra_vars["ansible_os_family"] = "Windows"
         else:    
             sg_extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
