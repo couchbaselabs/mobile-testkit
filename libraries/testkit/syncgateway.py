@@ -63,10 +63,14 @@ class SyncGateway:
         r.raise_for_status()
         return r.text
 
-    def stop(self):
+    def stop(self, sg_platform=None):
+        extra_vars = {}
+        if "macos" in sg_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         status = self.ansible_runner.run_ansible_playbook(
             "stop-sync-gateway.yml",
-            subset=self.hostname
+            subset=self.hostname,
+            extra_vars=extra_vars
         )
         return status
 

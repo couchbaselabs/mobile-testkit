@@ -788,12 +788,12 @@ class Cluster:
 
         return errors
 
-    def stop_sg_and_accel(self):
+    def stop_sg_and_accel(self, sg_platform=None):
 
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
         for sg in self.sync_gateways:
-            status = sg.stop()
+            status = sg.stop(sg_platform=sg_platform)
             assert status == 0, "Failed to stop sync gateway for host {}".format(sg.hostname)
 
         # Stop sync_gateway accels
