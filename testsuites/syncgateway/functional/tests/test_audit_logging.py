@@ -110,7 +110,6 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix + use_settings
     event_role = "role" + random_suffix + use_settings
-    remote_executor.execute("echo \"\" > /home/sync_gateway/logs/sg_audit.log")
 
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
