@@ -15,6 +15,8 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
     else:
         if "windows" in sg_platform:
             sg_extra_vars["ansible_os_family"] = "Windows"
+        if "macos" in sg_platform.lower():
+            sg_extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         else:    
             sg_extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
             sg_extra_vars["ansible_distribution"] = "Debian"
