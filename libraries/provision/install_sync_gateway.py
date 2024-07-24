@@ -388,6 +388,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                     extra_vars=playbook_vars, subset=target
                 )
             elif "macos" in sg_platform:
+                playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package-macos.yml",
                     extra_vars=playbook_vars, subset=target
@@ -411,6 +412,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                     extra_vars=playbook_vars
                 )
             elif "macos" in sg_platform:
+                playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package-macos.yml",
                     extra_vars=playbook_vars
