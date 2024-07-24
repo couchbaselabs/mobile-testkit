@@ -664,6 +664,9 @@ class SyncGateway(object):
         if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
+        if "macos" in sg_platform.lower():
+            playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
