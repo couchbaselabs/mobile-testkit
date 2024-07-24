@@ -41,11 +41,13 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
             raise ProvisioningError("Failed to reset hosts")
 
 
-def clear_firewall_rules(cluster_config):
+def clear_firewall_rules(cluster_config, sg_platform=None):
     log_info("Flusing firewall before teardown: {}".format(cluster_config))
-
+    extra_vars = {}
+    if "macos" in sg_platform.lower():
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
     ansible_runner = AnsibleRunner(config=cluster_config)
-    status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
+    status = ansible_runner.run_ansible_playbook("flush-firewall.yml", extra_vars=extra_vars)
     if status != 0:
         raise ProvisioningError("Failed to flush firewall")
 
