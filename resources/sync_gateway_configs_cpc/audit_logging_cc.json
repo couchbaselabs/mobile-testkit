@@ -15,7 +15,8 @@
                            "rotation": {"max_size": 1,
                                         "max_age": 3,
                                         "localtime": false,
-                                        "rotated_logs_size_limit": 10
+                                        "rotated_logs_size_limit": 10,
+                                        "enabled_events": [53260, 53270, 53271, 53272]
                                        }
                           }
                 },
