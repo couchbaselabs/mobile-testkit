@@ -719,23 +719,27 @@ class SyncGateway(object):
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")
 
-    def restart_sync_gateways(self, cluster_config, url=None):
+    def restart_sync_gateways(self, cluster_config, url=None, sg_platform=None):
         """ Restart sync gateways in a cluster. If url is passed, restart
          the sync gateway at that url
         """
         ansible_runner = AnsibleRunner(cluster_config)
-
+        extra_vars = {}
+        if "macos" in sg_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Restarting sync_gateway on {} ...".format(target))
             status = ansible_runner.run_ansible_playbook(
                 "restart-sync-gateway.yml",
-                subset=target
+                subset=target,
+                extra_vars=extra_vars
             )
         else:
             log_info("Restarting all sync_gateways")
             status = ansible_runner.run_ansible_playbook(
                 "restart-sync-gateway.yml",
+                extra_vars=extra_vars
             )
         if status != 0:
             raise ProvisioningError("Could not restart sync_gateway")
