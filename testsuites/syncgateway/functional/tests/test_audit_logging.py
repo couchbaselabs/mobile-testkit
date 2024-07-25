@@ -31,9 +31,8 @@ DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User autheti
                            "54112": EXPECTED_IN_LOGS  # Update role
                            }
 # The global events as defined in resources/sync_gateway_configs_cpc/audit_logging_cc.json
-GLOBAL_EVENTS_SETTINGS = {"53270": EXPECTED_IN_LOGS,
-                          "53271": EXPECTED_IN_LOGS
-                          }
+GLOBAL_EVENTS_SETTINGS = {"53271": EXPECTED_IN_LOGS
+                         }
 
 random_suffix = str(uuid.uuid4())[:8]
 sg_db = "db" + random_suffix
@@ -122,7 +121,6 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
             tested_ids[event] = settings_config
 
         audit_config = {"enabled": True, "events": tested_ids}
-        print("*************************audit_config = " + str(audit_config))
         admin_client.replace_audit_config(sg_db, audit_config)
 
     print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db)))
