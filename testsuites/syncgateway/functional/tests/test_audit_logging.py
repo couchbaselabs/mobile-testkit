@@ -20,6 +20,16 @@ from keywords import couchbaseserver
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
+DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
+                           "53280": EXPECTED_IN_LOGS,  # public API User authetication
+                           "54100": EXPECTED_IN_LOGS,  # Create user
+                           "54101": EXPECTED_IN_LOGS,  # Read user
+                           "54102": EXPECTED_IN_LOGS,  # Update user
+                           "54103": EXPECTED_IN_LOGS,  # Delete user
+                           "54110": EXPECTED_IN_LOGS,  # Create role
+                           "54111": EXPECTED_IN_LOGS,  # Read role
+                           "54112": EXPECTED_IN_LOGS  # Update role
+                           }
 
 random_suffix = str(uuid.uuid4())[:8]
 sg_db = "db" + random_suffix
@@ -31,6 +41,7 @@ channels = ["audit_logging"]
 auth = None
 bucket = "data-bucket"
 bucket2 = "audit-logging-bucket2"
+remote_executor = None
 
 
 @pytest.fixture
@@ -43,8 +54,8 @@ def audit_logging_fixture(params_from_base_test_setup):
     global channels
     global auth
     global bucket2
+    global remote_executor
 
-    cluster_config = params_from_base_test_setup["cluster_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
@@ -59,31 +70,35 @@ def audit_logging_fixture(params_from_base_test_setup):
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
-    # Only reset the cluster to configure audit logging once, to save test time.
-    if is_audit_logging_set is False:
-        cluster = Cluster(config=cluster_config)
-        sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
-        cluster.reset(sg_config_path=sg_conf, use_config=True)
-        is_audit_logging_set = True
-        # Creating buckets and SGW dbs
-        if bucket in cb_server.get_bucket_names():
-            cb_server.delete_bucket(bucket)
-        cb_server.create_bucket(cluster_config, bucket, 100)
-        cb_server.create_bucket(cluster_config, bucket2, 100)
-        if admin_client.does_db_exist(sg_db) is False:
-            admin_client.create_db(sg_db, {"bucket": bucket, "num_index_replicas": 0})
-        if admin_client.does_db_exist(sg2_db) is False:
-            admin_client.create_db(sg2_db, {"bucket": bucket2, "num_index_replicas": 0})
-        if admin_client.does_user_exist(sg_db, username) is False:
-            sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    # TODO: only reset the cluster to configure audit logging once, to save test time.
+    # At the moment, the attempts to delete the audit log requires a SGW restart, and clearing the log
+    # using cho -n > sg_audit.log or similar is causing failures, for an unknown reason
+    cluster = Cluster(config=cluster_config)
+    sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
+    is_audit_logging_set = True
+    # Creating buckets and SGW dbs
+    if bucket in cb_server.get_bucket_names():
+        cb_server.delete_bucket(bucket)
+    cb_server.create_bucket(cluster_config, bucket, 100)
+    cb_server.create_bucket(cluster_config, bucket2, 100)
+    if admin_client.does_db_exist(sg_db) is False:
+        admin_client.create_db(sg_db, {"bucket": bucket, "num_index_replicas": 0})
+    if admin_client.does_db_exist(sg2_db) is False:
+        admin_client.create_db(sg2_db, {"bucket": bucket2, "num_index_replicas": 0})
+    if admin_client.does_user_exist(sg_db, username) is False:
+        sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
-    remote_executor.execute("rm -rf /home/sync_gateway/logs/audit_log*")
 
-
-def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixture):
+@pytest.mark.parametrize("settings_config", [
+    ("default"),
+    (True),
+    (False)
+])
+def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, settings_config):
     '''
     @summary:
     This test checks a selected number of events and checks that they are logged.
@@ -92,20 +107,20 @@ def test_default_audit_settings(params_from_base_test_setup, audit_logging_fixtu
     2. Check that the events are are recorded/not recorded in the audit_log file
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
-    event_user = "user" + random_suffix
-    event_role = "role" + random_suffix
-    tested_ids = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
-                  "53280": EXPECTED_IN_LOGS,  # public API User authetication
-                  "54100": EXPECTED_IN_LOGS,  # Create user
-                  "54101": EXPECTED_IN_LOGS,  # Read user
-                  "54102": EXPECTED_IN_LOGS,  # Update user
-                  "54103": EXPECTED_IN_LOGS,  # Delete user
-                  "54110": EXPECTED_IN_LOGS,  # Create role
-                  "54111": EXPECTED_IN_LOGS,  # Read role
-                  "54112": EXPECTED_IN_LOGS  # Update role
-                  }
+    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
+    event_user = "user" + random_suffix + str(settings_config)
+    event_role = "role" + random_suffix + str(settings_config)
 
+    tested_ids = DEFAULT_EVENTS_SETTINGS
+    # randomise a selected filterable events in case we are not testing the default settings
+    if settings_config != "default":
+        for event in tested_ids.keys():
+            tested_ids[event] = settings_config
+
+        audit_config = {"enabled": True, "events": tested_ids}
+        admin_client.replace_audit_config(sg_db, audit_config)
+
+    print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db, audit_config)))
     # 1. Trigger the tested events
     trigger_event_53281(sg_client=sg_client, sg_url=sg_url)
     trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
