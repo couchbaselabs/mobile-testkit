@@ -145,9 +145,9 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     trigger_event_54111(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
     trigger_event_54112(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
     trigger_event_55000(sg_client, sg_url, doc_id_prefix, auth=(username, password))
-    trigger_event_55001(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
-    trigger_event_55002(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
-    trigger_event_55003(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
+    trigger_event_55001(sg_client, sg_url, doc_id_prefix + "_0")
+    trigger_event_55002(sg_client, sg_url, doc_id_prefix + "_0")
+    trigger_event_55003(sg_client, sg_url, doc_id_prefix + "_0")
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
