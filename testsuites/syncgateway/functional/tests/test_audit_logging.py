@@ -338,15 +338,15 @@ def trigger_event_55000(sg_client, sg_url, doc_id_prefix, auth):
 
 
 # Read document
-def trigger_event_55001(sg_client, sg_url, doc_id, auth):
+def trigger_event_55001(sg_client, sg_url, doc_id):
     sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
 
 
 # Update document
-def trigger_event_55002(sg_client, sg_url, doc_id, auth):
+def trigger_event_55002(sg_client, sg_url, doc_id):
     sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
 
 
 # Delete document
-def trigger_event_55003(sg_client, sg_url, doc_id, auth):
+def trigger_event_55003(sg_client, sg_url, doc_id):
     sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
