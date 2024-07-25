@@ -31,8 +31,7 @@ DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User autheti
                            "54112": EXPECTED_IN_LOGS  # Update role
                            }
 # The global events as defined in resources/sync_gateway_configs_cpc/audit_logging_cc.json
-GLOBAL_EVENTS_SETTINGS = {"53271": EXPECTED_IN_LOGS
-                         }
+GLOBAL_EVENTS_SETTINGS = {"53271": EXPECTED_IN_LOGS}
 
 random_suffix = str(uuid.uuid4())[:8]
 sg_db = "db" + random_suffix
