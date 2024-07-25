@@ -31,6 +31,15 @@ DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User autheti
                            "54112": EXPECTED_IN_LOGS  # Update role
                            }
 
+# The global events as defined in resources/sync_gateway_configs_cpc/audit_logging_cc.json or unfirtable settings
+GLOBAL_EVENTS_SETTINGS = {"53248": EXPECTED_IN_LOGS,  # Auditing enabled
+                          "53250": EXPECTED_IN_LOGS,  # Auditing configuration changed
+                          "53260": EXPECTED_IN_LOGS,  # Sync Gateway startup
+                          "53270": EXPECTED_IN_LOGS,  # Public HTTP API request
+                          "54003": NOT_EXPECTED_IN_THE_LOGS,  # Read all databases
+                          "53271": NOT_EXPECTED_IN_THE_LOGS   # Admin HTTP API request
+                          }
+
 random_suffix = str(uuid.uuid4())[:8]
 sg_db = "db" + random_suffix
 sg2_db = "db2" + random_suffix
@@ -192,6 +201,36 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
         assert is_db2_event_in_logs, "The event for db2 was not recorded properly. The audit log file: " + str(doc)
 
 
+def test_global_events(params_from_base_test_setup, audit_logging_fixture):
+    '''
+    @summary:
+    1. Trigging global events
+    2. Check that the events are are recorded/not recorded in the audit_log file
+    '''
+    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    event_user = "user" + random_suffix + "ge"
+    tested_ids = GLOBAL_EVENTS_SETTINGS
+
+    # 1. Trigging global events
+    trigger_event_53271(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_53270(sg_client, sg_url, auth=(username, password), db=sg_db)
+    trigger_event_53250(admin_client, db=sg_db)
+    trigger_event_54003(admin_client)
+
+    # 2. Check that the events are are recorded/not recorded in the audit_log file
+    audit_log_folder = get_audit_log_folder(cluster_config)
+    for id in tested_ids.keys():
+        pattern = ["\"id\":" + id]
+        if tested_ids[id] is EXPECTED_IN_LOGS:  # we are expecting the id in the log
+            print("*** Expecting event " + str(id) + " to be in the logs")
+            scan_for_pattern(audit_log_folder + "/sg_audit.log", pattern)
+        else:  # we are NOT expecting the id in the log
+            with pytest.raises(Exception):
+                print("*** Checking if event id " + str(id) + " is in the audit log - not expecting it")
+                scan_for_pattern(audit_log_folder + "/sg_audit.log", pattern)
+
+
 def get_audit_log_folder(cluster_config):
     ansible_runner = AnsibleRunner(cluster_config)
 
@@ -260,3 +299,25 @@ def trigger_event_54112(sg_client, sg_admin_url, role, db=sg_db):
 # Create session
 def trigger_event_53282(sg_client, sg_admin_url, db=sg_db):
     sg_client.create_session(url=sg_admin_url, db=db, name=username, auth=auth)
+
+
+# Admin HTTP API request
+def trigger_event_53271(sg_client, sg_admin_url, user, db=sg_db):
+    sg_client.create_user(url=sg_admin_url, db=db, name=user, password=password, channels=channels, auth=auth)
+
+
+# Public HTTP API request
+def trigger_event_53270(sg_client, sg_url, auth, db=sg_db):
+    sg_client.get_all_docs(url=sg_url, db=db, auth=auth)
+
+
+# Audit configuration changed
+def trigger_event_53250(admin_client, db=sg_db):
+    eventsConfiguration = admin_client.get_audit_logging_conf(db)
+    audit_config = {"enabled": True, "events": {"53280": not eventsConfiguration["events"]["53280"]}}
+    admin_client.replace_audit_config(db, audit_config)
+
+
+# Read all databases
+def trigger_event_54003(admin_client):
+    admin_client.get_dbs()
