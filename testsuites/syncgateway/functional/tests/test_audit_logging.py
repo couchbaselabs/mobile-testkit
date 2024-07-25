@@ -204,7 +204,6 @@ def test_global_events(params_from_base_test_setup, audit_logging_fixture):
     # Trigging global events
     trigger_event_53271(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
     trigger_event_53270(sg_client, sg_admin_url, db=sg_db)
-    time.sleep(3)
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
