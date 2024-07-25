@@ -35,6 +35,7 @@ DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User autheti
 GLOBAL_EVENTS_SETTINGS = {"53248": EXPECTED_IN_LOGS,  # Auditing enabled
                           "53250": EXPECTED_IN_LOGS,  # Auditing configuration changed
                           "53260": EXPECTED_IN_LOGS,  # Sync Gateway startup
+                          "53249": EXPECTED_IN_LOGS,   # Disable audit logging
                           "54003": NOT_EXPECTED_IN_THE_LOGS,  # Read all databases
                           "53271": NOT_EXPECTED_IN_THE_LOGS   # Admin HTTP API request
                           }
@@ -201,17 +202,22 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
 
 
 def test_global_events(params_from_base_test_setup, audit_logging_fixture):
-
+    '''
+    @summary:
+    1. Trigging global events
+    2. Check that the events are are recorded/not recorded in the audit_log file
+    '''
     sg_client, admin_client, _, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     event_user = "user" + random_suffix + "ge"
     tested_ids = GLOBAL_EVENTS_SETTINGS
 
-    # Trigging global events
+    # 1. Trigging global events
     trigger_event_53271(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
     trigger_event_53270(sg_client, sg_admin_url, db=sg_db)
     trigger_event_53250(admin_client, db=sg_db)
     trigger_event_54003(admin_client)
+    trigger_event_53249(admin_client)  # Disable audit logging
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
@@ -310,6 +316,12 @@ def trigger_event_53270(sg_client, sg_admin_url, db=sg_db):
 def trigger_event_53250(admin_client, db=sg_db):
     eventsConfiguration = admin_client.get_audit_logging_conf(db)
     audit_config = {"enabled": True, "events": {"53280": not eventsConfiguration["events"]["53280"]}}
+    admin_client.replace_audit_config(db, audit_config)
+
+
+# Audit logging_disabled
+def trigger_event_53249(admin_client, db=sg_db):
+    audit_config = {"enabled": False}
     admin_client.replace_audit_config(db, audit_config)
 
 
