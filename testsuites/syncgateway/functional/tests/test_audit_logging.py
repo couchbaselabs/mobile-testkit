@@ -214,7 +214,7 @@ def test_global_events(params_from_base_test_setup, audit_logging_fixture):
 
     # 1. Trigging global events
     trigger_event_53271(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
-    trigger_event_53270(sg_client, sg_url, auth, db=sg_db)
+    trigger_event_53270(sg_client, sg_url, auth=(username, password), db=sg_db)
     trigger_event_53250(admin_client, db=sg_db)
     trigger_event_54003(admin_client)
 
