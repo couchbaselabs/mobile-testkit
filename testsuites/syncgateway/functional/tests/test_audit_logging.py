@@ -113,12 +113,14 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
 
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
+    print("*******************************settings_config=" + str(settings_config != "default"))
     if settings_config != "default":
+        print("*******************************updating events")
         for event in tested_ids.keys():
             tested_ids[event] = settings_config
 
         audit_config = {"enabled": True, "events": tested_ids}
-        admin_client.replace_audit_config(sg_db, audit_config)
+        admin_client.update_audit_config(sg_db, audit_config)
 
     print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db, audit_config)))
     # 1. Trigger the tested events
