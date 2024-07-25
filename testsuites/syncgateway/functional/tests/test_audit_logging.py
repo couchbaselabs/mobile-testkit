@@ -349,4 +349,5 @@ def trigger_event_55002(sg_client, sg_url, doc_id, auth):
 
 # Delete document
 def trigger_event_55003(sg_client, sg_url, doc_id, auth):
-    sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
+    doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
+    sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc['_rev'], auth=auth)
