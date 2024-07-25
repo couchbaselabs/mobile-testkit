@@ -120,6 +120,7 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
         audit_config = {"enabled": True, "events": tested_ids}
         admin_client.replace_audit_config(sg_db, audit_config)
 
+    print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db, audit_config)))
     # 1. Trigger the tested events
     trigger_event_53281(sg_client=sg_client, sg_url=sg_url)
     trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
