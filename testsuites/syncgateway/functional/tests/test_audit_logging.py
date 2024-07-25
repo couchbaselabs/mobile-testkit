@@ -155,7 +155,7 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     # 1. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
-    for i in range(0, 3500):
+    for i in range(0, 6500):
         trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
     # 2. Looking at the content of the logs directory and expecting it to contain an archive
     _, stdout, _ = remote_executor.execute("ls /home/sync_gateway/logs | grep sg_audit.*.gz")
