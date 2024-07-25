@@ -93,6 +93,7 @@ def audit_logging_fixture(params_from_base_test_setup):
             sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
+
 @pytest.mark.parametrize("use_settings", [
     ("default"),
     ("filtered")
