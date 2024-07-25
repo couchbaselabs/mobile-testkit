@@ -309,6 +309,7 @@ def trigger_event_53270(sg_client, sg_admin_url, db=sg_db):
 # Audit configuration changed
 def trigger_event_53250(admin_client, db=sg_db):
     eventsConfiguration = admin_client.get_audit_logging_conf(db)
+    print("===================================events:" + str(eventsConfiguration))
     audit_config = {"enabled": True, "events": {"53280": not eventsConfiguration["53280"]}}
     admin_client.replace_audit_config(db, audit_config)
 
