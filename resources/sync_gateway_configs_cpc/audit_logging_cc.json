@@ -17,7 +17,7 @@
                                         "localtime": false,
                                         "rotated_logs_size_limit": 10
                                        },
-                           "enabled_events": [53260, 53270, 53271, 53272]
+                           "enabled_events": [53270, 53272]
                           }
                 },
     "api":{
