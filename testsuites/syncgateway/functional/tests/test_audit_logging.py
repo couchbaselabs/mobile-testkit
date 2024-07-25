@@ -4,7 +4,6 @@ import time
 import pytest
 import uuid
 import re
-import random
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.remoteexecutor import RemoteExecutor
@@ -94,11 +93,12 @@ def audit_logging_fixture(params_from_base_test_setup):
     yield sg_client, admin_client, sg_url, sg_admin_url
 
 
-@pytest.mark.parametrize("use_settings", [
+@pytest.mark.parametrize("settings_config", [
     ("default"),
-    ("filtered")
+    (True),
+    (False)
 ])
-def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_settings):
+def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, settings_config):
     '''
     @summary:
     This test checks a selected number of events and checks that they are logged.
@@ -108,14 +108,15 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, use_
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
-    event_user = "user" + random_suffix + use_settings
-    event_role = "role" + random_suffix + use_settings
+    event_user = "user" + random_suffix + str(settings_config)
+    event_role = "role" + random_suffix + str(settings_config)
 
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
-    if use_settings == 'filtered':
+    if settings_config != "default":
         for event in tested_ids.keys():
-            tested_ids[event] = bool(random.randint(0, 1))
+            tested_ids[event] = settings_config
+
         audit_config = {"enabled": True, "events": tested_ids}
         admin_client.replace_audit_config(sg_db, audit_config)
 
