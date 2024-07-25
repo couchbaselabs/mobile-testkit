@@ -117,6 +117,7 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     if settings_config != "default":
         print("*******************************updating events")
         for event in tested_ids.keys():
+            print("*******************************event={}, value={}".format(event, str(settings_config)))
             tested_ids[event] = settings_config
 
         audit_config = {"enabled": True, "events": tested_ids}
