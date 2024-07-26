@@ -16,7 +16,7 @@ from libraries.testkit.cluster import Cluster
 from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.scan_logs import scan_for_pattern
-from keywords import couchbaseserver
+from keywords import couchbaseserver, document
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
@@ -28,8 +28,13 @@ DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User autheti
                            "54103": EXPECTED_IN_LOGS,  # Delete user
                            "54110": EXPECTED_IN_LOGS,  # Create role
                            "54111": EXPECTED_IN_LOGS,  # Read role
-                           "54112": EXPECTED_IN_LOGS  # Update role
+                           "54112": EXPECTED_IN_LOGS,  # Update role
+                           "55000": NOT_EXPECTED_IN_THE_LOGS,  # Create document
+                           "55001": NOT_EXPECTED_IN_THE_LOGS,  # Read document
+                           "55002": NOT_EXPECTED_IN_THE_LOGS,  # Update document
+                           "55003": NOT_EXPECTED_IN_THE_LOGS,  # Delete document
                            }
+
 
 # The global events as defined in resources/sync_gateway_configs_cpc/audit_logging_cc.json or unfirtable settings
 GLOBAL_EVENTS_SETTINGS = {"53248": EXPECTED_IN_LOGS,  # Auditing enabled
@@ -119,15 +124,15 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     event_user = "user" + random_suffix + str(settings_config)
     event_role = "role" + random_suffix + str(settings_config)
-
+    doc_id_prefix = "audit_logging_doc" + random_suffix
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
+    audit_config = {"enabled": True}
     if settings_config != "default":
         for event in tested_ids.keys():
             tested_ids[event] = settings_config
-
-        audit_config = {"enabled": True, "events": tested_ids}
-        admin_client.replace_audit_config(sg_db, audit_config)
+        audit_config["events"] = tested_ids
+    admin_client.update_audit_config(sg_db, audit_config)
 
     print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db)))
     # 1. Trigger the tested events
@@ -140,6 +145,10 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     trigger_event_54110(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
     trigger_event_54111(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
     trigger_event_54112(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
+    trigger_event_55000(sg_client, sg_url, doc_id_prefix, auth=(username, password))
+    trigger_event_55001(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
+    trigger_event_55002(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
+    trigger_event_55003(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
@@ -321,3 +330,25 @@ def trigger_event_53250(admin_client, db=sg_db):
 # Read all databases
 def trigger_event_54003(admin_client):
     admin_client.get_dbs()
+
+
+# Create document
+def trigger_event_55000(sg_client, sg_url, doc_id_prefix, auth):
+    sgdoc_bodies = document.create_docs(doc_id_prefix=doc_id_prefix, number=3, channels=channels)
+    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=auth)
+
+
+# Read document
+def trigger_event_55001(sg_client, sg_url, doc_id, auth):
+    sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
+
+
+# Update document
+def trigger_event_55002(sg_client, sg_url, doc_id, auth):
+    sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
+
+
+# Delete document
+def trigger_event_55003(sg_client, sg_url, doc_id, auth):
+    doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
+    sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc['_rev'], auth=auth)
