@@ -229,14 +229,14 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     # 1. Triggering 2 events in 2 different dbs
     trigger_create_role(sg_client, sg_admin_url, role="db1_role", db=sg_db)
     trigger_create_user(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=sg2_db)
-    trigger_create_document_with_scopes_collections(sg_client, sg_url,  db=sg2_db, auth=("db2_user", "password"))
+    trigger_create_document_with_scopes_collections(sg_client, sg_url, db=sg2_db, auth=("db2_user", "password"))
     # 2. Checking that the right event was logged against the right db
     audit_log_folder = get_audit_log_folder(cluster_config)
     with open(audit_log_folder + "/sg_audit.log", mode="rt", encoding="utf-8") as docFile:
         doc = docFile.read()
         is_db1_event_in_logs = re.findall(db1_pattern, doc)
         is_db2_event_in_logs = re.findall(db2_pattern, doc)
-        is_db2_to_collection_create_doc_event_logged = re.findall(db2_pattern, doc)
+        is_db2_to_collection_create_doc_event_logged = re.findall(db_scopes_and_collections_pattern, doc)
         assert is_db1_event_in_logs, "The event for db1 was not recorded properly. The audit log file: " + str(doc)
         assert is_db2_event_in_logs, "The event for db2 was not recorded properly. The audit log file: " + str(doc)
         assert is_db2_to_collection_create_doc_event_logged, "The create document event was not recorded properly. The document was uploaded to a collection. The audit log file: " + str(doc)
@@ -366,6 +366,7 @@ def trigger_update_document(sg_client, sg_url, doc_id, auth):
 def trigger_delete_document(sg_client, sg_url, doc_id, auth):
     doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
     sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc['_rev'], auth=auth)
+
 
 def trigger_create_document_with_scopes_collections(sg_client, sg_url, db, auth):
     sg_client.add_docs(url=sg_url, db=db, number=3, id_prefix="audit_collection_1_doc" + random_suffix, auth=auth, scope=scope, collection=collection, channels=["A"])
