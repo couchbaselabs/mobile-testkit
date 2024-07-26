@@ -124,8 +124,8 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
-    # event_user = "user" + random_suffix + str(settings_config)
-    # event_role = "role" + random_suffix + str(settings_config)
+    event_user = "user" + random_suffix + str(settings_config)
+    event_role = "role" + random_suffix + str(settings_config)
     doc_id_prefix = "audit_logging_doc" + random_suffix
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
@@ -138,19 +138,19 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
 
     print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db)))
     # 1. Trigger the tested events
-    # trigger_event_53281(sg_client=sg_client, sg_url=sg_url)
-    # trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
-    # trigger_event_54100(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
-    # trigger_event_54101(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
-    # trigger_event_54102(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
-    # trigger_event_54103(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
-    # trigger_event_54110(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
-    # trigger_event_54111(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
-    # trigger_event_54112(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
+    trigger_event_53281(sg_client=sg_client, sg_url=sg_url)
+    trigger_event_53280(sg_client=sg_client, sg_url=sg_url, auth=(username, password))
+    trigger_event_54100(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_54101(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_54102(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_54103(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
+    trigger_event_54110(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
+    trigger_event_54111(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
+    trigger_event_54112(sg_client=sg_client, sg_admin_url=sg_admin_url, role=event_role)
     trigger_event_55000(sg_client, sg_url, doc_id_prefix, auth=(username, password))
-    # trigger_event_55001(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
-    # trigger_event_55002(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
-    # trigger_event_55003(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
+    trigger_event_55001(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
+    trigger_event_55002(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
+    trigger_event_55003(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
