@@ -17,6 +17,7 @@ from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.scan_logs import scan_for_pattern
 from keywords import couchbaseserver, document
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
@@ -119,6 +120,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     # TODO: only reset the cluster to configure audit logging once, to save test time.
     # At the moment, the attempts to delete the audit log requires a SGW restart, and clearing the log
     # using cho -n > sg_audit.log or similar is causing failures, for an unknown reason
+    persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
     cluster = Cluster(config=cluster_config)
     sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
     cluster.reset(sg_config_path=sg_conf, use_config=True)
