@@ -20,22 +20,20 @@ from keywords import couchbaseserver, document
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
-# DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
-#                           "53280": EXPECTED_IN_LOGS,  # public API User authetication
-#                           "54100": EXPECTED_IN_LOGS,  # Create user
-#                           "54101": EXPECTED_IN_LOGS,  # Read user
-#                           "54102": EXPECTED_IN_LOGS,  # Update user
-#                           "54103": EXPECTED_IN_LOGS,  # Delete user
-#                           "54110": EXPECTED_IN_LOGS,  # Create role
-#                           "54111": EXPECTED_IN_LOGS,  # Read role
-#                           "54112": EXPECTED_IN_LOGS,  # Update role
-#                           "55000": NOT_EXPECTED_IN_THE_LOGS,  # Create document
-#                           "55001": NOT_EXPECTED_IN_THE_LOGS,  # Read document
-#                           "55002": NOT_EXPECTED_IN_THE_LOGS,  # Update document
-#                           "55003": NOT_EXPECTED_IN_THE_LOGS,  # Delete document
-#                           }
-
-DEFAULT_EVENTS_SETTINGS = {"55000": NOT_EXPECTED_IN_THE_LOGS}
+DEFAULT_EVENTS_SETTINGS = {"53281": EXPECTED_IN_LOGS,  # public API User authetication failed
+                           "53280": EXPECTED_IN_LOGS,  # public API User authetication
+                           "54100": EXPECTED_IN_LOGS,  # Create user
+                           "54101": EXPECTED_IN_LOGS,  # Read user
+                           "54102": EXPECTED_IN_LOGS,  # Update user
+                           "54103": EXPECTED_IN_LOGS,  # Delete user
+                           "54110": EXPECTED_IN_LOGS,  # Create role
+                           "54111": EXPECTED_IN_LOGS,  # Read role
+                           "54112": EXPECTED_IN_LOGS,  # Update role
+                           "55000": NOT_EXPECTED_IN_THE_LOGS,  # Create document
+                           "55001": NOT_EXPECTED_IN_THE_LOGS,  # Read document
+                           "55002": NOT_EXPECTED_IN_THE_LOGS,  # Update document
+                           "55003": NOT_EXPECTED_IN_THE_LOGS,  # Delete document
+                           }
 
 
 # The global events as defined in resources/sync_gateway_configs_cpc/audit_logging_cc.json or unfirtable settings
