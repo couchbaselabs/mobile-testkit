@@ -38,7 +38,11 @@ EVENTS = {"public_api_auth_failed": "53281",
           "sgw_startup": "53260",
           "public_api_request": "53270",
           "read_all_databases": "54003",
-          "admin_http_api_request": "53271"
+          "admin_http_api_request": "53271",
+          "import document": "55005",
+          "public_user_session_created": "53282",
+          "public_user_delete_session": "53283",
+          "admin_user_authenticated": "53290"
           }
 
 DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
@@ -50,11 +54,13 @@ DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["create_role"]: EXPECTED_IN_LOGS,
                            EVENTS["read_role"]: EXPECTED_IN_LOGS,
                            EVENTS["update_role"]: EXPECTED_IN_LOGS,
+                           EVENTS["public_user_session_created"]: EXPECTED_IN_LOGS,
+                           EVENTS["public_user_delete_session"]: EXPECTED_IN_LOGS,
+                           EVENTS["admin_user_authenticated"]: EXPECTED_IN_LOGS,
                            EVENTS["create_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["read_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["update_document"]: NOT_EXPECTED_IN_THE_LOGS,
-                           EVENTS["delete_document"]: NOT_EXPECTED_IN_THE_LOGS,
-                           "53260": EXPECTED_IN_LOGS
+                           EVENTS["delete_document"]: NOT_EXPECTED_IN_THE_LOGS
                            }
 
 
@@ -136,8 +142,8 @@ def audit_logging_fixture(params_from_base_test_setup):
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
-    # cb_server.delete_bucket(bucket)
-    # cb_server.delete_bucket(bucket2)
+    cb_server.delete_bucket(bucket)
+    cb_server.delete_bucket(bucket2)
 
 
 @pytest.mark.parametrize("settings_config", [
@@ -182,6 +188,8 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     trigger_read_document(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
     trigger_update_document(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
     trigger_delete_document(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
+    _, session_id = trigger_create_public_user_session(sg_client, sg_admin_url)
+    delete_user_session(sg_client, sg_admin_url, username, session_id)
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
@@ -332,10 +340,6 @@ def trigger_update_role(sg_client, sg_admin_url, role, db=sg_db):
     sg_client.update_role(url=sg_admin_url, db=db, name=role)
 
 
-def trigger_create_session(sg_client, sg_admin_url, db=sg_db):
-    sg_client.create_session(url=sg_admin_url, db=db, name=username, auth=auth)
-
-
 def trigger_admin_http_api_request(sg_client, sg_admin_url, user, db=sg_db):
     sg_client.create_user(url=sg_admin_url, db=db, name=user, password=password, channels=channels, auth=auth)
 
@@ -374,3 +378,15 @@ def trigger_delete_document(sg_client, sg_url, doc_id, auth):
 
 def trigger_create_document_with_scopes_collections(sg_client, sg_url, db, auth):
     sg_client.add_docs(url=sg_url, db=db, number=3, id_prefix="audit_collection_1_doc" + random_suffix, auth=auth, scope=scope, collection=collection, channels=["A"])
+
+
+def trigger_create_public_user_session(sg_client, sg_admin_url):
+    return sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
+
+
+def delete_user_session(sg_client, sg_admin_url, user, session_id):
+    sg_client.delete_session(sg_admin_url, db=sg_db, user_name=user, session_id=session_id)
+
+# 53284	Public API user all sessions deleted	All sessions were deleted for a Public API user
+# 53291	Admin API user authentication failed	Admin API user failed to authenticate
+# 53292	Admin API user authorization failed	Admin API user failed to authorize
