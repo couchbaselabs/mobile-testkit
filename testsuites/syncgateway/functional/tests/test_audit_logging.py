@@ -80,7 +80,7 @@ username = 'audit-logging-user'
 password = 'password'
 is_audit_logging_set = False
 channels = ["audit_logging"]
-auth = None
+auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
 bucket = "data-bucket"
 bucket2 = "audit-logging-bucket2"
 remote_executor = None
@@ -96,14 +96,12 @@ def audit_logging_fixture(params_from_base_test_setup):
     global sg_db
     global is_audit_logging_set
     global channels
-    global auth
     global bucket2
     global remote_executor
     global scope
     global collection
 
     cluster_config = params_from_base_test_setup["cluster_config"]
-    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -111,7 +109,6 @@ def audit_logging_fixture(params_from_base_test_setup):
     admin_client = Admin(cluster.sync_gateways[0])
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_client = MobileRestClient()
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]

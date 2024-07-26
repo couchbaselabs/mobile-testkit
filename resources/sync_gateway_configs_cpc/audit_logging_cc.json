@@ -21,7 +21,6 @@
                           }
                 },
     "api":{
-        {{ disable_admin_auth }}
         {{ tls }}
         {{ prometheus }}
         "public_interface":":4984",
