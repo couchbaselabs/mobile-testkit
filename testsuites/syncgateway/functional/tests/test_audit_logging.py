@@ -77,6 +77,8 @@ auth = None
 bucket = "data-bucket"
 bucket2 = "audit-logging-bucket2"
 remote_executor = None
+scope = "audit-scope" + random_suffix
+collection = "audit-collection" + random_suffix
 
 
 @pytest.fixture
@@ -90,6 +92,8 @@ def audit_logging_fixture(params_from_base_test_setup):
     global auth
     global bucket2
     global remote_executor
+    global scope
+    global collection
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
@@ -106,6 +110,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     cbs_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+    sync_function = "function(doc){channel(doc.channels);}"
 
     # TODO: only reset the cluster to configure audit logging once, to save test time.
     # At the moment, the attempts to delete the audit log requires a SGW restart, and clearing the log
@@ -119,10 +124,13 @@ def audit_logging_fixture(params_from_base_test_setup):
         cb_server.delete_bucket(bucket)
     cb_server.create_bucket(cluster_config, bucket, 100)
     cb_server.create_bucket(cluster_config, bucket2, 100)
+    cb_server.create_scope(bucket2, scope)
+    cb_server.create_collection(bucket2, scope, collection)
     if admin_client.does_db_exist(sg_db) is False:
         admin_client.create_db(sg_db, {"bucket": bucket, "num_index_replicas": 0})
     if admin_client.does_db_exist(sg2_db) is False:
-        admin_client.create_db(sg2_db, {"bucket": bucket2, "num_index_replicas": 0})
+        data = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
+        admin_client.create_db(sg2_db, data)
     if admin_client.does_user_exist(sg_db, username) is False:
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
@@ -212,23 +220,26 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     1. Triggering 2 events in 2 different dbs
     2. Checking that the right event was logged against the right db
     '''
-    sg_client, _, _, sg_admin_url = audit_logging_fixture
+    sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db1_pattern = re.compile('\"db\":\"{}\".*\"id\":54110'.format(sg_db))
     db2_pattern = re.compile('\"db\":\"{}\".*\"id\":54100'.format(sg2_db))
+    db_scopes_and_collections_pattern = re.compile('\"db\":\"{}\".*\"id\":55000'.format(sg2_db))
 
     # 1. Triggering 2 events in 2 different dbs
     trigger_create_role(sg_client, sg_admin_url, role="db1_role", db=sg_db)
     trigger_create_user(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=sg2_db)
-
+    trigger_create_document_with_scopes_collections(sg_client, sg_url,  db=sg2_db, auth=("db2_user", "password"))
     # 2. Checking that the right event was logged against the right db
     audit_log_folder = get_audit_log_folder(cluster_config)
     with open(audit_log_folder + "/sg_audit.log", mode="rt", encoding="utf-8") as docFile:
         doc = docFile.read()
         is_db1_event_in_logs = re.findall(db1_pattern, doc)
         is_db2_event_in_logs = re.findall(db2_pattern, doc)
+        is_db2_to_collection_create_doc_event_logged = re.findall(db2_pattern, doc)
         assert is_db1_event_in_logs, "The event for db1 was not recorded properly. The audit log file: " + str(doc)
         assert is_db2_event_in_logs, "The event for db2 was not recorded properly. The audit log file: " + str(doc)
+        assert is_db2_to_collection_create_doc_event_logged, "The create document event was not recorded properly. The document was uploaded to a collection. The audit log file: " + str(doc)
 
 
 def test_global_events(params_from_base_test_setup, audit_logging_fixture):
@@ -355,3 +366,6 @@ def trigger_update_document(sg_client, sg_url, doc_id, auth):
 def trigger_delete_document(sg_client, sg_url, doc_id, auth):
     doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth)
     sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc['_rev'], auth=auth)
+
+def trigger_create_document_with_scopes_collections(sg_client, sg_url, db, auth):
+    sg_client.add_docs(url=sg_url, db=db, number=3, id_prefix="audit_collection_1_doc" + random_suffix, auth=auth, scope=scope, collection=collection, channels=["A"])
