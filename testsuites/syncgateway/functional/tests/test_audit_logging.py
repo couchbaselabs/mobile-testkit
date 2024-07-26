@@ -54,6 +54,7 @@ DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["read_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["update_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["delete_document"]: NOT_EXPECTED_IN_THE_LOGS,
+                           "53260": EXPECTED_IN_LOGS
                            }
 
 
