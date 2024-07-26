@@ -67,8 +67,8 @@ GLOBAL_EVENTS_SETTINGS = {EVENTS["audit_enabled"]: EXPECTED_IN_LOGS,
                           }
 
 random_suffix = str(uuid.uuid4())[:8]
-sg_db = "db" + random_suffix
-sg2_db = "db2" + random_suffix
+sg_db = "db_" + random_suffix
+sg2_db = "db2_" + random_suffix
 username = 'audit-logging-user'
 password = 'password'
 is_audit_logging_set = False
@@ -134,6 +134,9 @@ def audit_logging_fixture(params_from_base_test_setup):
     if admin_client.does_user_exist(sg_db, username) is False:
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
+
+    cb_server.delete_bucket(bucket)
+    cb_server.delete_bucket(bucket2)
 
 
 @pytest.mark.parametrize("settings_config", [
@@ -222,9 +225,9 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     '''
     sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
-    db1_pattern = re.compile('\"db\":\"{}\".*\"id\":54110'.format(sg_db))
-    db2_pattern = re.compile('\"db\":\"{}\".*\"id\":54100'.format(sg2_db))
-    db_scopes_and_collections_pattern = re.compile('\"db\":\"{}\".*\"id\":55000'.format(sg2_db))
+    db1_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg_db, EVENTS["create_role"]))
+    db2_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_user"]))
+    db_scopes_and_collections_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_document"]))
 
     # 1. Triggering 2 events in 2 different dbs
     trigger_create_role(sg_client, sg_admin_url, role="db1_role", db=sg_db)
