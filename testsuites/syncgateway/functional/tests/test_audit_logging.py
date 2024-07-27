@@ -336,7 +336,7 @@ def trigger_read_role(sg_client, sg_admin_url, role, db=sg_db):
 
 
 def trigger_update_role(sg_client, sg_admin_url, role, db=sg_db):
-    sg_client.update_role(url=sg_admin_url, db=db, name=role, auht=auth)
+    sg_client.update_role(url=sg_admin_url, db=db, name=role, auth=auth)
 
 
 def trigger_admin_http_api_request(sg_client, sg_admin_url, user, db=sg_db):
