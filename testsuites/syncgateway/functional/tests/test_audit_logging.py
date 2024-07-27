@@ -384,7 +384,7 @@ def trigger_create_public_user_session(sg_client, sg_admin_url):
 
 
 def delete_user_session(sg_client, sg_admin_url, user, session_id):
-    sg_client.delete_session(sg_admin_url, db=sg_db, user_name=user, session_id=session_id)
+    sg_client.delete_session(sg_admin_url, db=sg_db, user_name=user, session_id=session_id, auth=auth)
 
 # 53284	Public API user all sessions deleted	All sessions were deleted for a Public API user
 # 53291	Admin API user authentication failed	Admin API user failed to authenticate
