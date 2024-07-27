@@ -328,7 +328,7 @@ def trigger_update_delete(sg_client, sg_admin_url, user, db=sg_db):
 
 
 def trigger_create_role(sg_client, sg_admin_url, role, db=sg_db):
-    sg_client.create_role(url=sg_admin_url, db=db, name=role)
+    sg_client.create_role(url=sg_admin_url, db=db, name=role, auth=auth)
 
 
 def trigger_read_role(sg_client, sg_admin_url, role, db=sg_db):
