@@ -113,7 +113,6 @@ def vector_search_test_fixture(params_from_base_test_setup):
     db.deleteDB(vsTestDatabase)
 
 
-@pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
 def test_vector_search_index_correctness(vector_search_test_fixture):
     '''
     @summary: Modifying and pulling documents leads to correct vector embeddings
@@ -196,35 +195,35 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
     # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
     ivQueryAll = vsHandler.query(term="dinner",
-                                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                 sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector)) AS distance "
                                       "FROM indexVectors "
-                                      "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                                      "LIMIT 300 "),
                                  database=vsTestDatabase)
 
     dbvQueryAll = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                  sql=("SELECT word, vector_distance(vector, $vector) AS distance "
                                        "FROM docBodyVectors "
-                                       "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
+                                       "LIMIT 300 "),
                                   database=vsTestDatabase)
 
     ivQueryCat3 = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                  sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector)) AS distance "
                                        "FROM indexVectors "
-                                       "WHERE vector_match(indexVectorsIndex, $vector, 300) "
+                                       "LIMIT 300 "
                                        "AND catid=\"cat3\""),
                                   database=vsTestDatabase)
 
     dbvQueryCat1 = vsHandler.query(term="dinner",
-                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                   sql=("SELECT word, vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
-                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                                        "LIMIT 300 "
                                         "AND catid=\"cat1\""),
                                    database=vsTestDatabase)
 
     dbvQueryCat2 = vsHandler.query(term="dinner",
-                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                   sql=("SELECT word, vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
-                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
+                                        "LIMIT 300 "
                                         "AND catid=\"cat2\""),
                                    database=vsTestDatabase)
 
