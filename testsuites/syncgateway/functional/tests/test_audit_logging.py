@@ -193,7 +193,8 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     trigger_delete_document(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
     _, session_id = trigger_create_public_user_session(sg_client, sg_admin_url)
     trigger_delete_user_session(sg_client, sg_admin_url, username, session_id)
-    trigger_admin_auth_unauthorized(sg_client, sg_admin_url, "dummy_user" + random_suffix, auth=admin_auth)
+    trigger_admin_auth_failed(sg_client, sg_admin_url)
+    trigger_admin_auth_unauthorized(sg_client, sg_admin_url, auth=admin_auth)
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
@@ -392,16 +393,16 @@ def trigger_delete_user_session(sg_client, sg_admin_url, user, session_id):
     sg_client.delete_session(sg_admin_url, db=sg_db, user_name=user, session_id=session_id, auth=admin_auth)
 
 
-def trigger_admin_auth_failed(sg_client, sg_admin_url, user):
+def trigger_admin_auth_failed(sg_client, sg_admin_url):
     try:
-        sg_client.create_user(url=sg_admin_url, db=sg_db, name=user, password=password, channels=channels, auth=("fake_user", "fake_password"))
+        sg_client.create_user(url=sg_admin_url, db=sg_db, name="dummy_user" + random_suffix, password=password, channels=channels, auth=("fake_user", "fake_password"))
     except (Exception):
         pass
 
 
-def trigger_admin_auth_unauthorized(sg_client, sg_admin_url, user, auth):
+def trigger_admin_auth_unauthorized(sg_client, sg_admin_url, auth):
     try:
-        sg_client.create_user(sg_admin_url, db=sg_db, user_name=user, auth=auth)
+        sg_client.create_user(sg_admin_url, db=sg_db, user_name="dummy_user" + random_suffix, auth=auth)
     except (Exception):
         pass
 
