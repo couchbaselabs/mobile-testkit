@@ -262,7 +262,7 @@ class MobileRestClient:
         resp = self.request_session(url, db, name, password, ttl)
         return resp.headers["Set-Cookie"]
 
-    def delete_session(self, url, db, user_name=None, session_id=None):
+    def delete_session(self, url, db, user_name=None, session_id=None, auth=None):
         """
         Sync Gateway only.
 
@@ -271,15 +271,21 @@ class MobileRestClient:
         :param user_name: user_name associated with the cookie
         :param session_id: cookie session id to delete
         """
-
+        resp = None
         if user_name is not None:
             # Delete session via /{db}/_user/{user-name}/_session/{session-id}
-            resp = self._session.delete("{}/{}/_user/{}/_session/{}".format(url, db, user_name, session_id))
+            if auth:
+                resp = self._session.delete("{}/{}/_user/{}/_session/{}".format(url, db, user_name, session_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.delete("{}/{}/_user/{}/_session/{}".format(url, db, user_name, session_id))
             log_r(resp)
             resp.raise_for_status()
         else:
             # Delete session via /{db}/_session/{session-id}
-            resp = self._session.delete("{}/{}/_session/{}".format(url, db, session_id))
+            if auth:
+                resp = self._session.delete("{}/{}/_session/{}".format(url, db, session_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.delete("{}/{}/_session/{}".format(url, db, session_id))
             log_r(resp)
             resp.raise_for_status()
 
