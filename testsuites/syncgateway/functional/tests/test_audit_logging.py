@@ -401,10 +401,10 @@ def trigger_admin_auth_failed(sg_client, sg_admin_url):
 
 
 def trigger_admin_auth_unauthorized(sg_client, sg_admin_url, auth):
-    try:
-        sg_client.create_user(sg_admin_url, db=sg_db, name="admin_unauth_failed_user" + random_suffix, auth=auth)
-    except (Exception):
-        pass
+    # try:
+    sg_client.create_user(sg_admin_url, db=sg_db, name="admin_unauth_failed_user" + random_suffix, auth=auth)
+    # except (Exception):
+    #    pass
 
 
 # 53284	Public API user all sessions deleted	All sessions were deleted for a Public API user
