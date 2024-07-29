@@ -194,7 +194,7 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     _, session_id = trigger_create_public_user_session(sg_client, sg_admin_url)
     trigger_delete_user_session(sg_client, sg_admin_url, username, session_id)
     trigger_admin_auth_failed(sg_client, sg_admin_url)
-    trigger_admin_auth_unauthorized(sg_client, sg_admin_url, auth=admin_auth)
+    trigger_admin_auth_unauthorized(sg_client, sg_admin_url, auth=(username, password))
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
