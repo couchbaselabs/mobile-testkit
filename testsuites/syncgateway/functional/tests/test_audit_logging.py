@@ -395,16 +395,16 @@ def trigger_delete_user_session(sg_client, sg_admin_url, user, session_id):
 
 def trigger_admin_auth_failed(sg_client, sg_admin_url):
     try:
-        sg_client.create_user(url=sg_admin_url, db=sg_db, name="dummy_user" + random_suffix, password=password, channels=channels, auth=("fake_user", "fake_password"))
+        sg_client.create_user(url=sg_admin_url, db=sg_db, name="admin_auth_failed_user" + random_suffix, password=password, channels=channels, auth=("fake_user", "fake_password"))
     except (Exception):
         pass
 
 
 def trigger_admin_auth_unauthorized(sg_client, sg_admin_url, auth):
-    # try:
-    sg_client.create_user(sg_admin_url, db=sg_db, user_name="dummy_user" + random_suffix, auth=auth)
-    # except (Exception):
-    #    pass
+    try:
+        sg_client.create_user(sg_admin_url, db=sg_db, name="admin_unauth_failed_user" + random_suffix, auth=auth)
+    except (Exception):
+        pass
 
 
 # 53284	Public API user all sessions deleted	All sessions were deleted for a Public API user
