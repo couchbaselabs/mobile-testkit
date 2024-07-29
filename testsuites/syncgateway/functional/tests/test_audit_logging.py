@@ -43,7 +43,9 @@ EVENTS = {"public_api_auth_failed": "53281",
           "import document": "55005",
           "public_user_session_created": "53282",
           "public_user_delete_session": "53283",
-          "admin_user_authenticated": "53290"
+          "admin_user_authenticated": "53290",
+          "admin_api_auth_failed": "53291",
+          "admin_api_auth_unauzthrized": "53292"
           }
 
 DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
@@ -58,6 +60,8 @@ DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["public_user_session_created"]: EXPECTED_IN_LOGS,
                            EVENTS["public_user_delete_session"]: EXPECTED_IN_LOGS,
                            EVENTS["admin_user_authenticated"]: EXPECTED_IN_LOGS,
+                           EVENTS["admin_api_auth_failed"]: EXPECTED_IN_LOGS,
+                           EVENTS["admin_api_auth_unauzthrized"]: EXPECTED_IN_LOGS,
                            EVENTS["create_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["read_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["update_document"]: NOT_EXPECTED_IN_THE_LOGS,
@@ -81,7 +85,7 @@ username = 'audit-logging-user'
 password = 'password'
 is_audit_logging_set = False
 channels = ["audit_logging"]
-auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+admin_auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
 bucket = "data-bucket"
 bucket2 = "audit-logging-bucket2"
 remote_executor = None
@@ -138,7 +142,7 @@ def audit_logging_fixture(params_from_base_test_setup):
         data = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
         admin_client.create_db(sg2_db, data)
     if admin_client.does_user_exist(sg_db, username) is False:
-        sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+        sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=admin_auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
     cb_server.delete_bucket(bucket)
@@ -188,7 +192,8 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     trigger_update_document(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
     trigger_delete_document(sg_client, sg_url, doc_id_prefix + "_0", auth=(username, password))
     _, session_id = trigger_create_public_user_session(sg_client, sg_admin_url)
-    delete_user_session(sg_client, sg_admin_url, username, session_id)
+    trigger_delete_user_session(sg_client, sg_admin_url, username, session_id)
+    trigger_admin_auth_unauthorized(sg_client, sg_admin_url, "dummy_user" + random_suffix, auth=admin_auth)
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
@@ -312,35 +317,35 @@ def trigger_user_auth_succeeded(sg_client, sg_url, auth, db=sg_db):
 
 
 def trigger_create_user(sg_client, sg_admin_url, user, db=sg_db):
-    sg_client.create_user(url=sg_admin_url, db=db, name=user, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg_admin_url, db=db, name=user, password=password, channels=channels, auth=admin_auth)
 
 
 def trigger_get_user(sg_client, sg_admin_url, user, db=sg_db):
-    sg_client.get_user(url=sg_admin_url, db=db, name=user, auth=auth)
+    sg_client.get_user(url=sg_admin_url, db=db, name=user, auth=admin_auth)
 
 
 def trigger_update_user(sg_client, sg_admin_url, user, db=sg_db):
-    sg_client.update_user(url=sg_admin_url, db=db, name=user, password="password1", auth=auth)
+    sg_client.update_user(url=sg_admin_url, db=db, name=user, password="password1", auth=admin_auth)
 
 
 def trigger_update_delete(sg_client, sg_admin_url, user, db=sg_db):
-    sg_client.delete_user(url=sg_admin_url, db=db, name=user, auth=auth)
+    sg_client.delete_user(url=sg_admin_url, db=db, name=user, auth=admin_auth)
 
 
 def trigger_create_role(sg_client, sg_admin_url, role, db=sg_db):
-    sg_client.create_role(url=sg_admin_url, db=db, name=role, auth=auth)
+    sg_client.create_role(url=sg_admin_url, db=db, name=role, auth=admin_auth)
 
 
 def trigger_read_role(sg_client, sg_admin_url, role, db=sg_db):
-    sg_client.get_role(url=sg_admin_url, db=db, name=role, auth=auth)
+    sg_client.get_role(url=sg_admin_url, db=db, name=role, auth=admin_auth)
 
 
 def trigger_update_role(sg_client, sg_admin_url, role, db=sg_db):
-    sg_client.update_role(url=sg_admin_url, db=db, name=role, auth=auth)
+    sg_client.update_role(url=sg_admin_url, db=db, name=role, auth=admin_auth)
 
 
 def trigger_admin_http_api_request(sg_client, sg_admin_url, user, db=sg_db):
-    sg_client.create_user(url=sg_admin_url, db=db, name=user, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg_admin_url, db=db, name=user, password=password, channels=channels, auth=admin_auth)
 
 
 def trigger_public_api_request(sg_client, sg_url, auth, db=sg_db):
@@ -380,11 +385,26 @@ def trigger_create_document_with_scopes_collections(sg_client, sg_url, db, auth)
 
 
 def trigger_create_public_user_session(sg_client, sg_admin_url):
-    return sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
+    return sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=admin_auth)
 
 
-def delete_user_session(sg_client, sg_admin_url, user, session_id):
-    sg_client.delete_session(sg_admin_url, db=sg_db, user_name=user, session_id=session_id, auth=auth)
+def trigger_delete_user_session(sg_client, sg_admin_url, user, session_id):
+    sg_client.delete_session(sg_admin_url, db=sg_db, user_name=user, session_id=session_id, auth=admin_auth)
+
+
+def trigger_admin_auth_failed(sg_client, sg_admin_url, user):
+    try:
+        sg_client.create_user(url=sg_admin_url, db=sg_db, name=user, password=password, channels=channels, auth=("fake_user", "fake_password"))
+    except (Exception):
+        pass
+
+
+def trigger_admin_auth_unauthorized(sg_client, sg_admin_url, user, auth):
+    try:
+        sg_client.create_user(sg_admin_url, db=sg_db, user_name=user, auth=auth)
+    except (Exception):
+        pass
+
 
 # 53284	Public API user all sessions deleted	All sessions were deleted for a Public API user
 # 53291	Admin API user authentication failed	Admin API user failed to authenticate
