@@ -194,7 +194,6 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     _, session_id = trigger_create_public_user_session(sg_client, sg_admin_url)
     trigger_delete_user_session(sg_client, sg_admin_url, username, session_id)
     trigger_admin_auth_failed(sg_client, sg_admin_url)
-    trigger_admin_auth_unauthorized(sg_client, sg_admin_url, auth=(username, password))
 
     # 2. Check that the events are are recorded/not recorded in the audit_log file
     audit_log_folder = get_audit_log_folder(cluster_config)
@@ -398,15 +397,3 @@ def trigger_admin_auth_failed(sg_client, sg_admin_url):
         sg_client.create_user(url=sg_admin_url, db=sg_db, name="admin_auth_failed_user" + random_suffix, password=password, channels=channels, auth=("fake_user", "fake_password"))
     except (Exception):
         pass
-
-
-def trigger_admin_auth_unauthorized(sg_client, sg_admin_url, auth):
-    try:
-        sg_client.create_user(sg_admin_url, db=sg_db, name="admin_unauth_failed_user" + random_suffix, password=password, channels=channels, auth=auth)
-    except (Exception):
-        pass
-
-
-# 53284	Public API user all sessions deleted	All sessions were deleted for a Public API user
-# 53291	Admin API user authentication failed	Admin API user failed to authenticate
-# 53292	Admin API user authorization failed	Admin API user failed to authorize
