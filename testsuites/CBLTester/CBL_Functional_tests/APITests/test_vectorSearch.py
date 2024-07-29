@@ -201,27 +201,27 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
                                  database=vsTestDatabase)
 
     dbvQueryAll = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(vector, $vector) AS distance "
+                                  sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                        "FROM docBodyVectors "
                                        "LIMIT 300 "),
                                   database=vsTestDatabase)
 
     ivQueryCat3 = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector)) AS distance "
+                                  sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector) AS distance "
                                        "FROM indexVectors "
                                        "LIMIT 300 "
                                        "AND catid=\"cat3\""),
                                   database=vsTestDatabase)
 
     dbvQueryCat1 = vsHandler.query(term="dinner",
-                                   sql=("SELECT word, vector_distance(vector, $vector) AS distance "
+                                   sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
                                         "LIMIT 300 "
                                         "AND catid=\"cat1\""),
                                    database=vsTestDatabase)
 
     dbvQueryCat2 = vsHandler.query(term="dinner",
-                                   sql=("SELECT word, vector_distance(vector, $vector) AS distance "
+                                   sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
                                         "LIMIT 300 "
                                         "AND catid=\"cat2\""),
