@@ -195,7 +195,7 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
     # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
     ivQueryAll = vsHandler.query(term="dinner",
-                                 sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector)) AS distance "
+                                 sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector) AS distance "
                                       "FROM indexVectors "
                                       "LIMIT 300 "),
                                  database=vsTestDatabase)
