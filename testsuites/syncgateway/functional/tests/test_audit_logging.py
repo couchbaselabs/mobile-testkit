@@ -44,8 +44,7 @@ EVENTS = {"public_api_auth_failed": "53281",
           "public_user_session_created": "53282",
           "public_user_delete_session": "53283",
           "admin_user_authenticated": "53290",
-          "admin_api_auth_failed": "53291",
-          "admin_api_auth_unauzthrized": "53292"
+          "admin_api_auth_failed": "53291"
           }
 
 DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
