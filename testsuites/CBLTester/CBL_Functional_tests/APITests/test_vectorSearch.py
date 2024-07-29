@@ -209,22 +209,25 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
     ivQueryCat3 = vsHandler.query(term="dinner",
                                   sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector) AS distance "
                                        "FROM indexVectors "
+                                       "WHERE catid='cat3' "
                                        "LIMIT 300 "
-                                       "AND catid=\"cat3\""),
+                                       ),
                                   database=vsTestDatabase)
 
     dbvQueryCat1 = vsHandler.query(term="dinner",
                                    sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
+                                        "WHERE catid='cat1' "
                                         "LIMIT 300 "
-                                        "AND catid=\"cat1\""),
+                                        ),
                                    database=vsTestDatabase)
 
     dbvQueryCat2 = vsHandler.query(term="dinner",
                                    sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
+                                        "WHERE catid='cat2' "
                                         "LIMIT 300 "
-                                        "AND catid=\"cat2\""),
+                                        ),
                                    database=vsTestDatabase)
 
     print(f"Index vector query all: {len(ivQueryAll)}")
@@ -314,22 +317,25 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
     ivQueryCat3 = vsHandler.query(term="dinner",
                                   sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector) AS distance "
                                        "FROM indexVectors "
+                                       "WHERE catid='cat3' "
                                        "LIMIT 350 "
-                                       "AND catid=\"cat3\""),
+                                       ),
                                   database=vsTestDatabase)
 
     dbvQueryCat1 = vsHandler.query(term="dinner",
                                    sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
+                                        "WHERE catid='cat1' "
                                         "LIMIT 350 "
-                                        "AND catid=\"cat1\""),
+                                        ),
                                    database=vsTestDatabase)
 
     dbvQueryCat2 = vsHandler.query(term="dinner",
                                    sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
+                                        "WHERE catid='cat2' "
                                         "LIMIT 350 "
-                                        "AND catid=\"cat2\""),
+                                        ),
                                    database=vsTestDatabase)
 
     print(f"Index vector query all: {len(ivQueryAll)}")
