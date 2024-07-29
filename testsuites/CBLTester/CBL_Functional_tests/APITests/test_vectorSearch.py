@@ -196,36 +196,39 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 
     # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
     ivQueryAll = vsHandler.query(term="dinner",
-                                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                 sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector) AS distance "
                                       "FROM indexVectors "
-                                      "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
+                                      "LIMIT 300 "),
                                  database=vsTestDatabase)
 
     dbvQueryAll = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                  sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                        "FROM docBodyVectors "
-                                       "WHERE vector_match(docBodyVectorsIndex, $vector, 300)"),
+                                       "LIMIT 300 "),
                                   database=vsTestDatabase)
 
     ivQueryCat3 = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                  sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector) AS distance "
                                        "FROM indexVectors "
-                                       "WHERE vector_match(indexVectorsIndex, $vector, 300) "
-                                       "AND catid=\"cat3\""),
+                                       "WHERE catid='cat3' "
+                                       "LIMIT 300 "
+                                       ),
                                   database=vsTestDatabase)
 
     dbvQueryCat1 = vsHandler.query(term="dinner",
-                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                   sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
-                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
-                                        "AND catid=\"cat1\""),
+                                        "WHERE catid='cat1' "
+                                        "LIMIT 300 "
+                                        ),
                                    database=vsTestDatabase)
 
     dbvQueryCat2 = vsHandler.query(term="dinner",
-                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                   sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
-                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 300) "
-                                        "AND catid=\"cat2\""),
+                                        "WHERE catid='cat2' "
+                                        "LIMIT 300 "
+                                        ),
                                    database=vsTestDatabase)
 
     print(f"Index vector query all: {len(ivQueryAll)}")
@@ -301,36 +304,39 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
     time.sleep(15)
 
     ivQueryAll = vsHandler.query(term="dinner",
-                                 sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                 sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector) AS distance "
                                       "FROM indexVectors "
-                                      "WHERE vector_match(indexVectorsIndex, $vector, 350)"),
+                                      "LIMIT 350 "),
                                  database=vsTestDatabase)
 
     dbvQueryAll = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                  sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                        "FROM docBodyVectors "
-                                       "WHERE vector_match(docBodyVectorsIndex, $vector, 350)"),
+                                       "LIMIT 350 "),
                                   database=vsTestDatabase)
 
     ivQueryCat3 = vsHandler.query(term="dinner",
-                                  sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
+                                  sql=("SELECT word, approx_vector_distance(prediction(gteSmall, {\"word\": word}).vector, $vector) AS distance "
                                        "FROM indexVectors "
-                                       "WHERE vector_match(indexVectorsIndex, $vector, 350) "
-                                       "AND catid=\"cat3\""),
+                                       "WHERE catid='cat3' "
+                                       "LIMIT 350 "
+                                       ),
                                   database=vsTestDatabase)
 
     dbvQueryCat1 = vsHandler.query(term="dinner",
-                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                   sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
-                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
-                                        "AND catid=\"cat1\""),
+                                        "WHERE catid='cat1' "
+                                        "LIMIT 350 "
+                                        ),
                                    database=vsTestDatabase)
 
     dbvQueryCat2 = vsHandler.query(term="dinner",
-                                   sql=("SELECT word, vector_distance(docBodyVectorsIndex) AS distance "
+                                   sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
                                         "FROM docBodyVectors "
-                                        "WHERE vector_match(docBodyVectorsIndex, $vector, 350) "
-                                        "AND catid=\"cat2\""),
+                                        "WHERE catid='cat2' "
+                                        "LIMIT 350 "
+                                        ),
                                    database=vsTestDatabase)
 
     print(f"Index vector query all: {len(ivQueryAll)}")
