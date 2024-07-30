@@ -454,8 +454,9 @@ class CouchbaseServer:
         per_bucket_ram_mb = self.get_ram_per_bucket(len(bucket_names))
 
         for bucket_name in bucket_names:
-            if bucket_name not in self.get_bucket_names():
-                self.create_bucket(cluster_config, bucket_name, per_bucket_ram_mb, ipv6)
+            if bucket_name in self.get_bucket_names():
+                self.delete_bucket(bucket_name)
+            self.create_bucket(cluster_config, bucket_name, per_bucket_ram_mb, ipv6)
 
     def create_bucket(self, cluster_config, name, ram_quota_mb=1024, ipv6=False):
         """
