@@ -159,13 +159,12 @@ class TestServerJava(TestServerBase):
             extra_vars = {
                 "package_name": self.package_name
             }
-            extra_vars["ansible_distribution"] = "CentOS"
-            print("-----------------------platform=" + self.platform)
             if self.platform == "java-debian":
                 extra_vars["java_home"] = os.environ["JAVA_HOME"]
                 extra_vars["jsvc_home"] = os.environ["JSVC_HOME"]
                 extra_vars["ansible_distribution"] = "debian"                
-
+            extra_vars["ansible_distribution"] = "CentOS"
+            print("-----------------------dist=" + str(extra_vars["ansible_distribution"]))
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml",
                                                               extra_vars=extra_vars
                                                               )
