@@ -29,7 +29,7 @@ class TestServerJava(TestServerBase):
             self.download_url = "{}/couchbase-lite-java/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
         else:
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
-         # The new distribution method for the support libs starts after release v3.1.1
+        # The new distribution method for the support libs starts after release v3.1.1
         if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
             self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
         if community_enabled:
@@ -156,16 +156,16 @@ class TestServerJava(TestServerBase):
             })
         else:
             # install jar file as a daemon service on non-Windows environment and start
-            extra_vars={
+            extra_vars = {
                 "package_name": self.package_name
             }
             if self.platform == "java-debian":
                 extra_vars["java_home"] = os.environ["JAVA_HOME"]
                 extra_vars["jsvc_home"] = os.environ["JSVC_HOME"]
                 extra_vars["ansible_distribution"] = "debian"
-            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml", extra_vars={
-                extra_vars
-            })
+            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml",
+                                                              extra_vars=extra_vars
+                                                              )
 
         if status == 0:
             return
