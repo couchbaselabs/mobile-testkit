@@ -157,14 +157,10 @@ class TestServerJava(TestServerBase):
         else:
             # install jar file as a daemon service on non-Windows environment and start
             extra_vars = {
-                "package_name": self.package_name
+                "package_name": self.package_name,
+                "java_home" : os.environ["JAVA_HOME"],
+                "jsvc_home" : os.environ["JSVC_HOME"]
             }
-            if self.platform == "java-debian":
-                extra_vars["java_home"] = os.environ["JAVA_HOME"]
-                extra_vars["jsvc_home"] = os.environ["JSVC_HOME"]
-                extra_vars["ansible_distribution"] = "debian"                
-            extra_vars["ansible_distribution"] = "CentOS"
-            print("-----------------------dist=" + str(extra_vars["ansible_distribution"]))
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml",
                                                               extra_vars=extra_vars
                                                               )
