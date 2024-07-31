@@ -17,7 +17,7 @@ class TestServerFactory:
     @staticmethod
     def validate_platform(platform):
         valid_platforms = ["android", "ios", "net-mono", "net-msft", "net-uwp", "xamarin-android", "xamarin-ios",
-                           "java-macosx", "java-msft", "java-ubuntu", "java-centos", "c-rpi", "c-macosx",
+                           "java-macosx", "java-msft", "java-ubuntu", "java-centos", "java-debian", "c-rpi", "c-macosx",
                            "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos", "c-msft", "c-ios", "c-uwp",
                            "c-android", "c-debian", "c-ubuntu", "maui-android", "maui-winui"]
         if platform not in valid_platforms:
@@ -49,7 +49,7 @@ class TestServerFactory:
             return TestServerNetMono(version_build, host, port)
         elif platform == "net-msft" or platform == "net-uwp" or platform == "c-msft" or platform == "c-uwp" or platform == "maui-winui":
             return TestServerNetMsft(version_build, host, port, platform=platform, community_enabled=community_enabled)
-        elif platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
+        elif platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "java-debian"]:
             return TestServerJava(version_build, host, port, debug_mode, platform=platform,
                                   community_enabled=community_enabled)
         elif platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
