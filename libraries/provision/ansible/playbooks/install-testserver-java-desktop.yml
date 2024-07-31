@@ -8,6 +8,7 @@
   tasks:
   - debug: msg="JAVA_HOME location is {{ java_home }}"
   - debug: msg="JSVC_HOME location is {{ jsvc_home }}"
+  - debug: msg="ansible_distribution = {{ ansible_distribution }}"
 
   - name: Delete any cblite2 filed generated in previous tests
     file:
