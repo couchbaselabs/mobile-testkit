@@ -158,8 +158,8 @@ class TestServerJava(TestServerBase):
             # install jar file as a daemon service on non-Windows environment and start
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml", extra_vars={
                 "package_name": self.package_name,
-                "JAVA_HOME": os.environ["JAVA_HOME"],
-                "JSVC_HOME": os.environ["JSVC_HOME"]
+                "java_home": os.environ["JAVA_HOME"],
+                "jsvc_home": os.environ["JSVC_HOME"]
             })
 
         if status == 0:
@@ -190,8 +190,8 @@ class TestServerJava(TestServerBase):
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop.yml", extra_vars={
                 "service_status": "stop",
                 "package_name": self.package_name,
-                "JAVA_HOME": os.environ["JAVA_HOME"],
-                "JSVC_HOME": os.environ["JSVC_HOME"]
+                "java_home": os.environ["JAVA_HOME"],
+                "jsvc_home": os.environ["JSVC_HOME"]
             })
 
         if status == 0:

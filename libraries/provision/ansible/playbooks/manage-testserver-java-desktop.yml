@@ -3,12 +3,14 @@
   vars:
     service_status:
     package_name:
+    java_home:
+    jsvc_home:
 
   tasks:
-  - debug: msg="JAVA_HOME location is {{ ansible_env.JAVA_HOME }}"
-  - debug: msg="JSVC_HOME location is {{ ansible_env.JSVC_HOME }}"
+  - debug: msg="JAVA_HOME location is {{ java_home }}"
+  - debug: msg="JSVC_HOME location is {{ jsvc_home }}"
 
   - name: Stop TestServer Java Daemon Service
-    shell: "~/javatestserver/daemon_manager.sh stop ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }}"
+    shell: "~/javatestserver/daemon_manager.sh stop ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ java_home }} {{ jsvc_home }}"
     when: "{{ service_status | search('stop') }}"
     ignore_errors: yes

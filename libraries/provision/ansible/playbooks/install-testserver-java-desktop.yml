@@ -2,10 +2,12 @@
   hosts: testserver
   vars:
     package_name:
+    java_home:
+    jsvc_home:
 
   tasks:
-  - debug: msg="JAVA_HOME location is {{ ansible_env.JAVA_HOME }}"
-  - debug: msg="JSVC_HOME location is {{ ansible_env.JSVC_HOME }}"
+  - debug: msg="JAVA_HOME location is {{ java_home }}"
+  - debug: msg="JSVC_HOME location is {{ jsvc_home }}"
 
   - name: Delete any cblite2 filed generated in previous tests
     file:
@@ -46,11 +48,11 @@
     ignore_errors: yes
 
   - name: Install and start TestServer Java Daemon Service
-    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }} ~/javatestserver/"
+    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ java_home }} {{ jsvc_home }} ~/javatestserver/"
     when: ansible_distribution_major_version != "6"
 
   - name: Install and start TestServer Java Daemon Service
-    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }}"
+    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ java_home }} {{ jsvc_home }}"
     args:
       chdir: ~/javatestserver
     when: (ansible_distribution == "CentOS" or ansible_distribution == "RedHat") and ansible_distribution_major_version == "6"
