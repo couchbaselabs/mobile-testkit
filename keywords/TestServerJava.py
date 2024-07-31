@@ -1,4 +1,5 @@
 import os
+import re
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
@@ -28,6 +29,9 @@ class TestServerJava(TestServerBase):
             self.download_url = "{}/couchbase-lite-java/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
         else:
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+         # The new distribution method for the support libs starts after release v3.1.1
+        if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
+            self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
         if community_enabled:
             self.build_name = "TestServer-java-community-{}".format(self.version_build)
         else:
@@ -154,6 +158,8 @@ class TestServerJava(TestServerBase):
             # install jar file as a daemon service on non-Windows environment and start
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml", extra_vars={
                 "package_name": self.package_name,
+                "java_home": os.environ["JAVA_HOME"],
+                "jsvc_home": os.environ["JSVC_HOME"]
             })
 
         if status == 0:
@@ -182,7 +188,9 @@ class TestServerJava(TestServerBase):
             # stop TestServerJava Daemon Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop.yml", extra_vars={
                 "service_status": "stop",
-                "package_name": self.package_name
+                "package_name": self.package_name,
+                "java_home": os.environ["JAVA_HOME"],
+                "jsvc_home": os.environ["JSVC_HOME"]
             })
 
         if status == 0:
