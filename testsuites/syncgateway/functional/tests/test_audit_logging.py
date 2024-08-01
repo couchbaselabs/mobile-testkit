@@ -124,6 +124,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     cluster = Cluster(config=cluster_config)
     sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
     cluster.reset(sg_config_path=sg_conf, use_config=True)
+    admin_client.auth = admin_auth
     audit_config = {"enabled": False}
     admin_client.update_audit_config(sg_db, audit_config)
     # Creating buckets and SGW dbs
