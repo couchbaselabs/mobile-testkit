@@ -81,7 +81,6 @@ sg_db = "db_" + random_suffix
 sg2_db = "db2_" + random_suffix
 username = 'audit-logging-user'
 password = 'password'
-is_audit_logging_set = False
 channels = ["audit_logging"]
 admin_auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
 bucket = "data-bucket"
@@ -97,7 +96,6 @@ def audit_logging_fixture(params_from_base_test_setup):
     global username
     global password
     global sg_db
-    global is_audit_logging_set
     global channels
     global bucket2
     global remote_executor
@@ -126,7 +124,8 @@ def audit_logging_fixture(params_from_base_test_setup):
     cluster = Cluster(config=cluster_config)
     sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
     cluster.reset(sg_config_path=sg_conf, use_config=True)
-    is_audit_logging_set = True
+    audit_config = {"enabled": False}
+    admin_client.update_audit_config(sg_db, audit_config)
     # Creating buckets and SGW dbs
     if bucket in cb_server.get_bucket_names():
         cb_server.delete_bucket(bucket)
@@ -168,7 +167,6 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
     audit_config = {"enabled": True}
-    admin_client.update_audit_config(sg_db, audit_config)
     if settings_config != "default":
         for event in tested_ids.keys():
             tested_ids[event] = settings_config
