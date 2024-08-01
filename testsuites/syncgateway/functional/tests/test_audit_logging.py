@@ -131,6 +131,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     cb_server.create_collection(bucket2, scope, collection)
     if admin_client.does_db_exist(sg_db) is False:
         admin_client.create_db(sg_db, {"bucket": bucket, "num_index_replicas": 0})
+    print("The audit events configuration with database creation: " + str(admin_client.get_audit_logging_conf(sg_db)))
     # audit_config = {"enabled": False}
     # admin_client.update_audit_config(sg_db, audit_config)
     if admin_client.does_db_exist(sg2_db) is False:
