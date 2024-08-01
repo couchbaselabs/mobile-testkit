@@ -137,6 +137,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     if admin_client.does_db_exist(sg2_db) is False:
         data = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
         admin_client.create_db(sg2_db, data)
+    print("The audit events configuration after the second database creation: " + str(admin_client.get_audit_logging_conf(sg_db)))
     if admin_client.does_user_exist(sg_db, username) is False:
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=admin_auth)
     yield sg_client, admin_client, sg_url, sg_admin_url
