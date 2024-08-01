@@ -168,6 +168,7 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
     audit_config = {"enabled": True}
+    admin_client.update_audit_config(sg_db, audit_config)
     if settings_config != "default":
         for event in tested_ids.keys():
             tested_ids[event] = settings_config
