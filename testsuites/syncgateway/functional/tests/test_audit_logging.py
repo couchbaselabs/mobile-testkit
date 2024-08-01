@@ -133,7 +133,7 @@ def audit_logging_fixture(params_from_base_test_setup):
     cb_server.create_collection(bucket2, scope, collection)
     if admin_client.does_db_exist(sg_db) is False:
         admin_client.create_db(sg_db, {"bucket": bucket, "num_index_replicas": 0})
-    audit_config = {"enabled": False}
+    audit_config = {"enabled": True}
     admin_client.update_audit_config(sg_db, audit_config)
     if admin_client.does_db_exist(sg2_db) is False:
         data = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
@@ -166,14 +166,13 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     doc_id_prefix = "audit_logging_doc" + random_suffix
     tested_ids = DEFAULT_EVENTS_SETTINGS
     # randomise a selected filterable events in case we are not testing the default settings
-    audit_config = {"enabled": True}
+    audit_config = {}
     if settings_config != "default":
         for event in tested_ids.keys():
             tested_ids[event] = settings_config
         audit_config["events"] = tested_ids
     print("====================================================config=" + str(audit_config["events"]))
-    admin_client.update_audit_config(sg_db, audit_config)
-    time.sleep(10)
+    admin_client.audit_config(sg_db, audit_config)
     print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db)))
     # 1. Trigger the tested events
     trigger_user_auth_failed(sg_client=sg_client, sg_url=sg_url)
