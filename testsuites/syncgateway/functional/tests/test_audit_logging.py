@@ -43,7 +43,6 @@ EVENTS = {"public_api_auth_failed": "53281",
           "import document": "55005",
           "public_user_session_created": "53282",
           "public_user_delete_session": "53283",
-          "admin_user_authenticated": "53290",
           "admin_api_auth_failed": "53291"
           }
 
@@ -58,7 +57,6 @@ DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["update_role"]: EXPECTED_IN_LOGS,
                            EVENTS["public_user_session_created"]: EXPECTED_IN_LOGS,
                            EVENTS["public_user_delete_session"]: EXPECTED_IN_LOGS,
-                           EVENTS["admin_user_authenticated"]: EXPECTED_IN_LOGS,
                            EVENTS["admin_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["create_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["read_document"]: NOT_EXPECTED_IN_THE_LOGS,
