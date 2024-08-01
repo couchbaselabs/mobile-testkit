@@ -4,7 +4,6 @@
     "maxIncomingConnections": 0,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
-    "logging": "{\"audit\": {\"enable\": true, \"audit_log_file_path\": \"/tmp/audit_log_test.txt\"}}",
     {{ hide_product_version }}
     {{ disable_persistent_config }}
     {{ server_tls_skip_verify }}
