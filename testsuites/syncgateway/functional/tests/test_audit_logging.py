@@ -172,7 +172,7 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
             tested_ids[event] = settings_config
         audit_config["events"] = tested_ids
     print("====================================================config=" + str(audit_config["events"]))
-    admin_client.audit_config(sg_db, audit_config)
+    admin_client.update_audit_config(sg_db, audit_config)
     print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db)))
     # 1. Trigger the tested events
     trigger_user_auth_failed(sg_client=sg_client, sg_url=sg_url)
