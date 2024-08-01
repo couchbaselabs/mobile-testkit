@@ -131,8 +131,8 @@ def audit_logging_fixture(params_from_base_test_setup):
     cb_server.create_collection(bucket2, scope, collection)
     if admin_client.does_db_exist(sg_db) is False:
         admin_client.create_db(sg_db, {"bucket": bucket, "num_index_replicas": 0})
-    audit_config = {"enabled": False}
-    admin_client.update_audit_config(sg_db, audit_config)
+    # audit_config = {"enabled": False}
+    # admin_client.update_audit_config(sg_db, audit_config)
     if admin_client.does_db_exist(sg2_db) is False:
         data = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
         admin_client.create_db(sg2_db, data)
