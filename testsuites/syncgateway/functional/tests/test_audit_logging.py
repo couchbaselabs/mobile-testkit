@@ -228,12 +228,12 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     1. Triggering 2 events in 2 different dbs
     2. Checking that the right event was logged against the right db
     '''
-    sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
+    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db1_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg_db, EVENTS["create_role"]))
     db2_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_user"]))
     db_scopes_and_collections_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_document"]))
-
+    print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db)))
     # 1. Triggering 2 events in 2 different dbs
     trigger_create_role(sg_client, sg_admin_url, role="db1_role", db=sg_db)
     trigger_create_user(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=sg2_db)
