@@ -17,7 +17,6 @@ from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.scan_logs import scan_for_pattern
 from keywords import couchbaseserver, document
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
@@ -43,7 +42,6 @@ EVENTS = {"public_api_auth_failed": "53281",
           "import document": "55005",
           "public_user_session_created": "53282",
           "public_user_delete_session": "53283",
-          "admin_user_authenticated": "53290",
           "admin_api_auth_failed": "53291"
           }
 
@@ -58,8 +56,6 @@ DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["update_role"]: EXPECTED_IN_LOGS,
                            EVENTS["public_user_session_created"]: EXPECTED_IN_LOGS,
                            EVENTS["public_user_delete_session"]: EXPECTED_IN_LOGS,
-                           EVENTS["admin_user_authenticated"]: EXPECTED_IN_LOGS,
-                           EVENTS["admin_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["create_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["read_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["update_document"]: NOT_EXPECTED_IN_THE_LOGS,
@@ -81,7 +77,6 @@ sg_db = "db_" + random_suffix
 sg2_db = "db2_" + random_suffix
 username = 'audit-logging-user'
 password = 'password'
-is_audit_logging_set = False
 channels = ["audit_logging"]
 admin_auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
 bucket = "data-bucket"
@@ -97,7 +92,6 @@ def audit_logging_fixture(params_from_base_test_setup):
     global username
     global password
     global sg_db
-    global is_audit_logging_set
     global channels
     global bucket2
     global remote_executor
@@ -122,11 +116,9 @@ def audit_logging_fixture(params_from_base_test_setup):
     # TODO: only reset the cluster to configure audit logging once, to save test time.
     # At the moment, the attempts to delete the audit log requires a SGW restart, and clearing the log
     # using cho -n > sg_audit.log or similar is causing failures, for an unknown reason
-    persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
     cluster = Cluster(config=cluster_config)
     sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
     cluster.reset(sg_config_path=sg_conf, use_config=True)
-    is_audit_logging_set = True
     # Creating buckets and SGW dbs
     if bucket in cb_server.get_bucket_names():
         cb_server.delete_bucket(bucket)
@@ -136,11 +128,14 @@ def audit_logging_fixture(params_from_base_test_setup):
     cb_server.create_collection(bucket2, scope, collection)
     if admin_client.does_db_exist(sg_db) is False:
         admin_client.create_db(sg_db, {"bucket": bucket, "num_index_replicas": 0})
+    audit_config = {"enabled": False}
+    admin_client.update_audit_config(sg_db, audit_config)
     if admin_client.does_db_exist(sg2_db) is False:
         data = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
         admin_client.create_db(sg2_db, data)
     if admin_client.does_user_exist(sg_db, username) is False:
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=admin_auth)
+    enable_audit_loging(admin_client, sg_db)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
     cb_server.delete_bucket(bucket)
@@ -171,9 +166,8 @@ def test_audit_settings(params_from_base_test_setup, audit_logging_fixture, sett
     if settings_config != "default":
         for event in tested_ids.keys():
             tested_ids[event] = settings_config
-        audit_config["events"] = tested_ids
-    admin_client.update_audit_config(sg_db, audit_config)
-
+    audit_config["events"] = tested_ids
+    admin_client.replace_audit_config(sg_db, audit_config)
     print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db)))
     # 1. Trigger the tested events
     trigger_user_auth_failed(sg_client=sg_client, sg_url=sg_url)
@@ -234,11 +228,13 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     1. Triggering 2 events in 2 different dbs
     2. Checking that the right event was logged against the right db
     '''
-    sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
+    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db1_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg_db, EVENTS["create_role"]))
     db2_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_user"]))
     db_scopes_and_collections_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_document"]))
+    audit_config = {"events": {EVENTS["create_role"]: EXPECTED_IN_LOGS}}
+    admin_client.update_audit_config(sg_db, audit_config)
 
     # 1. Triggering 2 events in 2 different dbs
     trigger_create_role(sg_client, sg_admin_url, role="db1_role", db=sg_db)
@@ -395,3 +391,8 @@ def trigger_admin_auth_failed(sg_client, sg_admin_url):
         sg_client.create_user(url=sg_admin_url, db=sg_db, name="admin_auth_failed_user" + random_suffix, password=password, channels=channels, auth=("fake_user", "fake_password"))
     except (Exception):
         pass
+
+
+def enable_audit_loging(admin_client, db):
+    audit_config = {"enabled": True}
+    admin_client.replace_audit_config(db, audit_config)
