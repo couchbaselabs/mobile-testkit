@@ -57,7 +57,6 @@ DEFAULT_EVENTS_SETTINGS = {EVENTS["public_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["update_role"]: EXPECTED_IN_LOGS,
                            EVENTS["public_user_session_created"]: EXPECTED_IN_LOGS,
                            EVENTS["public_user_delete_session"]: EXPECTED_IN_LOGS,
-                           EVENTS["admin_api_auth_failed"]: EXPECTED_IN_LOGS,
                            EVENTS["create_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["read_document"]: NOT_EXPECTED_IN_THE_LOGS,
                            EVENTS["update_document"]: NOT_EXPECTED_IN_THE_LOGS,
@@ -118,7 +117,6 @@ def audit_logging_fixture(params_from_base_test_setup):
     # TODO: only reset the cluster to configure audit logging once, to save test time.
     # At the moment, the attempts to delete the audit log requires a SGW restart, and clearing the log
     # using cho -n > sg_audit.log or similar is causing failures, for an unknown reason
-    persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
     cluster = Cluster(config=cluster_config)
     sg_conf = sync_gateway_config_path_for_mode("audit_logging", "cc")
     cluster.reset(sg_config_path=sg_conf, use_config=True)
