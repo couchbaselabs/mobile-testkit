@@ -233,7 +233,11 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     db1_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg_db, EVENTS["create_role"]))
     db2_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_user"]))
     db_scopes_and_collections_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_document"]))
-    print("The audit events configuration: " + str(admin_client.get_audit_logging_conf(sg_db)))
+    audit_config = {"events": {EVENTS["create_role"]: EXPECTED_IN_LOGS}}
+    admin_client.update_audit_config(sg_db, audit_config)
+    audit_config = {"events": {EVENTS["create_document"]: EXPECTED_IN_LOGS}}
+    admin_client.update_audit_config(sg2_db, audit_config)
+
     # 1. Triggering 2 events in 2 different dbs
     trigger_create_role(sg_client, sg_admin_url, role="db1_role", db=sg_db)
     trigger_create_user(sg_client=sg_client, sg_admin_url=sg_admin_url, user="db2_user", db=sg2_db)
