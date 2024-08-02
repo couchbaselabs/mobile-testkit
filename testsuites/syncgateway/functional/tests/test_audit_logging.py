@@ -135,6 +135,7 @@ def audit_logging_fixture(params_from_base_test_setup):
         admin_client.create_db(sg2_db, data)
     if admin_client.does_user_exist(sg_db, username) is False:
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=admin_auth)
+    enable_audit_loging(admin_client, sg_db)
     yield sg_client, admin_client, sg_url, sg_admin_url
 
     cb_server.delete_bucket(bucket)
@@ -206,11 +207,10 @@ def test_audit_log_rotation(params_from_base_test_setup, audit_logging_fixture):
     1. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
     2. Looking at the content of the logs directory and expecting it to contain an archive
     '''
-    sg_client, admin_client, sg_url, _ = audit_logging_fixture
+    sg_client, _, sg_url, _ = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     cluster = Cluster(config=cluster_config)
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
-    enable_audit_loging(admin_client, sg_db)
 
     # 1. Triggering event 53280 multiple times to increaes the audit log size to more than 1MB
     for i in range(0, 3000):
@@ -229,12 +229,11 @@ def test_events_logs_per_db(params_from_base_test_setup, audit_logging_fixture):
     1. Triggering 2 events in 2 different dbs
     2. Checking that the right event was logged against the right db
     '''
-    sg_client, admin_client, sg_url, sg_admin_url = audit_logging_fixture
+    sg_client, _, sg_url, sg_admin_url = audit_logging_fixture
     cluster_config = params_from_base_test_setup["cluster_config"]
     db1_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg_db, EVENTS["create_role"]))
     db2_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_user"]))
     db_scopes_and_collections_pattern = re.compile('\"db\":\"{}\".*\"id\":{}'.format(sg2_db, EVENTS["create_document"]))
-    enable_audit_loging(admin_client, sg_db)
 
     # 1. Triggering 2 events in 2 different dbs
     trigger_create_role(sg_client, sg_admin_url, role="db1_role", db=sg_db)
@@ -262,7 +261,6 @@ def test_global_events(params_from_base_test_setup, audit_logging_fixture):
     cluster_config = params_from_base_test_setup["cluster_config"]
     event_user = "user" + random_suffix + "ge"
     tested_ids = GLOBAL_EVENTS_SETTINGS
-    enable_audit_loging(admin_client, sg_db)
 
     # 1. Trigging global events
     trigger_admin_http_api_request(sg_client=sg_client, sg_admin_url=sg_admin_url, user=event_user)
