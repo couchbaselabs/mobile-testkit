@@ -17,7 +17,6 @@ from keywords.exceptions import CollectionError
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.scan_logs import scan_for_pattern
 from keywords import couchbaseserver, document
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 EXPECTED_IN_LOGS = True
 NOT_EXPECTED_IN_THE_LOGS = False
