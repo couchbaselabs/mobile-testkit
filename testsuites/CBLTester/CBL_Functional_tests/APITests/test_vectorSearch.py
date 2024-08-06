@@ -499,6 +499,7 @@ def test_vector_search_sanity(vector_search_test_fixture):
 def update_lazy_vector(collectionHandler, collection, docBodyVectorCollection, indexName, vsHandler, limit):
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection) / limit)):
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
+        print("**************************index=" + str(index))
         vsHandler.updateQueryIndex(index, loopNumber=limit)
 
 
