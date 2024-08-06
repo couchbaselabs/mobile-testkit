@@ -87,6 +87,6 @@ class VectorSearch(object):
 
     def updateQueryIndex(self, index, loopNumber):
         args = Args()
-        args.setMemoryPointer("index", index)
+        args.setMemoryPointer("indexName", index)
         args.setString("loopNumber", loopNumber)
         return self._client.invokeMethod("vectorSearch_updateQueryIndex", args)
