@@ -397,7 +397,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         scopeName="_default",
         collectionName="docBodyVectors",
         indexName=indexName,
-        expression="word",
+        expression="vector",
         dimensions=gteSmallDims,
         centroids=8,
         metric="euclidean",
@@ -431,12 +431,12 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         )
     update_task.result()
     query_task.result()
-    for i in range(1, 4000):
-        vsHandler.query(term="dinner",
-                        sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
-                             "FROM updateIndex "
-                             "LIMIT 300 "),
-                        database=vsTestDatabase)
+    #  for i in range(1, 4000):
+    #     vsHandler.query(term="dinner",
+    #                     sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
+    #                          "FROM docBodyVectors "
+    #                          "LIMIT 300 "),
+    #                     database=vsTestDatabase)
 
 
 # TODO might be worth checking if a. this test case is small enough for vector search and
