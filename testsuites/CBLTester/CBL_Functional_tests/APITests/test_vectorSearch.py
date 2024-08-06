@@ -499,15 +499,14 @@ def test_vector_search_sanity(vector_search_test_fixture):
 def update_lazy_vector(collectionHandler, collection, docBodyVectorCollection, indexName, vsHandler, limit):
     for i in range(1, floor(collection.documentCount(docBodyVectorCollection) / limit)):
         index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
-        print("**************************index=" + str(index))
         vsHandler.updateQueryIndex(index, loopNumber=limit)
 
 
 def queryIndex(vsHandler, vsTestDatabase):
     for i in range(1, 10000):
         vsHandler.query(term="dinner",
-                        sql=("SELECT word, vector_distance(updateIndex) AS distance "
-                             "FROM docBodyVectors "
-                             "WHERE vector_match(updateIndex, $vector, 300)"),
+                        sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
+                             "FROM updateIndex "
+                             "LIMIT 300 "),
                         database=vsTestDatabase)
         print("query number=" + str(i))
