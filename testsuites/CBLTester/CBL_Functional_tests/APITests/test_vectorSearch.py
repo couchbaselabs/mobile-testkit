@@ -506,7 +506,7 @@ def queryIndex(vsHandler, vsTestDatabase):
     for i in range(1, 10000):
         vsHandler.query(term="dinner",
                         sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
-                             "FROM updateIndex "
+                             "FROM docBodyVectors "
                              "LIMIT 300 "),
                         database=vsTestDatabase)
         print("query number=" + str(i))
