@@ -30,7 +30,7 @@ class VectorSearch(object):
     # USEFUL FUNCTIONS
     def createIndex(self, database, scopeName, collectionName, indexName, expression,
                     dimensions, centroids, scalarEncoding=None, subquantizers=None, bits=None,
-                    metric=None, minTrainingSize=None, maxTrainingSize=None):
+                    metric=None, minTrainingSize=None, maxTrainingSize=None, isLazy=None):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("collectionName", collectionName)
@@ -51,6 +51,8 @@ class VectorSearch(object):
             args.setInt("minTrainingSize", minTrainingSize)
         if maxTrainingSize:
             args.setInt("maxTrainingSize", maxTrainingSize)
+        if isLazy is not None:
+            args.setBoolean("isLazy", isLazy)
         return self._client.invokeMethod("vectorSearch_createIndex", args)
 
     def getEmbedding(self, input):
@@ -69,7 +71,6 @@ class VectorSearch(object):
         args.setString("term", term)
         args.setString("sql", sql)
         args.setMemoryPointer("database", database)
-
         return self._client.invokeMethod("vectorSearch_query", args)
 
     def loadDatabase(self, dbPath=None):
@@ -78,11 +79,14 @@ class VectorSearch(object):
             args.setString("dbPath", dbPath)
         return self._client.invokeMethod("vectorSearch_loadDatabase", args)
 
-    def regenerateWordEmbeddings(self):
-        return self._client.invokeMethod("vectorSearch_regenerateWordEmbeddings")
-
     def register_model(self, key, name):
         args = Args()
         args.setString("key", key)
         args.setString("name", name)
         return self._client.invokeMethod("vectorSearch_registerModel", args)
+
+    def updateQueryIndex(self, index, loopNumber):
+        args = Args()
+        args.setMemoryPointer("indexName", index)
+        args.setString("loopNumber", loopNumber)
+        return self._client.invokeMethod("vectorSearch_updateQueryIndex", args)

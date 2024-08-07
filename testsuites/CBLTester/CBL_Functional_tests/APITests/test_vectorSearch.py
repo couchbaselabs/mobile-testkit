@@ -2,6 +2,7 @@ import pytest
 import time
 import uuid
 import random
+from math import floor
 from CBLClient.Database import Database
 from libraries.testkit import cluster
 from keywords.ClusterKeywords import ClusterKeywords
@@ -12,6 +13,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 from CBLClient.VectorSearch import VectorSearch
 from CBLClient.Collection import Collection
 from CBLClient.Document import Document
+from concurrent.futures import ThreadPoolExecutor
 
 bucket = "travel-sample"
 sync_function = "function(doc){channel(doc.channels);}"
@@ -373,58 +375,90 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 #    return len(sg_docs)
 
 
-# TODO might be worth checking if a. this test case is small enough for vector search and
-# b. whether this is an appropriate fixture for a sanity test
-# TODO make this test only pull documents from server that have embeddings then query them
-@pytest.mark.skip(reason="Waiting for all the test apps changes to be merged")
-@pytest.mark.sanity
-def test_vector_search_sanity(vector_search_test_fixture):
+@pytest.mark.skipif(not pytest.config.getoption("--liteserv-platform").startswith("android"),
+                    reason="Sanity-stress test for the shared lite core lazy vector code")
+def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
+    '''
+    @summary: A system test for querying a lazy index while it is being updated. Only needs one platform for now.
+    Other lazy vector tests are being run in the dev level.
+    1. Create a lazy vector
+    2. Upload documents and update them
+    3. In parallel, update the lazy vector embeddings and query the index
+    '''
+    # setup
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
-
+    total_num_of_docs_to_upload = 10000
+    indexName = "updateIndex"
+    limit = 7
     db = Database(base_url)
-
-    # Check for correct server version
-    server_version = couchbaseserver.get_server_version(cb_server.host)
-    if server_version >= "7.6.0":
-        pytest.skip("Server version must be before 7.6 for this test")
-
-    # Load vsTestDatabase
+    collection = Collection(base_url)
     vsHandler = VectorSearch(base_url)
+    collectionHandler = Collection(base_url)
+    vsHandler.register_model(key="word", name="gteSmall")
+    print("Registered model gteSmall on field 'word'")
 
-    # Register Model
-    vsHandler.registerModel(key="word", name="gteSmall")
+    # Check that all 4 collections on CBL exist
+    cbl_collections = db.collectionsInScope(vsTestDatabase, scope)
+    # TODO check if _default counts towards this
+    assert len(cbl_collections) == 5, "wrong number of collections returned"
+    assert dbv_col_name in cbl_collections, "no CBL collection found for doc body vectors"
+    assert st_col_name in cbl_collections, "no CBL collection found for search terms"
+    assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
+    assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
 
-    # Create Index
-    # This function requires an index name, expression (strings), number of dimensions and centroids (ints)
+    # 1. Create a lazy vector
     vsHandler.createIndex(
         database=vsTestDatabase,
         scopeName="_default",
-        collectionName="indexVectors",
-        indexName="indexVectorsIndex",
-        expression="prediction(gteSmall, {\"word\": word}).vector",
+        collectionName="docBodyVectors",
+        indexName=indexName,
+        expression="vector",
         dimensions=gteSmallDims,
-        centroids=4,
-        metric="cosine",
-        minTrainingSize=25 * 8,
-        maxTrainingSize=256 * 8)
+        centroids=8,
+        metric="euclidean",
+        minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
+        maxTrainingSize=256 * 8,
+        isLazy=True)
+    # 2. Upload documents and update them
+    docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
+    doc_ids = db.create_bulk_docs(total_num_of_docs_to_upload, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
+    docsNeedWord = collectionHandler.getDocuments(docBodyVectorCollection, ids=doc_ids)
+    for i in range(1, total_num_of_docs_to_upload):
+        docBody = {}
+        docBody = docsNeedWord[doc_ids[i]]
+        docBody["word"] = str(i)
+        collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
+    # 3. In parallel, update the lazy vector embeddings and query the index
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        update_task = executor.submit(
+            update_lazy_vector,
+            collectionHandler,
+            collection,
+            docBodyVectorCollection,
+            indexName,
+            vsHandler,
+            limit
+        )
+        query_task = executor.submit(
+            queryIndex,
+            vsHandler,
+            vsTestDatabase
+        )
+    update_task.result()
+    query_task.result()
 
-    # Queries - we query indexVector collection
-    queryAll = vsHandler.query(term="dinner",
-                               sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                                    "FROM indexVectors "
-                                    "WHERE vector_match(indexVectorsIndex, $vector, 300)"),
-                               database=vsTestDatabase)
 
-    queryCat2 = vsHandler.query(term="dinner",
-                                sql=("SELECT word, vector_distance(indexVectorsIndex) AS distance "
-                                     "FROM indexVectors "
-                                     "WHERE vector_match(indexVectorsIndex, $vector, 300) "
-                                     "AND catid=\"cat2\""),
-                                database=vsTestDatabase)
+def update_lazy_vector(collectionHandler, collection, docBodyVectorCollection, indexName, vsHandler, limit):
+    for i in range(1, floor(collection.documentCount(docBodyVectorCollection) / limit)):
+        index = collectionHandler.getIndex(docBodyVectorCollection, indexName)
+        vsHandler.updateQueryIndex(index, loopNumber=limit)
 
-    assert len(queryAll) == 295, len(queryAll) + " documents returned, 295 expected"
-    assert len(queryCat2) == 50, len(queryCat2) + " documents returned, 50 expected"
 
-    # Delete vsTestDatabase
-    db.close(vsTestDatabase)
-    db.deleteDBbyName("vsTestDatabase")
+def queryIndex(vsHandler, vsTestDatabase):
+    for i in range(1, 10000):
+        vsHandler.query(term="dinner",
+                        sql=("SELECT word, approx_vector_distance(vector, $vector) AS distance "
+                             "FROM docBodyVectors "
+                             "LIMIT 300 "),
+                        database=vsTestDatabase)
+        print("query number=" + str(i))
