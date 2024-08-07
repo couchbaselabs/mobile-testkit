@@ -372,6 +372,13 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
 @pytest.mark.skipif(not pytest.config.getoption("--liteserv-platform").startswith("android"),
                     reason="Sanity-stress test for the shared lite core lazy vector code")
 def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
+    '''
+    @summary: A system test for querying a lazy index while it is being updated. Only needs one platform for now.
+    Other lazy vector tests are being run in the dev level.
+    1. Create a lazy vector
+    2. Upload documents and update them
+    3. In parallel, update the lazy vector embeddings and query the index
+    '''
     # setup
     base_url, scope, dbv_col_name, st_col_name, iv_col_name, aw_col_name, cb_server, vsTestDatabase, sg_client, sg_username = vector_search_test_fixture
     total_num_of_docs_to_upload = 10000
@@ -393,7 +400,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
     assert iv_col_name in cbl_collections, "no CBL collection found for index vectors"
     assert aw_col_name in cbl_collections, "no CBL collection found for auxiliary words"
 
-    # create indexes
+    # 1. Create a lazy vector
     vsHandler.createIndex(
         database=vsTestDatabase,
         scopeName="_default",
@@ -406,7 +413,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         minTrainingSize=25 * 8,  # default training size values (25* 256*), need to adjust handler so values are optional
         maxTrainingSize=256 * 8,
         isLazy=True)
-
+    # 2. Upload documents and update them
     docBodyVectorCollection = db.createCollection(vsTestDatabase, "docBodyVectors", scope)
     doc_ids = db.create_bulk_docs(total_num_of_docs_to_upload, "doc_to_update_embeddings_for", db=vsTestDatabase, collection=docBodyVectorCollection)
     docsNeedWord = collectionHandler.getDocuments(docBodyVectorCollection, ids=doc_ids)
@@ -415,6 +422,7 @@ def test_lazy_vector_query_while_updating_index(vector_search_test_fixture):
         docBody = docsNeedWord[doc_ids[i]]
         docBody["word"] = str(i)
         collectionHandler.updateDocument(collection=docBodyVectorCollection, data=docBody, doc_id=doc_ids[i])
+    # 3. In parallel, update the lazy vector embeddings and query the index
     with ThreadPoolExecutor(max_workers=2) as executor:
         update_task = executor.submit(
             update_lazy_vector,
