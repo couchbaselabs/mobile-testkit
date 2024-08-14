@@ -2588,17 +2588,19 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_admin_url = sg["admin"]
     sg_url = sg["public"]
     print("**************************************toplogy=" + str(topology))
-    data = {"bucket": "data-bucket-1",  "num_index_replicas": 0}
-    c_cluster = cluster.Cluster(config=cluster_config)
-    admin_client = Admin(c_cluster.sync_gateways[0])
-    admin_client.create_db(db, data)
-    # c.reset(sg_config_path=sg_config)
     sg_db = "sg_db1"
     channels = ["ABC"]
-    # username = NGINX_SGW_USER_NAME
-    # password = NGINX_SGW_PASSWORD
     sgw_user = "proxy-auth-test1"
     sgw_password = "password"
+    data = {"bucket": "data-bucket-1",  "num_index_replicas": 0}
+    
+    c_cluster = cluster.Cluster(config=cluster_config)
+    admin_client = Admin(c_cluster.sync_gateways[0])
+    # c.reset(sg_config_path=sg_config)
+    admin_client.create_db(sg_db, data)
+   
+    # username = NGINX_SGW_USER_NAME
+    # password = NGINX_SGW_PASSWORD
 
     # 1. Start nginx with basic authentication
     # install_nginx(cluster_config, True, userName=username, password=password, base_url=base_url)
