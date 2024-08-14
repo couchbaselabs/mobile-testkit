@@ -2589,7 +2589,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_url = sg["public"]
     print("**************************************toplogy=" + str(topology))
     # c.reset(sg_config_path=sg_config)
-    sg_db = "db"
+    sg_db = "sg_db1"
     channels = ["ABC"]
     # username = NGINX_SGW_USER_NAME
     # password = NGINX_SGW_PASSWORD
