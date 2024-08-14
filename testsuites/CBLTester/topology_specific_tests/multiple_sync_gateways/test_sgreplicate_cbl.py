@@ -2591,8 +2591,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     # c.reset(sg_config_path=sg_config)
     sg_db = "db"
     channels = ["ABC"]
-    username = NGINX_SGW_USER_NAME
-    password = NGINX_SGW_PASSWORD
+    # username = NGINX_SGW_USER_NAME
+    # password = NGINX_SGW_PASSWORD
     sgw_user = "proxy-auth-test1"
     sgw_password = "password"
 
@@ -2612,7 +2612,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     #print("-----------------target_url=" + proxy_url + ":4984")
     #print("-----------------sg_blip_url=" + sg_blip_url)
-    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic", auth=(sgw_user, sgw_password))
+    replicator_authenticator = authenticator.authentication(username=sgw_user, password=sgw_password, authentication_type="basic")
     repl_config = replicator.configure(source_db=cbl_db,
                                        # target_url=proxy_url + ":8080",
                                        target_url=sg_blip_url,
@@ -2620,7 +2620,7 @@ def test_proxy_authentication(params_from_base_test_setup):
                                        replicator_authenticator=replicator_authenticator,
                                        replication_type="pushAndPull"
                                       )
-    proxy_authenticator = authenticator.authentication(username=username, password=password, authentication_type="proxy", auth=(username, password))
+    proxy_authenticator = authenticator.authentication(username="user1", password="password1", authentication_type="proxy")
     repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
