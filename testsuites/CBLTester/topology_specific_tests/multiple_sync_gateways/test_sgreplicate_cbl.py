@@ -2589,7 +2589,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_url = sg["public"]
     print("**************************************toplogy=" + str(topology))
     data = {"bucket": "data-bucket-1",  "num_index_replicas": 0}
-    admin_client = Admin(sg["admin"])
+    c_cluster = cluster.Cluster(config=cluster_config)
+    admin_client = Admin(c_cluster.sync_gateways[0])
     admin_client.create_db(db, data)
     # c.reset(sg_config_path=sg_config)
     sg_db = "sg_db1"
