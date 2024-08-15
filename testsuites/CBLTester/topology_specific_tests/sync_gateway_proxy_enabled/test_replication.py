@@ -148,7 +148,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_admin_url = sg["admin"]
     sg_url = sg["public"]
     print("**************************************toplogy=" + str(topology))
-    sg_db = "sg_db1"
+    sg_db = "db"
     channels = ["ABC"]
     sgw_user = "proxy-auth-test1"
     sgw_password = "password"
