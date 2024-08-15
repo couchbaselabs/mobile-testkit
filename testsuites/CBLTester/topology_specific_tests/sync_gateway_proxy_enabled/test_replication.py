@@ -141,8 +141,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     # c = cluster.Cluster(config=cluster_config)
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
-    #proxy_url = topology["load_balancers"][0]
-    #proxy_url = proxy_url.replace("http", "ws")
+    proxy_url = topology["load_balancers"][0]
+    proxy_url = proxy_url.replace("http", "ws")
     topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
     sg = topology["sync_gateways"][0]
     sg_admin_url = sg["admin"]
@@ -159,11 +159,11 @@ def test_proxy_authentication(params_from_base_test_setup):
     # c.reset(sg_config_path=sg_config)
     # admin_client.create_db(sg_db, data)
 
-    # username = NGINX_SGW_USER_NAME
-    # password = NGINX_SGW_PASSWORD
+    username = NGINX_SGW_USER_NAME
+    password = NGINX_SGW_PASSWORD
 
     # 1. Start nginx with basic authentication
-    # install_nginx(cluster_config, True, userName=username, password=password, base_url=base_url)
+    install_nginx(cluster_config, True, userName=username, password=password, base_url=base_url)
     # install_nginx(cluster_config, True, username=username, password=password)
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
