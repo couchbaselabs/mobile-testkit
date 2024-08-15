@@ -162,7 +162,10 @@ def test_proxy_authentication(params_from_base_test_setup):
     username = NGINX_SGW_USER_NAME
     password = NGINX_SGW_PASSWORD
 
-    # 1. Start nginx with basic authentication
+    # 1. Start nginx with basic authentication. If base_url, nginx will be installed as a proxy, rather than a 
+    # reverse prox (will use nginx_proxy.conf.j2). 
+    # TODO: change this mechanism for something more obvious similar to: "reverse_preoxy = False, base_url=base_url"
+    #
     install_nginx(cluster_config, True, userName=username, password=password, base_url=base_url)
     # install_nginx(cluster_config, True, username=username, password=password)
     sg_client = MobileRestClient()
@@ -180,7 +183,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     #print("-----------------sg_blip_url=" + sg_blip_url)
     replicator_authenticator = authenticator.authentication(username=sgw_user, password=sgw_password, authentication_type="basic")
     repl_config = replicator.configure(source_db=cbl_db,
-                                       target_url=proxy_url + ":4984",
+                                       target_url=proxy_url + ":8080",
                                        #target_url=sg_blip_url,
                                        continuous=True,
                                        replicator_authenticator=replicator_authenticator,
