@@ -13,7 +13,7 @@ SGW_DB_CONFIGS = "resources/database_configs"
 SYNC_GATEWAY_CERT = "resources/sync_gateway_cert"
 DATA_DIR = "resources/data"
 ENVIRONMENT_FILE = "resources/data/environment_file.txt"
-NGINX_SGW_USER_NAME = "nginx_user"
+NGINX_SGW_USER_NAME = "proxy_user"
 NGINX_SGW_PASSWORD = "password"
 NGINX_BASIC_AUTH_FILE_LINUX = "nginx_auth_file"
 
