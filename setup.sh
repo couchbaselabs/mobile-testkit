@@ -9,11 +9,7 @@
 py3version=$(python3 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 
 
-if [[ $py3version == 3.8.* ]]; then
-    printf "Using Python3 version: %s\n" $py3version
-    PYTHON=python3
-    PIP=pip3.8
-elif [[ $py3version == 3.7.* ]]; then
+if [[ $py3version == 3.7.* ]]; then
     printf "Using Python3 version: %s\n" $py3version
     PYTHON=python3
     PIP=pip3.7

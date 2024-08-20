@@ -46,7 +46,7 @@ RUN pip install --ignore-installed -U requests
 RUN pip install -r requirements.txt
 
 # Create ansible config for sample
-RUN cp ansible.cfg.example ansible.cfg
+RUN cp ansible.cfg ansible.cfg
 
 # Set the correct default user
 RUN sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg

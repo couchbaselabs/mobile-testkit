@@ -117,9 +117,9 @@ def validate_environment():
 
 
 def create_ansible_config(remote_user):
-    # Read in ansible.cfg.example and replace "vagrant" -> remote_user and
+    # Read in ansible.cfg and replace "vagrant" -> remote_user and
     # write out result to ansible.cfg
-    ansible_cfg_example = open("ansible.cfg.example").read()
+    ansible_cfg_example = open("ansible.cfg").read()
     ansible_cfg = re.sub("vagrant", remote_user, ansible_cfg_example)
     with open("ansible.cfg", "w") as f:
         f.write(ansible_cfg)
