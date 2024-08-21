@@ -181,7 +181,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     print(f"Authenticator Object: base_url={authenticator.base_url}")
     replicator_authenticator = authenticator.authentication(username=sgw_user, password=sgw_password, authentication_type="basic")
-    print("Replicator Authenticator Object:", replicator_authenticator)
+    # print("Replicator Authenticator Object:", replicator_authenticator)
+    print("Replicator Authenticator Object:", dir(replicator_authenticator))
     repl_config = replicator.configure(source_db=cbl_db,
                                        target_url=proxy_url + ":8080",
                                        #target_url=sg_blip_url,
@@ -189,9 +190,11 @@ def test_proxy_authentication(params_from_base_test_setup):
                                        replicator_authenticator=replicator_authenticator,
                                        replication_type="pushAndPull"
                                       )
-    print("Replication Configuration Object:", repl_config)
+    # print("Replication Configuration Object:", repl_config)
+    print("Replication Configuration Object:", dir(repl_config))
     proxy_authenticator = authenticator.authentication(username=proxy_username, password=proxy_password, authentication_type="proxy")
-    print("Proxy Authenticator Object:", proxy_authenticator)
+    # print("Proxy Authenticator Object:", proxy_authenticator)
+    print("Proxy Authenticator Object:", dir(proxy_authenticator))
     repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
     print("Updated Replication Configuration with Proxy Authenticator:", repl_config)
     repl = replicator.create(repl_config)
