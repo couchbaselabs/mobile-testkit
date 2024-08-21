@@ -141,9 +141,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     # c = cluster.Cluster(config=cluster_config)
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
-    # proxy_url = topology["load_balancers"][0]
-    # proxy_url = proxy_url.replace("http", "ws")
-    proxy_url = "http://172.16.2.75"
+    proxy_url = topology["load_balancers"][0]
+    proxy_url = proxy_url.replace("http", "ws")
+    # proxy_url = "http://172.16.2.75"
     topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
     sg = topology["sync_gateways"][0]
     sg_admin_url = sg["admin"]
@@ -152,7 +152,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_db = "db"
     channels = ["ABC"]
     sgw_user = "proxy-auth-test1"
-    sgw_password = "password"
+    # sgw_password = "password"
+    sgw_password = "$apr1$HtYGoEL8$LJ3Z7CzEEffiU8/hT4zBR/"
     # data = {"bucket": "data-bucket-1",  "num_index_replicas": 0}
 
     # c_cluster = cluster.Cluster(config=cluster_config)
@@ -180,7 +181,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(username=sgw_user, password=sgw_password, authentication_type="basic")
     repl_config = replicator.configure(source_db=cbl_db,
-                                       target_url=proxy_url + ":8081",
+                                       target_url=proxy_url + ":8080",
                                        #target_url=sg_blip_url,
                                        continuous=True,
                                        replicator_authenticator=replicator_authenticator,
