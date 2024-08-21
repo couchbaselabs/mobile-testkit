@@ -152,8 +152,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg_db = "db"
     channels = ["ABC"]
     sgw_user = "proxy-auth-test1"
-    # sgw_password = "password"
-    sgw_password = "$apr1$HtYGoEL8$LJ3Z7CzEEffiU8/hT4zBR/"
+    sgw_password = "password"
     # data = {"bucket": "data-bucket-1",  "num_index_replicas": 0}
 
     # c_cluster = cluster.Cluster(config=cluster_config)
