@@ -216,7 +216,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     # Step 1: Capture the arguments in a dictionary
     config_args = {
         "source_db": cbl_db,
-        "target_url": sgw_url + ":4984",
+        "target_url": sgw_url + ":4984/db",
         "continuous": True,
         "replicator_authenticator": replicator_authenticator,
         "replication_type": "pushAndPull"
