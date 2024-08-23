@@ -186,8 +186,8 @@ def test_proxy_authentication(params_from_base_test_setup):
 
     # Step 1: Capture the arguments in a dictionary
     replicator_auth_args = {
-        "username": sgw_user,
-        "password": sgw_password,
+        "username": proxy_username,
+        "password": proxy_password,
         "authentication_type": "basic"
     }
 
