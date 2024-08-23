@@ -180,23 +180,101 @@ def test_proxy_authentication(params_from_base_test_setup):
     print(f"Replicator Object: base_url={replicator.base_url}")
     authenticator = Authenticator(base_url)
     print(f"Authenticator Object: base_url={authenticator.base_url}")
-    replicator_authenticator = authenticator.authentication(username=sgw_user, password=sgw_password, authentication_type="basic")
-    # print("Replicator Authenticator Object:", replicator_authenticator)
-    print("Replicator Authenticator Object:", dir(replicator_authenticator))
-    repl_config = replicator.configure(source_db=cbl_db,
-                                       target_url=proxy_url + ":8080",
-                                       #target_url=sg_blip_url,
-                                       continuous=True,
-                                       replicator_authenticator=replicator_authenticator,
-                                       replication_type="pushAndPull"
-                                      )
-    # print("Replication Configuration Object:", repl_config)
-    print("Replication Configuration Object:", dir(repl_config))
-    proxy_authenticator = authenticator.authentication(username=proxy_username, password=proxy_password, authentication_type="proxy")
-    # print("Proxy Authenticator Object:", proxy_authenticator)
-    print("Proxy Authenticator Object:", dir(proxy_authenticator))
-    repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
+
+    # replicator_authenticator = authenticator.authentication(username=sgw_user, password=sgw_password, authentication_type="basic")
+    # # print("Replicator Authenticator Object:", replicator_authenticator)
+    # print("Replicator Authenticator Object:", dir(replicator_authenticator))
+
+    # Step 1: Capture the arguments in a dictionary
+    replicator_auth_args = {
+        "username": sgw_user,
+        "password": sgw_password,
+        "authentication_type": "basic"
+    }
+
+    # Step 2: Print the arguments
+    print("Replicator Authenticator Method Arguments:")
+    for key, value in replicator_auth_args.items():
+        print(f"{key}: {value}")
+
+    # Step 3: Pass the arguments to the authentication method
+    replicator_authenticator = authenticator.authentication(**replicator_auth_args)
+
+    # Step 4: Print the directory of the resulting object
+    print("Replicator Authenticator Object Directory:", replicator_authenticator)
+
+    # repl_config = replicator.configure(source_db=cbl_db,
+    #                                    target_url=proxy_url + ":8080",
+    #                                    #target_url=sg_blip_url,
+    #                                    continuous=True,
+    #                                    replicator_authenticator=replicator_authenticator,
+    #                                    replication_type="pushAndPull"
+    #                                   )
+    # # print("Replication Configuration Object:", repl_config)
+    # print("Replication Configuration Object:", dir(repl_config))
+
+    # Step 1: Capture the arguments in a dictionary
+    config_args = {
+        "source_db": cbl_db,
+        "target_url": proxy_url + ":8080",
+        "continuous": True,
+        "replicator_authenticator": replicator_authenticator,
+        "replication_type": "pushAndPull"
+    }
+
+    # Step 2: Print the arguments
+    print("Replication Configuration Arguments:")
+    for key, value in config_args.items():
+        print(f"{key}: {value}")
+
+    # Step 3: Pass the arguments to the configure method
+    repl_config = replicator.configure(**config_args)
+
+    # Optionally print the returned object
+    print("Replication Configuration Object:", repl_config)
+
+    # proxy_authenticator = authenticator.authentication(username=proxy_username, password=proxy_password, authentication_type="proxy")
+    # # print("Proxy Authenticator Object:", proxy_authenticator)
+    # print("Proxy Authenticator Object:", dir(proxy_authenticator))
+
+    # Step 1: Capture the arguments in a dictionary
+    auth_args = {
+        "username": proxy_username,
+        "password": proxy_password,
+        "authentication_type": "proxy"
+    }
+
+    # Step 2: Print the arguments
+    print("Proxy Authenticator Arguments:")
+    for key, value in auth_args.items():
+        print(f"{key}: {value}")
+
+    # Step 3: Pass the arguments to the authentication method
+    proxy_authenticator = authenticator.authentication(**auth_args)
+
+    # Optionally print the returned object
+    print("Proxy Authenticator Object:", proxy_authenticator)
+
+    # repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
+    # print("Updated Replication Configuration with Proxy Authenticator:", repl_config)
+
+    # Step 1: Capture the arguments in a dictionary
+    proxy_auth_args = {
+        "repl_config": repl_config,
+        "proxy_authenticator": proxy_authenticator
+    }
+
+    # Step 2: Print the arguments
+    print("setProxyAuthenticator Method Arguments:")
+    for key, value in proxy_auth_args.items():
+        print(f"{key}: {value}")
+
+    # Step 3: Pass the arguments to the setProxyAuthenticator method
+    repl_config = replicator.setProxyAuthenticator(**proxy_auth_args)
+
+    # Optionally print the returned object
     print("Updated Replication Configuration with Proxy Authenticator:", repl_config)
+
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=True)
