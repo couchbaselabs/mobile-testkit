@@ -183,7 +183,6 @@ def test_proxy_authentication(params_from_base_test_setup):
 
     # replicator_authenticator = authenticator.authentication(username=sgw_user, password=sgw_password, authentication_type="basic")
     # # print("Replicator Authenticator Object:", replicator_authenticator)
-    # print("Replicator Authenticator Object:", dir(replicator_authenticator))
 
     # Step 1: Capture the arguments in a dictionary
     replicator_auth_args = {
@@ -211,12 +210,13 @@ def test_proxy_authentication(params_from_base_test_setup):
     #                                    replication_type="pushAndPull"
     #                                   )
     # # print("Replication Configuration Object:", repl_config)
-    # print("Replication Configuration Object:", dir(repl_config))
+
+    sgw_url = "ws://10.100.150.155"
 
     # Step 1: Capture the arguments in a dictionary
     config_args = {
         "source_db": cbl_db,
-        "target_url": proxy_url + ":8080",
+        "target_url": sgw_url + ":4984",
         "continuous": True,
         "replicator_authenticator": replicator_authenticator,
         "replication_type": "pushAndPull"
@@ -235,7 +235,6 @@ def test_proxy_authentication(params_from_base_test_setup):
 
     # proxy_authenticator = authenticator.authentication(username=proxy_username, password=proxy_password, authentication_type="proxy")
     # # print("Proxy Authenticator Object:", proxy_authenticator)
-    # print("Proxy Authenticator Object:", dir(proxy_authenticator))
 
     # Step 1: Capture the arguments in a dictionary
     auth_args = {
