@@ -260,8 +260,8 @@ def test_proxy_authentication(params_from_base_test_setup):
 
     # Step 1: Capture the arguments in a dictionary
     proxy_auth_args = {
-        "repl_config": repl_config,
-        "proxy_authenticator": proxy_authenticator
+        "configuration": repl_config,
+        "authenticator": proxy_authenticator
     }
 
     # Step 2: Print the arguments
