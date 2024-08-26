@@ -151,7 +151,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     print("**************************************toplogy=" + str(topology))
     sg_db = "db"
     channels = ["ABC"]
-    sgw_user = "proxy-auth-test1"
+    sgw_user = "username"
     sgw_password = "password"
     # data = {"bucket": "data-bucket-1",  "num_index_replicas": 0}
 
