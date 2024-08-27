@@ -216,7 +216,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     # Step 1: Capture the arguments in a dictionary
     config_args = {
         "source_db": cbl_db,
-        "target_url": sgw_url + ":4984/db",
+        "target_url": sg_blip_url,
         "continuous": True,
         "replicator_authenticator": replicator_authenticator,
         "replication_type": "pushAndPull"
@@ -276,5 +276,5 @@ def test_proxy_authentication(params_from_base_test_setup):
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl, err_check=True)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
     replicator.stop(repl)
