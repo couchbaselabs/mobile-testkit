@@ -1,5 +1,6 @@
 import pytest
 import time
+import uuid
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
@@ -147,7 +148,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     sg = topology["sync_gateways"][0]
     sg_admin_url = sg["admin"]
     sg_url = sg["public"]
-    print("**************************************toplogy=" + str(topology))
+    random_suffix = str(uuid.uuid4())[:8]
     sg_db = "db"
     channels = ["ABC"]
     # sgw_user = "proxy-auth-test1"
@@ -175,7 +176,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, sgw_user, password=sgw_password, channels=channels, auth=auth)
  
-    cbl_db_name = "proxyAuth-" + str(time.time())
+    cbl_db_name = "proxyAuth-" + str(random_suffix)
     cbl_db = db.create(cbl_db_name, db_config)
     # 2. Configure replication with Proxy authentication and start it
     replicator = Replication(base_url)
