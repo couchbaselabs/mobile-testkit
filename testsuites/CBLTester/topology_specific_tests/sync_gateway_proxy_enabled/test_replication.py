@@ -187,6 +187,7 @@ def test_proxy_authentication(params_from_base_test_setup):
                                       )
     proxy_authenticator = authenticator.authentication(username=proxy_username, password=proxy_password, authentication_type="proxy")
     repl_config = replicator.setProxyAuthenticator(repl_config, proxy_authenticator)
+    print("*************************************repl_config" + str(repl_config))
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=True)
