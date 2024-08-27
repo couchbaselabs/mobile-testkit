@@ -151,7 +151,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     random_suffix = str(uuid.uuid4())[:8]
     sg_db = "db"
     channels = ["ABC"]
-    sgw_user = "proxy-auth-test1"
+    sgw_user = "sgw-user-proxy-auth-" + random_suffix
     sgw_password = "password"
     # data = {"bucket": "data-bucket-1",  "num_index_replicas": 0}
 
@@ -163,7 +163,7 @@ def test_proxy_authentication(params_from_base_test_setup):
     # sgw_user = NGINX_SGW_USER_NAME
     # sgw_password = NGINX_SGW_PASSWORD
  
-    proxy_username = NGINX_SGW_USER_NAME
+    proxy_username = NGINX_SGW_USER_NAME + random_suffix
     proxy_password = NGINX_SGW_PASSWORD
 
     cbl_db_name = "proxyAuth-" + str(random_suffix)
