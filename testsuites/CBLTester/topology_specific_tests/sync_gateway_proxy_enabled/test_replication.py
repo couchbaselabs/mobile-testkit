@@ -150,8 +150,8 @@ def test_proxy_authentication(params_from_base_test_setup):
     print("**************************************toplogy=" + str(topology))
     sg_db = "db"
     channels = ["ABC"]
-    sgw_user = "proxy-auth-test1"
-    sgw_password = "password"
+    # sgw_user = "proxy-auth-test1"
+    # sgw_password = "password"
     # data = {"bucket": "data-bucket-1",  "num_index_replicas": 0}
 
     # c_cluster = cluster.Cluster(config=cluster_config)
@@ -159,6 +159,9 @@ def test_proxy_authentication(params_from_base_test_setup):
     # c.reset(sg_config_path=sg_config)
     # admin_client.create_db(sg_db, data)
 
+    sgw_user = NGINX_SGW_USER_NAME
+    sgw_password = NGINX_SGW_PASSWORD
+ 
     proxy_username = NGINX_SGW_USER_NAME
     proxy_password = NGINX_SGW_PASSWORD
 
