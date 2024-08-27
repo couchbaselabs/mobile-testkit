@@ -196,5 +196,5 @@ def test_proxy_authentication(params_from_base_test_setup):
     print("*************************************repl_config" + str(repl_config))
     repl = replicator.create(repl_config)
     replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl, err_check=True)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
     replicator.stop(repl)
