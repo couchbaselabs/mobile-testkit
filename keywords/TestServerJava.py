@@ -13,6 +13,7 @@ class TestServerJava(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="java-centos", community_enabled=None):
         super(TestServerJava, self).__init__(version_build, host, port)
 
+        self.cbl_core_lib_name = None
         self.platform = platform
         self.released_version = {
             "2.7.0": 94
@@ -29,9 +30,15 @@ class TestServerJava(TestServerBase):
             self.download_url = "{}/couchbase-lite-java/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
         else:
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
-        # The new distribution method for the support libs starts after release v3.1.1
-        if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
-            self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
+            # The new distribution method for the support libs starts after release v3.1.1
+            if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
+                self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
+            else:
+                if community_enabled:
+                    self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
+                else:
+                    self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
+
         if community_enabled:
             self.build_name = "TestServer-java-community-{}".format(self.version_build)
         else:
@@ -41,6 +48,7 @@ class TestServerJava(TestServerBase):
         log_info("download_url: {}".format(self.download_url))
         log_info("build_name: {}".format(self.build_name))
         log_info("self.platform = {}".format(self.platform))
+        log_info("download_corelib_url: {}".format(self.download_corelib_url))
 
         '''
         generate ansible config file base on platform format
@@ -106,6 +114,7 @@ class TestServerJava(TestServerBase):
             # download jar file to a remote Windows 10 machine
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-desktop-msft.yml", extra_vars={
                 "download_url": self.download_url,
+                "cblite_download_url": self.download_corelib_url,
                 "package_name": self.package_name,
                 "build_name": self.build_name
             })
@@ -113,6 +122,7 @@ class TestServerJava(TestServerBase):
             # download jar file to a remote non-Windows machine
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-desktop.yml", extra_vars={
                 "download_url": self.download_url,
+                "cblite_download_url": self.download_corelib_url,
                 "package_name": self.package_name
             })
 
