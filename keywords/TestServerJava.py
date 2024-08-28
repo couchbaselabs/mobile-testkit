@@ -13,7 +13,7 @@ class TestServerJava(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="java-centos", community_enabled=None):
         super(TestServerJava, self).__init__(version_build, host, port)
 
-        self.cbl_core_lib_name = None
+        self.download_corelib_url = None
         self.platform = platform
         self.released_version = {
             "2.7.0": 94
@@ -32,12 +32,12 @@ class TestServerJava(TestServerBase):
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
             # The new distribution method for the support libs starts after release v3.1.1
             if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
-                self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
+                self.download_corelib_url = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
             else:
                 if community_enabled:
-                    self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
+                    self.download_corelib_url = "couchbase-lite-java-{}".format(self.version)
                 else:
-                    self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
+                    self.download_corelib_url = "couchbase-lite-java-enterprise-{}".format(self.version)
 
         if community_enabled:
             self.build_name = "TestServer-java-community-{}".format(self.version_build)
