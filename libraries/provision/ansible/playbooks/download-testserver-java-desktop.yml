@@ -16,29 +16,19 @@
   - debug:
       msg: "package_name {{ package_name }}.zip"
 
-  - name: Check the CouchbaseLite core zip file exists
-    stat:
-      path: ~/javatestserver/{{ core_package_name }}.zip
-    register: core_st
-
   - name: Delete any exiting pre-downloaded files
     file:
       path: ~/javatestserver
       state: absent
- 
-  - debug:
-      msg: "testserver zip file already presents, skipping download..."
 
   - name: Set javatestserver location
     stat:
       path: ~/javatestserver
-    register: javatestserver_dir
 
   - name: create javatestserver directory if not exists
     file:
       path: ~/javatestserver
       state: directory
-    when: javatestserver_dir.stat.exists == False
 
   - name: Download TestServer Java .zip
     get_url:
@@ -52,7 +42,6 @@
     get_url:
       url: "{{ cblite_download_url }}"
       dest: ~/javatestserver/{{ core_package_name }}.zip
-    when: core_st.stat.exists == False
 
   - name: Unzip Couchbase Lite Library and remove .zip
     unarchive: src=~/javatestserver/{{ core_package_name }}.zip dest=~/javatestserver copy=no
