@@ -13,6 +13,7 @@ class TestServerJava(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="java-centos", community_enabled=None):
         super(TestServerJava, self).__init__(version_build, host, port)
 
+        self.cbl_core_lib_name = None
         self.download_corelib_url = None
         self.platform = platform
         self.released_version = {
@@ -32,12 +33,13 @@ class TestServerJava(TestServerBase):
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
             # The new distribution method for the support libs starts after release v3.1.1
             if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
-                self.download_corelib_url = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
+                self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
             else:
                 if community_enabled:
-                    self.download_corelib_url = "couchbase-lite-java-{}".format(self.version)
+                    self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
                 else:
-                    self.download_corelib_url = "couchbase-lite-java-enterprise-{}".format(self.version)
+                    self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
+            self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
 
         if community_enabled:
             self.build_name = "TestServer-java-community-{}".format(self.version_build)
@@ -46,6 +48,7 @@ class TestServerJava(TestServerBase):
 
         log_info("package_name: {}".format(self.package_name))
         log_info("download_url: {}".format(self.download_url))
+        log_info("cbl_core_lib_name: {}".format(self.cbl_core_lib_name))
         log_info("build_name: {}".format(self.build_name))
         log_info("self.platform = {}".format(self.platform))
         log_info("download_corelib_url: {}".format(self.download_corelib_url))
@@ -115,6 +118,7 @@ class TestServerJava(TestServerBase):
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-desktop-msft.yml", extra_vars={
                 "download_url": self.download_url,
                 "cblite_download_url": self.download_corelib_url,
+                "core_package_name": self.cbl_core_lib_name,
                 "package_name": self.package_name,
                 "build_name": self.build_name
             })
@@ -122,6 +126,7 @@ class TestServerJava(TestServerBase):
             # download jar file to a remote non-Windows machine
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-desktop.yml", extra_vars={
                 "download_url": self.download_url,
+                "core_package_name": self.cbl_core_lib_name,
                 "cblite_download_url": self.download_corelib_url,
                 "package_name": self.package_name
             })

@@ -3,6 +3,7 @@
   vars:
     download_url:
     cblite_download_url:
+    core_package_name:
     package_name:
 
   tasks:
