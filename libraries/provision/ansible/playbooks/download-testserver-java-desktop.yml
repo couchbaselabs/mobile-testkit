@@ -21,20 +21,13 @@
       path: ~/javatestserver/{{ core_package_name }}.zip
     register: core_st
 
-  - name: Check the TestServer zip file exists
-    stat:
-      path: ~/javatestserver/{{ package_name }}.zip
-    register: pkg_st
-
   - name: Delete any exiting pre-downloaded files
     file:
       path: ~/javatestserver
       state: absent
-    when: pkg_st.stat.exists == False
  
   - debug:
       msg: "testserver zip file already presents, skipping download..."
-    when: pkg_st.stat.exists == True
 
   - name: Set javatestserver location
     stat:
@@ -51,7 +44,6 @@
     get_url:
       url: "{{ download_url }}"
       dest: ~/javatestserver/{{ package_name }}.zip
-    when: pkg_st.stat.exists == False
 
   - name: Unzip TestServer Java Package and remove .zip
     unarchive: src=~/javatestserver/{{ package_name }}.zip dest=~/javatestserver copy=no
