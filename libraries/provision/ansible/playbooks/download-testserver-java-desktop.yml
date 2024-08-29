@@ -2,6 +2,8 @@
   hosts: testserver
   vars:
     download_url:
+    cblite_download_url:
+    core_package_name:
     package_name:
 
   tasks:
@@ -9,39 +11,37 @@
       msg: "download_url: {{ download_url }}"
 
   - debug:
-      msg: "package_name {{ package_name }}.zip"
+      msg: "cblite_download_url: {{ cblite_download_url }}"
 
-  - name: Check the TestServer zip file exists
-    stat:
-      path: ~/javatestserver/{{ package_name }}.zip
-    register: pkg_st
+  - debug:
+      msg: "package_name {{ package_name }}.zip"
 
   - name: Delete any exiting pre-downloaded files
     file:
       path: ~/javatestserver
       state: absent
-    when: pkg_st.stat.exists == False
- 
-  - debug:
-      msg: "testserver zip file already presents, skipping download..."
-    when: pkg_st.stat.exists == True
 
   - name: Set javatestserver location
     stat:
       path: ~/javatestserver
-    register: javatestserver_dir
 
   - name: create javatestserver directory if not exists
     file:
       path: ~/javatestserver
       state: directory
-    when: javatestserver_dir.stat.exists == False
 
   - name: Download TestServer Java .zip
     get_url:
       url: "{{ download_url }}"
       dest: ~/javatestserver/{{ package_name }}.zip
-    when: pkg_st.stat.exists == False
 
   - name: Unzip TestServer Java Package and remove .zip
     unarchive: src=~/javatestserver/{{ package_name }}.zip dest=~/javatestserver copy=no
+
+  - name: Download Couchbase Lite Library .zip
+    get_url:
+      url: "{{ cblite_download_url }}"
+      dest: ~/javatestserver/{{ core_package_name }}.zip
+
+  - name: Unzip Couchbase Lite Library and remove .zip
+    unarchive: src=~/javatestserver/{{ core_package_name }}.zip dest=~/javatestserver copy=no

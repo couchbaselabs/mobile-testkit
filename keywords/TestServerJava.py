@@ -1,4 +1,5 @@
 import os
+import re
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
@@ -12,6 +13,8 @@ class TestServerJava(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="java-centos", community_enabled=None):
         super(TestServerJava, self).__init__(version_build, host, port)
 
+        self.cbl_core_lib_name = None
+        self.download_corelib_url = None
         self.platform = platform
         self.released_version = {
             "2.7.0": 94
@@ -28,6 +31,16 @@ class TestServerJava(TestServerBase):
             self.download_url = "{}/couchbase-lite-java/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
         else:
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+            # The new distribution method for the support libs starts after release v3.1.1
+            if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
+                self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
+            else:
+                if community_enabled:
+                    self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
+                else:
+                    self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
+            self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
+
         if community_enabled:
             self.build_name = "TestServer-java-community-{}".format(self.version_build)
         else:
@@ -35,8 +48,10 @@ class TestServerJava(TestServerBase):
 
         log_info("package_name: {}".format(self.package_name))
         log_info("download_url: {}".format(self.download_url))
+        log_info("cbl_core_lib_name: {}".format(self.cbl_core_lib_name))
         log_info("build_name: {}".format(self.build_name))
         log_info("self.platform = {}".format(self.platform))
+        log_info("download_corelib_url: {}".format(self.download_corelib_url))
 
         '''
         generate ansible config file base on platform format
@@ -102,6 +117,8 @@ class TestServerJava(TestServerBase):
             # download jar file to a remote Windows 10 machine
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-desktop-msft.yml", extra_vars={
                 "download_url": self.download_url,
+                "cblite_download_url": self.download_corelib_url,
+                "core_package_name": self.cbl_core_lib_name,
                 "package_name": self.package_name,
                 "build_name": self.build_name
             })
@@ -109,6 +126,8 @@ class TestServerJava(TestServerBase):
             # download jar file to a remote non-Windows machine
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-desktop.yml", extra_vars={
                 "download_url": self.download_url,
+                "core_package_name": self.cbl_core_lib_name,
+                "cblite_download_url": self.download_corelib_url,
                 "package_name": self.package_name
             })
 
@@ -152,9 +171,14 @@ class TestServerJava(TestServerBase):
             })
         else:
             # install jar file as a daemon service on non-Windows environment and start
-            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml", extra_vars={
+            extra_vars = {
                 "package_name": self.package_name,
-            })
+                "java_home" : os.environ["JAVA_HOME"],
+                "jsvc_home" : os.environ["JSVC_HOME"]
+            }
+            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml",
+                                                              extra_vars=extra_vars
+                                                              )
 
         if status == 0:
             return
@@ -182,7 +206,9 @@ class TestServerJava(TestServerBase):
             # stop TestServerJava Daemon Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop.yml", extra_vars={
                 "service_status": "stop",
-                "package_name": self.package_name
+                "package_name": self.package_name,
+                "java_home": os.environ["JAVA_HOME"],
+                "jsvc_home": os.environ["JSVC_HOME"]
             })
 
         if status == 0:

@@ -2,10 +2,14 @@
   hosts: testserver
   vars:
     package_name:
+    java_home:
+    jsvc_home:
+    ansible_distribution:
 
   tasks:
-  - debug: msg="JAVA_HOME location is {{ ansible_env.JAVA_HOME }}"
-  - debug: msg="JSVC_HOME location is {{ ansible_env.JSVC_HOME }}"
+  - debug: msg="JAVA_HOME location is {{ java_home }}"
+  - debug: msg="JSVC_HOME location is {{ jsvc_home }}"
+  - debug: msg="ansible_distribution = {{ ansible_distribution }}"
 
   - name: Delete any cblite2 filed generated in previous tests
     file:
@@ -45,15 +49,14 @@
     shell: "ps aux | grep jsvc | awk '{print $2}' | xargs kill -9"
     ignore_errors: yes
 
-  - name: Install and start TestServer Java Daemon Service
-    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }} ~/javatestserver/"
-    when: ansible_distribution_major_version != "6"
+  # - name: Install and start TestServer Java Daemon Service
+  #  shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ java_home }} {{ jsvc_home }} ~/javatestserver/"
+  #  when: (ansible_distribution != "CentOS" and ansible_distribution != "RedHat")
 
   - name: Install and start TestServer Java Daemon Service
-    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }}"
+    shell: "export LD_LIBRARY_PATH=~/javatestserver && export JAVA_HOME={{ java_home }} && ~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ java_home }} {{ jsvc_home }} ~/javatestserver/"
     args:
       chdir: ~/javatestserver
-    when: (ansible_distribution == "CentOS" or ansible_distribution == "RedHat") and ansible_distribution_major_version == "6"
 
   - name: Wait for port 8080 to become open on the host, don't start checking for 2 seconds
     wait_for:
