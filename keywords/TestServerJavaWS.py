@@ -193,7 +193,8 @@ class TestServerJavaWS(TestServerBase):
         else:
             # start Tomcat Server
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws.yml", extra_vars={
-                "service_status": "start"
+                "service_status": "start",
+                "catalina_base": os.environ["CATALINA_BASE"]
             })
 
         time.sleep(15)
@@ -221,7 +222,8 @@ class TestServerJavaWS(TestServerBase):
         else:
             # stop Tomcat Server
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws.yml", extra_vars={
-                "service_status": "stop"
+                "service_status": "stop",
+                "catalina_base": os.environ["CATALINA_BASE"]
             })
 
         if status == 0:
