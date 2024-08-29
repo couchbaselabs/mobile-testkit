@@ -19,9 +19,6 @@
   - debug:
       msg: "core_package_name {{ core_package_name }}.zip"
 
-  - debug:
-      msg: "build_name {{ build_name }}"
-
   - name: Delete any exiting pre-downloaded files
     file:
       path: ~/javatestserver
