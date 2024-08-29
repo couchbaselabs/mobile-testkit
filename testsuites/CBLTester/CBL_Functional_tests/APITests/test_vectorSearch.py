@@ -113,7 +113,10 @@ def vector_search_test_fixture(params_from_base_test_setup):
     db.deleteDB(vsTestDatabase)
 
 
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("ios"))
+@pytest.mark.skipif(
+    pytest.config.getoption("--liteserv-platform").startswith("ios"),
+    reason="The vector search iOS test changes need to be merged",
+)
 def test_vector_search_index_correctness(vector_search_test_fixture):
     '''
     @summary: Modifying and pulling documents leads to correct vector embeddings
