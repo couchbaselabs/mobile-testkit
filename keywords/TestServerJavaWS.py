@@ -1,5 +1,4 @@
 import os
-import re
 import time
 
 from keywords.TestServerBase import TestServerBase
@@ -14,6 +13,7 @@ class TestServerJavaWS(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="javaws-centos", community_enabled=None):
         super(TestServerJavaWS, self).__init__(version_build, host, port)
         self.platform = platform
+        self.supported_libs_url = None
         self.released_version = {
             "2.7.0": 94
         }
@@ -28,29 +28,20 @@ class TestServerJavaWS(TestServerBase):
         if self.build is None:
             self.package_name = "CBLTestServer-Java-WS-{}-{}".format(self.build_type, self.version)
             self.download_url = "{}/couchbase-lite-java/{}/{}.war".format(RELEASED_BUILDS, self.version, self.package_name)
-
-            # The new distribution method for the support libs starts after release v3.1.1
-            if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
-                self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
+            if community_enabled:
+                self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
             else:
-                if community_enabled:
-                    self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
-                else:
-                    self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
-
+                self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
+            self.supported_libs_url = "couchbase-lite-java-linux-supportlibs-{}.zip".format(self.version_build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build, self.cbl_core_lib_name)
         else:
             self.package_name = "CBLTestServer-Java-WS-{}-{}".format(self.version_build, self.build_type)
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.war".format(LATEST_BUILDS, self.version, self.build, self.package_name)
-
-            # The new distribution method for the support libs starts after release v3.1.1
-            if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
-                self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}-{}".format(self.version, self.build)
+            if community_enabled:
+                self.cbl_core_lib_name = "couchbase-lite-java-{}-{}".format(self.version, self.build)
             else:
-                if community_enabled:
-                    self.cbl_core_lib_name = "couchbase-lite-java-{}-{}".format(self.version, self.build)
-                else:
-                    self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}-{}".format(self.version, self.build)
+                self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}-{}".format(self.version, self.build)
+            self.supported_libs_url = "couchbase-lite-java-linux-supportlibs-{}-{}.zip".format(self.version, self.build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
 
         self.build_name = "TestServer-java-WS-{}-{}".format(self.build_type, self.version_build)
@@ -58,6 +49,7 @@ class TestServerJavaWS(TestServerBase):
         log_info("package_name: {}".format(self.package_name))
         log_info("download_url: {}".format(self.download_url))
         log_info("download_corelib_url: {}".format(self.download_corelib_url))
+        log_info("supported_libs_url: {}".format(self.supported_libs_url))
         log_info("build_name: {}".format(self.build_name))
         log_info("self.platform = {}".format(self.platform))
 
@@ -139,7 +131,8 @@ class TestServerJavaWS(TestServerBase):
                 "testserver_download_url": self.download_url,
                 "cblite_download_url": self.download_corelib_url,
                 "war_package_name": self.package_name,
-                "core_package_name": self.cbl_core_lib_name
+                "core_package_name": self.cbl_core_lib_name,
+                "supported_libs_url": self.supported_libs_url
             })
 
         if status == 0:
