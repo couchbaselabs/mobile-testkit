@@ -11,5 +11,5 @@
   
   - debug: msg="{{ catalina_base }}/bin/catalina.sh {{service_status}}"
   - name: Start Tomcat Service
-    command: LD_LIBRARY_PATH=~/javatestserver nohup {{ catalina_base }}/bin/catalina.sh start
+    shell: LD_LIBRARY_PATH=~/javatestserver && nohup {{ catalina_base }}/bin/catalina.sh start
     when: "{{ service_status | search('start') }}"
