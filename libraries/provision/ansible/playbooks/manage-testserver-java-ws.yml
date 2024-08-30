@@ -2,13 +2,14 @@
   hosts: testserver
   vars:
     service_status:
+    catalina_base:
 
   tasks:
   - name: Stop Tomcat Service
-    command: "{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh stop 30 -force"
+    command: "{{ catalina_base }}/bin/catalina.sh stop 30 -force"
     ignore_errors: yes
   
-  - debug: msg="{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh {{service_status}}"
+  - debug: msg="{{ catalina_base }}/bin/catalina.sh {{service_status}}"
   - name: Start Tomcat Service
-    command: nohup {{ ansible_env.CATALINA_BASE }}/bin/catalina.sh start
+    shell: export LD_LIBRARY_PATH=/root/javatestserver && nohup {{ catalina_base }}/bin/catalina.sh start
     when: "{{ service_status | search('start') }}"

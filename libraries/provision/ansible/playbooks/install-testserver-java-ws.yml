@@ -3,12 +3,13 @@
   vars:
     war_package_name:
     core_package_name:
+    catalina_base:
 
   tasks:
-  - debug: msg="Tomcat home directory is {{ ansible_env.CATALINA_BASE }}"
+  - debug: msg="Tomcat home directory is {{ catalina_base }}"
  
   - name: Stop Tomcat Service
-    shell: "{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh stop 30 -force"
+    shell: "{{ catalina_base }}/bin/catalina.sh stop 30 -force"
     ignore_errors: yes
 
   - name: Delete any cblite2 filed generated in previous tests
@@ -19,7 +20,7 @@
 
   - name: Collect CouchbaseLite jar and supporting files
     find:
-      paths: "{{ ansible_env.CATALINA_BASE }}/lib"
+      paths: "{{ catalina_base }}/lib"
       patterns: "couchbase-lite-java-enterprise-*.jar,json-*.jar,okhttp-*.jar,okio-*.jar"
       recurse: True
     register: cblite_jar
@@ -32,27 +33,27 @@
 
   - name: Remove TestServer webapp files
     file:
-      path: "{{ ansible_env.CATALINA_BASE }}/webapps/ROOT"
+      path: "{{ catalina_base }}/webapps/ROOT"
       state: absent
 
   - name: Remove TestServer webapp files
     file:
-      path: "{{ ansible_env.CATALINA_BASE }}/webapps/ROOT.war"
+      path: "{{ catalina_base }}/webapps/ROOT.war"
       state: absent
 
   - name: Remove TestServer log files and runtime libaries
     file:
-      path: "{{ ansible_env.CATALINA_BASE }}/temp/TestServerTemp"
+      path: "{{ catalina_base }}/temp/TestServerTemp"
       state: absent
 
   - name: Remove TestServer runtime libaries
     file:
-      path: "{{ ansible_env.CATALINA_BASE }}/temp/com.couchbase.lite.java"
+      path: "{{ catalina_base }}/temp/com.couchbase.lite.java"
       state: absent
 
   - name: Remove Tomcat logs
     find:
-      paths: "{{ ansible_env.CATALINA_BASE }}/logs"
+      paths: "{{ catalina_base }}/logs"
       patterns: '*.*'
       recurse: True
     register: tomcat_log
@@ -65,7 +66,7 @@
 
   - name: Remove cblite2 files
     find:
-      paths: "{{ ansible_env.CATALINA_BASE }}"
+      paths: "{{ catalina_base }}"
       patterns: '*.cblite2'
       recurse: True
     register: cblite2_files
@@ -76,19 +77,11 @@
       state: absent
     with_items: "{{ cblite2_files.files | map(attribute='path') | list }}"
 
-  - name: Collect CouchbaseLite jar and supporting files in package to be installed
-    find:
-      paths: "/root/javatestserver/{{ core_package_name }}/lib"
-      patterns: "*.jar"
-      recurse: True
-    register: new_cblite_jar
-
-  - name: Copy CouchbaseLite jar files to Tomcat
+  - name: Copy CouchbaseLite jar file to Tomcat
     copy: 
-      src: "{{ item.path }}"
+      src: "/root/javatestserver/{{ core_package_name }}.jar"
       dest: "/opt/tomcat/lib"
       remote_src: yes
-    with_items: "{{ new_cblite_jar.files }}"
 
   - name: Copy TestServer war files to Tomcat
     copy:
