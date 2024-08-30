@@ -77,21 +77,11 @@
       state: absent
     with_items: "{{ cblite2_files.files | map(attribute='path') | list }}"
 
-  - name: Collect CouchbaseLite jar and supporting files in package to be installed
-    find:
-      paths: "/root/javatestserver"
-      patterns: "*.jar"
-      recurse: True
-    register: new_cblite_jar
-
-  - debug: msg="Jars found - {{ new_cblite_jar }}"
-
-  - name: Copy CouchbaseLite jar files to Tomcat
+  - name: Copy CouchbaseLite jar file to Tomcat
     copy: 
-      src: "{{ item.path }}"
+      src: "/root/javatestserver/{{ core_package_name }}"
       dest: "/opt/tomcat/lib"
       remote_src: yes
-    with_items: "{{ new_cblite_jar.files }}"
 
   - name: Copy TestServer war files to Tomcat
     copy:
