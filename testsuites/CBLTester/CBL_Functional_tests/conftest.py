@@ -571,14 +571,14 @@ def params_from_base_suite_setup(request):
             testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
-            testserver.stop()
-            testserver.start(log_filename)
         time.sleep(2)
 
     suite_source_db = None
     suite_db = None
     suite_db_log_files = None
     suite_cbllog = FileLogging(base_url)
+    testserver.stop()
+    testserver.start(log_filename)
     if create_db_per_suite:
         if enable_file_logging and liteserv_version >= "2.5.0":
             suite_cbllog.configure(log_level="verbose", max_rotate_count=2,
