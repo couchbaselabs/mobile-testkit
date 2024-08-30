@@ -569,6 +569,8 @@ def params_from_base_suite_setup(request):
         log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
             testserver.start_device(log_filename)
+            testserver.stop()
+            testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
         time.sleep(2)
