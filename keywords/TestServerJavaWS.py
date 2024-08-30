@@ -32,7 +32,7 @@ class TestServerJavaWS(TestServerBase):
                 self.cbl_core_lib_name = "couchbase-lite-java-{}-release".format(self.version)
             else:
                 self.cbl_core_lib_name = "couchbase-lite-java-ee-{}-release".format(self.version)
-            self.supported_libs_url = "couchbase-lite-java-linux-supportlibs-{}.zip".format(self.version_build)
+            self.supported_libs_url = "{}/couchbase-lite-java/{}/couchbase-lite-java-linux-supportlibs-{}.zip".format(RELEASED_BUILDS, self.version_build, self.version_build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build, self.cbl_core_lib_name)
         else:
             self.package_name = "CBLTestServer-Java-WS-{}-{}".format(self.version_build, self.build_type)
@@ -41,7 +41,7 @@ class TestServerJavaWS(TestServerBase):
                 self.cbl_core_lib_name = "couchbase-lite-java-{}-{}-release".format(self.version, self.build)
             else:
                 self.cbl_core_lib_name = "couchbase-lite-java-ee-{}-{}-release".format(self.version, self.build)
-            self.supported_libs_url = "couchbase-lite-java-linux-supportlibs-{}-{}.zip".format(self.version, self.build)
+            self.supported_libs_url = "{}/couchbase-lite-java/{}/{}/couchbase-lite-java-linux-supportlibs-{}-{}.zip".format(LATEST_BUILDS, self.version, self.build, self.version, self.build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.jar".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
 
         self.build_name = "TestServer-java-WS-{}-{}".format(self.build_type, self.version_build)
