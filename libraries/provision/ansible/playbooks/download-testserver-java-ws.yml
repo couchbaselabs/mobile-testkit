@@ -18,7 +18,7 @@
       msg: "war_package_name {{ war_package_name }}.war"
 
   - debug:
-      msg: "core_package_name {{ core_package_name }}.zip"
+      msg: "core_package_name {{ core_package_name }}.jar"
 
   - debug:
       msg: "supported_libs_url {{ supported_libs_url }}"
@@ -38,13 +38,10 @@
       url: "{{ testserver_download_url }}"
       dest: ~/javatestserver/{{ war_package_name }}.war
 
-  - name: Download Couchbase Lite Library .zip
+  - name: Download Couchbase Lite Library .jar
     get_url:
       url: "{{ cblite_download_url }}"
-      dest: ~/javatestserver/{{ core_package_name }}.zip
-
-  - name: Unzip Couchbase Lite Library and remove .zip
-    unarchive: src=~/javatestserver/{{ core_package_name }} dest=~/javatestserver copy=no
+      dest: ~/javatestserver/{{ core_package_name }}.jar
 
   - name: Download supported libs.zip
     get_url:
