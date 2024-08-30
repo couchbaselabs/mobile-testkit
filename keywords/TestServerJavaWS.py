@@ -166,7 +166,7 @@ class TestServerJavaWS(TestServerBase):
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name,
                 "catalina_base": os.environ["CATALINA_BASE"]
-=            })
+            })
 
         if status == 0:
             return
