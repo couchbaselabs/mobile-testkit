@@ -84,6 +84,8 @@
       recurse: True
     register: new_cblite_jar
 
+  - debug: msg="Jars found - {{ new_cblite_jar }}"
+
   - name: Copy CouchbaseLite jar files to Tomcat
     copy: 
       src: "{{ item.path }}"
