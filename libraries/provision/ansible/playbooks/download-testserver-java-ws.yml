@@ -6,6 +6,7 @@
     war_package_name:
     core_package_name:
     supported_libs_url:
+    doc_jar_url:
  
   tasks:
   - debug:
@@ -42,6 +43,12 @@
     get_url:
       url: "{{ cblite_download_url }}"
       dest: ~/javatestserver/{{ core_package_name }}.jar
+
+  - name: Download javadoc .jar
+    get_url:
+      url: "{{ doc_jar_url }}"
+      dest: ~/javatestserver/javadoc.jar
+
 
   - name: Download supported libs.zip
     get_url:

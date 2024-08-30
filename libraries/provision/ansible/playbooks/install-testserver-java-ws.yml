@@ -83,6 +83,13 @@
       dest: "/opt/tomcat/lib"
       remote_src: yes
 
+  - name: Copy javadoc jar file to Tomcat
+    copy:
+      src: "/root/javatestserver/javadoc.jar"
+      dest: "/opt/tomcat/lib"
+      remote_src: yes
+
+
   - name: Copy TestServer war files to Tomcat
     copy:
       src: "~/javatestserver/{{ war_package_name }}.war"

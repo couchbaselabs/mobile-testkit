@@ -14,6 +14,7 @@ class TestServerJavaWS(TestServerBase):
         super(TestServerJavaWS, self).__init__(version_build, host, port)
         self.platform = platform
         self.supported_libs_url = None
+        self.doc_jar_url = None
         self.released_version = {
             "2.7.0": 94
         }
@@ -35,14 +36,16 @@ class TestServerJavaWS(TestServerBase):
             self.supported_libs_url = "{}/couchbase-lite-java/{}/couchbase-lite-java-linux-supportlibs-{}.zip".format(RELEASED_BUILDS, self.version_build, self.version_build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build, self.cbl_core_lib_name)
         else:
+            artifact_location = "{}/couchbase-lite-java/{}/{}".format(LATEST_BUILDS, self.version, self.build)
             self.package_name = "CBLTestServer-Java-WS-{}-{}".format(self.version_build, self.build_type)
-            self.download_url = "{}/couchbase-lite-java/{}/{}/{}.war".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+            self.download_url = "{}/{}.war".format(artifact_location, self.package_name)
             if community_enabled:
                 self.cbl_core_lib_name = "couchbase-lite-java-{}-{}-release".format(self.version, self.build)
             else:
                 self.cbl_core_lib_name = "couchbase-lite-java-ee-{}-{}-release".format(self.version, self.build)
-            self.supported_libs_url = "{}/couchbase-lite-java/{}/{}/couchbase-lite-java-linux-supportlibs-{}-{}.zip".format(LATEST_BUILDS, self.version, self.build, self.version, self.build)
-            self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.jar".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
+            self.supported_libs_url = "{}/couchbase-lite-java-linux-supportlibs-{}-{}.zip".format(artifact_location, self.version, self.build)
+            self.doc_jar_url = "{}/couchbase-lite-java-ee-{}-{}-javadoc.jar".format(artifact_location, self.version, self.build)
+            self.download_corelib_url = "{}/{}.jar".format(artifact_location, self.cbl_core_lib_name)
 
         self.build_name = "TestServer-java-WS-{}-{}".format(self.build_type, self.version_build)
 
@@ -52,6 +55,7 @@ class TestServerJavaWS(TestServerBase):
         log_info("supported_libs_url: {}".format(self.supported_libs_url))
         log_info("build_name: {}".format(self.build_name))
         log_info("self.platform = {}".format(self.platform))
+        log_info("doc_jar_url = {}".format(self.doc_jar_url))
 
         '''
         generate ansible config file base on platform format
@@ -132,7 +136,8 @@ class TestServerJavaWS(TestServerBase):
                 "cblite_download_url": self.download_corelib_url,
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name,
-                "supported_libs_url": self.supported_libs_url
+                "supported_libs_url": self.supported_libs_url,
+                "doc_jar_url": self.doc_jar_url
             })
 
         if status == 0:
@@ -161,7 +166,7 @@ class TestServerJavaWS(TestServerBase):
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name,
                 "catalina_base": os.environ["CATALINA_BASE"]
-            })
+=            })
 
         if status == 0:
             return
