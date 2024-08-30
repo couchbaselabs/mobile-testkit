@@ -24,9 +24,6 @@
       path: ~/javatestserver
       state: absent
  
-  - debug:
-      msg: "testserver war files and CouchbaseLite core zip already present, skipping download..."
-
   - name: create javatestserver directory if not exists
     file:
       path: ~/javatestserver
