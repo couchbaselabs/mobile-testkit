@@ -79,7 +79,7 @@
 
   - name: Collect CouchbaseLite jar and supporting files in package to be installed
     find:
-      paths: "/root/javatestserver/{{ core_package_name }}/lib"
+      paths: "/root/javatestserver"
       patterns: "*.jar"
       recurse: True
     register: new_cblite_jar
