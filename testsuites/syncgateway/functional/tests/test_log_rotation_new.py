@@ -8,7 +8,7 @@ from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode,
 from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
 from keywords.exceptions import ProvisioningError
-from utilities.cluster_config_utils import load_cluster_config_json, persist_cluster_config_environment_prop, copy_to_temp_conf
+from utilities.cluster_config_utils import load_cluster_config_json
 from libraries.testkit.admin import Admin
 
 
