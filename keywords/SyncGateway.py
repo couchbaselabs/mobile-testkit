@@ -954,6 +954,10 @@ class SyncGateway(object):
                 log_info("Completed upgrading all sync_gateways/sg_accels")
             log_info("upgrade status is {}".format(status))
         else:
+            if "debian" in sg_platform.lower():
+                playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+                playbook_vars["ansible_distribution"] = "Debian"
+                playbook_vars["ansible_os_family"] = "Linux"
             if url is not None:
                 target = hostname_for_url(cluster_config, url)
                 log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
