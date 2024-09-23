@@ -32,13 +32,14 @@
 
     couchbase_server_bucket_type: couchbase
     couchbase_server_bucket_replica: 1
-    couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
+#    couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
   tasks:
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
     - debug: msg="IPv6 Enabled - {{ ipv6_enabled }}"
+
 
     - name: Install curl
       shell: "apt install -y curl"
@@ -114,6 +115,19 @@
     - name: COUCHBASE SERVER | Restart Couchbase Service
       service: name=couchbase-server state=restarted
       when: ansible_distribution == 'CentOS' and (not ansible_distribution_version == '7.2.1511' or (not couchbase_server_package_name == 'couchbase-server-enterprise-4.1.0-5005-centos7.x86_64.rpm' and not couchbase_server_package_name == 'couchbase-server-enterprise-4.0.0-4051-centos7.x86_64.rpm'))
+
+    - name: Gather memory facts
+      setup:
+        gather_subset: hardware
+
+    - name: Set Couchbase cluster RAM for each node
+      set_fact:
+        couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb | int) * 0.8 | int - 512) | max(512) }}"
+
+    - name: Debug RAM settings
+      debug:
+        msg: "Couchbase cluster RAM for {{ inventory_hostname }}: {{ couchbase_server_cluster_ram }}"
+
 
     # Configure
     - debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
