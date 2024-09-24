@@ -122,7 +122,7 @@
 
     - name: Set Couchbase cluster RAM for each node
       set_fact:
-       couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb | int) * 0.8 )| int - 512 | max(512) }}"
+       couchbase_server_cluster_ram: "{{((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
 
 
     - name: Debug RAM settings
