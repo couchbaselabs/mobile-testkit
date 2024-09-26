@@ -964,6 +964,8 @@ class CouchbaseServer:
             base_url = "{}/neo/{}".format(cbnas_base_url, build_number)
         elif version.startswith("7.6"):
             base_url = "{}/trinity/{}".format(cbnas_base_url, build_number)
+        elif version.startswith("7.7"):
+            base_url = "{}/cypher/{}".format(cbnas_base_url, build_number)
         else:
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))
