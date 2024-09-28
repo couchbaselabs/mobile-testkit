@@ -209,7 +209,7 @@ def cleanup_for_blocked_nodes(job_name=None):
         if doc["state"] == "available":
             continue
         job_id = doc["username"]
-        if job_id == "":
+        if job_id == "" or job_id == None:
             job_id = "test_job:123"
         length_array = []
         length_array = job_id.split(":")
