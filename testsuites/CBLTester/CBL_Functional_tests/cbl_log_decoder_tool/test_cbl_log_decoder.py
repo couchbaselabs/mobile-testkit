@@ -35,7 +35,7 @@ def test_cbl_decoder_with_existing_logs(params_from_base_test_setup):
             cbl_log_dir = "{}/{}/{}".format(log_dir, version, platform)
             log_info("Running in directory cbl_log_dir: "+cbl_log_dir)
             cbl_logs = os.listdir(cbl_log_dir)
-            log_info("cbl_logs: "+cbl_logs)
+            log_info(cbl_logs)
             extracted_cbllog_directory_name = download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder_build)
             for log in cbl_logs:
                 file = "{}/{}".format(cbl_log_dir, log)
