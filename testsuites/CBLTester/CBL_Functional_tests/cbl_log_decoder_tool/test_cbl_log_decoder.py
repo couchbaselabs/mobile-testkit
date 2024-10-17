@@ -30,12 +30,16 @@ def test_cbl_decoder_with_existing_logs(params_from_base_test_setup):
     versions = ["2.5.0"]
 
     for platform in cbl_platforms:
+        log_info("Running platform: "+platform)
         for version in versions:
             cbl_log_dir = "{}/{}/{}".format(log_dir, version, platform)
+            log_info("Running in directory cbl_log_dir: "+cbl_log_dir)
             cbl_logs = os.listdir(cbl_log_dir)
+            log_info("cbl_logs: "+cbl_logs)
             extracted_cbllog_directory_name = download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder_build)
             for log in cbl_logs:
                 file = "{}/{}".format(cbl_log_dir, log)
+                log_info("File: "+file)
                 assert is_binary(file), "{} file is not binary ".format(file)
                 decode_logs(extracted_cbllog_directory_name, file)
 
@@ -140,9 +144,10 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
     if os.path.isfile(expected_binary_path):
         log_info("Package is already downloaded. Skipping.")
         return
-
+    log_info("Package not downloaded, proceed to download from latest builds")
     # Package not downloaded, proceed to download from latest builds
     downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_zip_name)
+
     if cbl_log_decoder_build is None:
         try:
             url = "{}/couchbase-lite-log/{}/{}".format(RELEASED_BUILDS, version, package_zip_name)
@@ -153,10 +158,13 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
 
     log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_zip_name))
     resp = requests.get(url, verify=False)  # Need to resolve the certificate verification issue for release branch
+    log_info(resp.status_code)
+
     resp.raise_for_status()
     with open("{}/{}".format(BINARY_DIR, package_zip_name), "wb") as f:
         f.write(resp.content)
     extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
+    log_info("extracted_directory_name: "+extracted_directory_name)
     if os.path.exists(extracted_directory_name):
         shutil.rmtree(extracted_directory_name)
     if cbl_log_decoder_platform == "macos":
@@ -167,12 +175,17 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
     # Remove .zip
     os.remove("{}".format(downloaded_package_zip_name))
     os.chmod("{}/bin/cbl-log".format(extracted_directory_name), 0o777)
+    log_info("Download successful")
     return extracted_directory_name
 
 
 def decode_logs(extracted_directory_name, file):
     output_file = "deps/binaries/cbl.txt"
     command = "{}/bin/cbl-log logcat {} {}".format(extracted_directory_name, file, output_file)
+    log_info("Command: "+command)
+    with open(output_file, 'w') as f:
+        f.write("")
+    log_info("File created")
     return_val = os.system(command)
     if return_val != 0:
         raise Exception("{0} failed".format(command))
