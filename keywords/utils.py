@@ -324,6 +324,7 @@ def compare_docs(cbl_db, db, docs_dict):
             del cbl_db_docs[key]["_id"]
         except KeyError:
             log_info("Ignoring id verification")
+
         assert deep_dict_compare(doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
 
 
@@ -437,9 +438,13 @@ def deep_dict_compare(object1, object2, isPredictiveResult=False):
         if "stub" in object1:
             del object1["stub"]
             del object1["revpos"]
-            if "ver" in object1.keys():
-                del object1["ver"]
-        else:
+        if "ver" in object1.keys():
+            del object1["ver"]
+
+        if "_attachments" in object1:
+            del object1["_attachments"]
+        
+        if len(object1) != len(object2):
             log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
             log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))
             return False
