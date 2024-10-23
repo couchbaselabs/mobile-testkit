@@ -54,7 +54,7 @@
   #  when: (ansible_distribution != "CentOS" and ansible_distribution != "RedHat")
 
   - name: Install and start TestServer Java Daemon Service
-    shell: "export LD_LIBRARY_PATH=~/javatestserver && export JAVA_HOME={{ java_home }} && ~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ java_home }} {{ jsvc_home }} ~/javatestserver/"
+    shell: "mv /root/javatestserver/libstdc++.so /root/javatestserver/libstdc++.so.bak && ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /root/javatestserver/libstdc++.so && export LD_LIBRARY_PATH=~/javatestserver && export JAVA_HOME={{ java_home }} && ~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ java_home }} {{ jsvc_home }} ~/javatestserver/"
     args:
       chdir: ~/javatestserver
 
