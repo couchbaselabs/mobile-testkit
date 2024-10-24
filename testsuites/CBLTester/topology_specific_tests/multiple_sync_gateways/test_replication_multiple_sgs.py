@@ -270,7 +270,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     repl2_error = replicator.getError(repl2)
     if liteserv_platform == "xamarin-ios" or liteserv_platform == "xamarin-android" or liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
         assert "POSIXDomain" or "Couchbase.Lite.CouchbaseNetworkException" in repl2_error
-    elif liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+    elif liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos","java-debian"]:
         assert "ConnectException" in repl2_error
         assert "Failed to connect" in repl2_error
     elif 'c-' in liteserv_platform:
