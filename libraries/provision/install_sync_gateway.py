@@ -165,7 +165,7 @@ class SyncGatewayConfig:
 
 
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
-                         sg_platform="centos", sg_installer_type="msi",
+                         sg_platform="debian", sg_installer_type="msi",
                          sa_platform="centos", sa_installer_type="msi",
                          ipv6=False, aws=False, url=None, sync_gateway_version=None, custom_build=None, code_coverage=None):
 
