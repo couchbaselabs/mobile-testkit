@@ -82,7 +82,7 @@ class SyncGatewayConfig:
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, sg_ce=False,
-                                          sg_platform="centos",
+                                          sg_platform="debian",
                                           sg_installer_type="msi",
                                           sa_platform="centos",
                                           sa_installer_type="msi", aws=False,
