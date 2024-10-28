@@ -2516,8 +2516,8 @@ class MobileRestClient:
         resp = self._session.post("{}/{}/_offline".format(url, db))
         log_r(resp)
         resp.raise_for_status()
-        resp_obj = resp.json()
-        return resp_obj
+        # resp_obj = resp.json()
+        return 0
 
     def bring_db_online(self, cluster_conf, db, url, delay=0):
         # Bring db online
@@ -2536,8 +2536,8 @@ class MobileRestClient:
         resp = self._session.post("{}/{}/_online".format(url, db))
         log_r(resp)
         resp.raise_for_status()
-        resp_obj = resp.json()
-        return resp_obj
+        # resp_obj = resp.json()
+        return 0
 
     def get_changes_style_all_docs(self, url, db, auth=None, include_docs=False):
         """ Get all changes with include docs enabled and style all_docs """
