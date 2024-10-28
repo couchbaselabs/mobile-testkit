@@ -24,9 +24,7 @@
     
   tasks:
   - name: Restart sync gateway service
-    become: yes
-    shell: /opt/couchbase-sync-gateway/bin/sync_gateway /home/sync_gateway/sync_gateway.json &
-    ignore_errors: yes
+    shell: systemctl start sync_gateway
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/start-sync-gateway-windows.yml

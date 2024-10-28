@@ -5,8 +5,7 @@
   ignore_errors: yes
 
 - name: SYNC GATEWAY | Start sync gateway service
-  become: yes
-  service: name=sync_gateway state=started
+  shell: systemctl start sync_gateway
 
 - name: SYNC GATEWAY | Wait until sync gateway to listen on port
   become: yes
