@@ -31,6 +31,7 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -87,7 +88,7 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
 
     # Take db offline
     sg_client = MobileRestClient()
-    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db", url=sg_admin_url)
     assert status == 0
 
     time.sleep(5)
@@ -104,7 +105,7 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
         assert last_event['state'] == 'offline'
 
         # Bring db online
-        status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+        status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db", url=sg_admin_url)
         assert status == 0
 
         time.sleep(5)

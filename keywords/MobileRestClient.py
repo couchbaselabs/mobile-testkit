@@ -2499,7 +2499,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def take_db_offline(self, cluster_conf, db):
+    def take_db_offline(self, cluster_conf, db, url):
         # Take bucket offline
 
         # ansible_runner = AnsibleRunner(cluster_conf)
@@ -2513,13 +2513,13 @@ class MobileRestClient:
         # return status
 
         logging.info("Taking db offline")
-        resp = self._session.post("http://localhost:4985/{}/_offline".format(db))
+        resp = self._session.post("{}/{}/_offline".format(url, db))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj
 
-    def bring_db_online(self, cluster_conf, db, delay=0):
+    def bring_db_online(self, cluster_conf, db, url, delay=0):
         # Bring db online
         # ansible_runner = AnsibleRunner(cluster_conf)
         # status = ansible_runner.run_ansible_playbook(
@@ -2533,7 +2533,7 @@ class MobileRestClient:
         # return status
 
         logging.info("Bringing db online")
-        resp = self._session.post("http://localhost:4985/{}/_online".format(db))
+        resp = self._session.post("{}/{}/_online".format(url, db))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
