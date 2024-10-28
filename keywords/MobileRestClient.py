@@ -2501,28 +2501,43 @@ class MobileRestClient:
 
     def take_db_offline(self, cluster_conf, db):
         # Take bucket offline
-        ansible_runner = AnsibleRunner(cluster_conf)
-        status = ansible_runner.run_ansible_playbook(
-            "sync-gateway-db-offline.yml",
-            extra_vars={
-                "db": db
-            }
-        )
 
-        return status
+        # ansible_runner = AnsibleRunner(cluster_conf)
+        # status = ansible_runner.run_ansible_playbook(
+        #     "sync-gateway-db-offline.yml",
+        #     extra_vars={
+        #         "db": db
+        #     }
+        # )
+
+        # return status
+
+        logging.info("Taking db offline")
+        resp = self._session.post("http://localhost:4985/{}/_offline".format(db))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        return resp_obj
 
     def bring_db_online(self, cluster_conf, db, delay=0):
         # Bring db online
-        ansible_runner = AnsibleRunner(cluster_conf)
-        status = ansible_runner.run_ansible_playbook(
-            "sync-gateway-db-online.yml",
-            extra_vars={
-                "db": db,
-                "delay": delay
-            }
-        )
+        # ansible_runner = AnsibleRunner(cluster_conf)
+        # status = ansible_runner.run_ansible_playbook(
+        #     "sync-gateway-db-online.yml",
+        #     extra_vars={
+        #         "db": db,
+        #         "delay": delay
+        #     }
+        # )
 
-        return status
+        # return status
+
+        logging.info("Bringing db online")
+        resp = self._session.post("http://localhost:4985/{}/_online".format(db))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        return resp_obj
 
     def get_changes_style_all_docs(self, url, db, auth=None, include_docs=False):
         """ Get all changes with include docs enabled and style all_docs """
