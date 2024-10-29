@@ -72,7 +72,7 @@ def issue_request(target, user_agent, accept_encoding, x_accept_part_encoding, p
             headers = '-A {} -H "Accept-Encoding: gzip" -H "X-Accept-Part-Encoding: gzip" -H "Authorization: Basic c2V0aDpwYXNzd29yZA==" -H "Content-Type: application/json"'.format(user_agent)
 
     # Issue curl and write response to disc
-    bulk_get_curl_command = 'curl -X "POST" {0}/db/_bulk_get {1} -d $\'{2}\''.format(
+    bulk_get_curl_command = 'curl -X "POST" {0}/db/_bulk_get {1} -d \'{2}\''.format(
         re.sub(r'[\[\]]', '', target.url),
         headers,
         json.dumps(payload)
