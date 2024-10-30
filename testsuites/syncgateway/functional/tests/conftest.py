@@ -180,7 +180,7 @@ def pytest_addoption(parser):
     parser.addoption("--sync-gateway-previous-version",
                      action="store",
                      help="sync-gateway-previous-version",  # Adding a default to try to fix the test failure
-                     default="2.7.4")
+                     default="3.0.9")
 
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
