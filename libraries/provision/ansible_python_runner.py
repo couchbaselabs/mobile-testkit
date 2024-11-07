@@ -137,6 +137,9 @@ class Runner(object):
         log_info("Subset: {}".format(self.options.subset))
         myhosts = self.variable_manager.get_vars()['groups']['all']
         log_info("myhosts: {}".format(myhosts))
+        
+        log_info(self.inventory.get_groups_dict())
+
 
         self.pbex = playbook_executor.PlaybookExecutor(
             playbooks=[playbook],
