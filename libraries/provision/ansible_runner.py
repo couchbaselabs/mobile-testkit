@@ -26,6 +26,8 @@ class AnsibleRunner:
 
         playbook_filename = "{}/{}".format(PLAYBOOKS_HOME, script_name)
         log_info("playbook_filename: {}".format(playbook_filename))
+        
+        log_info("Subset is: {}".format(subset))
 
         runner = Runner(
             inventory_filename=inventory_filename,
