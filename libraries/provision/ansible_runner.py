@@ -1,3 +1,4 @@
+from keywords.utils import log_info
 from utilities.cluster_config_utils import get_sg_platform
 from libraries.provision.ansible_python_runner import Runner
 from ansible import constants
@@ -21,10 +22,10 @@ class AnsibleRunner:
             extra_vars["ansible_os_family"] = "Linux"
             extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         inventory_filename = self.provisiong_config
-        logging.info("inventory_filename: {}".format(inventory_filename))
+        log_info("inventory_filename: {}".format(inventory_filename))
 
         playbook_filename = "{}/{}".format(PLAYBOOKS_HOME, script_name)
-        logging.info("playbook_filename: {}".format(playbook_filename))
+        log_info("playbook_filename: {}".format(playbook_filename))
 
         runner = Runner(
             inventory_filename=inventory_filename,
