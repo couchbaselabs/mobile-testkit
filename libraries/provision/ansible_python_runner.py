@@ -129,6 +129,10 @@ class Runner(object):
 
         # Setup playbook executor, but don't run until run() called
         log_info("Running playbook: {}".format(playbook))
+        log_info("Using inventory: {}".format(self.inventory))
+        log_info("Variable manager: {}".format(self.variable_manager))
+        log_info("Options: {}".format(self.options))
+        log_info("loader: {}".format(self.loader))
         self.pbex = playbook_executor.PlaybookExecutor(
             playbooks=[playbook],
             inventory=self.inventory,
