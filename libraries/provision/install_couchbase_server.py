@@ -54,15 +54,21 @@ class CouchbaseServerConfig:
 
 def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platform="centos7", cbs_ce=False):
 
+    log_info("Cluster config is:")
     log_info(cluster_config)
+    log_info("Couchbase Server config is:")
     log_info(couchbase_server_config)
     with open("{}.json".format(cluster_config)) as f:
         cluster = json.loads(f.read())
+        log_info("Cluster config is: {}".format(cluster))
 
     ansible_runner = AnsibleRunner(cluster_config)
     cluster_keywords = ClusterKeywords(cluster_config)
+    log_info("cluster_keywords: {}".format(cluster_keywords))
     cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
+    log_info("cluster_topology: {}".format(cluster_topology))
     server_url = cluster_topology["couchbase_servers"][0]
+    log_info("Server URLs: {}".format(cluster_topology["couchbase_servers"]))
     cb_server = CouchbaseServer(server_url)
 
     log_info(">>> Installing Couchbase Server", str(cb_server) + str(cbs_platform))

@@ -24,9 +24,6 @@
     ssl_verify:
     couchbase_server_home_path: /opt/couchbase
 
-    # Host vars
-    # hostvars: "{{ hostvars }}"
-
     # Couchbase server group
     couchbase_servers: "{{ hostvars[groups.couchbase_servers] }}"
 
@@ -41,7 +38,7 @@
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
   tasks:
-    # - debug: msg="Hostvars {{ hostvars }}"
+    - debug: var=hostvars[inventory_hostname]
     - debug: msg="Couchbase server group {{ couchbase_servers }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
