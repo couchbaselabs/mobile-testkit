@@ -81,8 +81,13 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
                 .format(BUCKET_NAME, nodes_os_type, node_os_version, query_phone_in_slave)
     query = cluster.query(query_str)
     pool_list = []
+    first_node = "10.100.150.137"
     for row in query:
         doc_id = row["id"]
+        if first_node:
+            doc_id = first_node
+            first_node = None
+        log_info("Reserving node {}".format(str(doc_id)))
         is_node_reserved = reserve_node(doc_id, job_name_requesting_node)
         if nodes_os_type not in MOBILE_OS:
             vm_alive = check_vm_alive(doc_id)
