@@ -41,7 +41,7 @@
   tasks:
     - debug: var=hostvars[inventory_hostname]
     - debug: msg="Inventory hostname {{ inventory_hostname }}"
-    - debug: var=hostvars
+    - debug: var=hostvars|type_debug
     - debug: var="Hostvar keys {{ hostvars[inventory_hostname].keys() }}"
     - debug: msg="Hostvars {{hostvars}}"
     - debug: var=hostvars[groups.couchbase_servers]
