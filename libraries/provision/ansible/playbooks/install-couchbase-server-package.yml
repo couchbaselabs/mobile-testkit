@@ -42,6 +42,7 @@
     - debug: var=hostvars[inventory_hostname]
     - debug: msg="Inventory hostname {{ inventory_hostname }}"
     - debug: var=hostvars|type_debug
+    - debug: var=hostvars
     - debug: var=vars|type_debug
     - debug: var=vars
     - debug: var=hosts|type_debug
