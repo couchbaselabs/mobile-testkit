@@ -25,14 +25,11 @@
     ssl_verify:
     couchbase_server_home_path: /opt/couchbase
 
-    # Couchbase server group
-    couchbase_servers: "{{ hostvars[groups.couchbase_servers] }}"
-
     # Primary node
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    couchbase_server_primary_node: 10.100.150.137
 
     # Current node
-    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
+    couchbase_server_node: 10.100.150.137
 
     couchbase_server_bucket_type: couchbase
     couchbase_server_bucket_replica: 1
@@ -42,15 +39,10 @@
     - debug: var=hostvars[inventory_hostname]
     - debug: msg="Inventory hostname {{ inventory_hostname }}"
     - debug: var=hostvars|type_debug
-    - debug: var=hostvars
+    # - debug: var=hostvars
     - debug: var=vars|type_debug
-    - debug: var=vars
-    - debug: var=hosts|type_debug
-    - debug: var=hosts
-    - debug: var="Hostvar keys {{ hostvars[inventory_hostname].keys() }}"
-    - debug: msg="Hostvars {{hostvars}}"
-    - debug: var=hostvars[groups.couchbase_servers]
-    - debug: msg="Couchbase server group {{ couchbase_servers }}"
+    # - debug: var=vars
+    # - debug: msg="Couchbase server group {{ couchbase_servers }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
