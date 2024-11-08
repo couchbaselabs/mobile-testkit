@@ -41,10 +41,10 @@
   tasks:
     - debug: var=hostvars[inventory_hostname]
     - debug: msg="Inventory hostname {{ inventory_hostname }}"
+    - debug: var=hostvars
     - debug: var="Hostvar keys {{ hostvars[inventory_hostname].keys() }}"
     - debug: msg="Hostvars {{hostvars}}"
     - debug: var=hostvars[groups.couchbase_servers]
-    - debug: var=hostvars
     - debug: msg="Couchbase server group {{ couchbase_servers }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
