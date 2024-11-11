@@ -3,7 +3,9 @@
   vars:
     war_package_name:
     core_package_name:
-
+    catalina_base:
+  environment:
+    CATALINA_BASE: "{{ catalina_base }}"
   tasks:
   - debug: msg="Tomcat home directory is {{ ansible_env.CATALINA_BASE }}"
  
