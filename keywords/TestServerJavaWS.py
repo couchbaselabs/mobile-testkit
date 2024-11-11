@@ -44,7 +44,7 @@ class TestServerJavaWS(TestServerBase):
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.war".format(LATEST_BUILDS, self.version, self.build, self.package_name)
 
             # The new distribution method for the support libs starts after release v3.1.1
-            if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
+            if re.compile('^([456789]|3\.[23456789]|3\.1\.(\d{1,2}))').match(self.version):  # noqa: W605
                 self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}-{}".format(self.version, self.build)
             else:
                 if community_enabled:
