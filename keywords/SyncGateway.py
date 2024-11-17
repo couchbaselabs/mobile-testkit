@@ -784,7 +784,7 @@ class SyncGateway(object):
             build_flags="",
             skip_bucketcreation=False
         )
-        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package(sg_platform=get_sg_platform(cluster_config))
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
         playbook_vars1 = {}
         playbook_vars1["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars1["couchbase_sync_gateway_package"] = sync_gateway_package_name
@@ -833,7 +833,7 @@ class SyncGateway(object):
                 "disable_admin_auth": ""
             }
 
-            sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package(get_sg_platform(cluster_config))
+            sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
 
             playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
             playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
