@@ -177,7 +177,7 @@ def release_node(pool_list, job_name):
     :param job_name:  Name of Jenkins job which has reserved the node
     :return: void
     """
-    for node in pool_list:
+    for node in pool_list[1:]:
         result = sdk_client.get(node)
         print(result.value)
         doc = result.value
