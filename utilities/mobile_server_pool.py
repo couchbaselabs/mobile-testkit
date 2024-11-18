@@ -81,7 +81,7 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
                 .format(BUCKET_NAME, nodes_os_type, node_os_version, query_phone_in_slave)
     query = cluster.query(query_str)
     pool_list = []
-    first_node = "10.100.150.136"
+    first_node = "10.100.150.137"
     for row in query:
         doc_id = row["id"]
         if first_node:
