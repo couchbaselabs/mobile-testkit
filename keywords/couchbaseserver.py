@@ -7,7 +7,8 @@ from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from couchbase.exceptions import CouchbaseException, DocumentNotFoundException, DocumentExistsException
-from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
+from couchbase.auth import PasswordAuthenticator
+from couchbase.cluster import ClusterTimeoutOptions, ClusterOptions, Cluster, QueryIndexManager
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError

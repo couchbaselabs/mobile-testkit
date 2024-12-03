@@ -5,8 +5,8 @@ from CBLClient.Database import Database
 from CBLClient.Query import Query
 from keywords.utils import host_for_url
 from couchbase.cluster import Cluster
-from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
-
+from couchbase.auth import PasswordAuthenticator
+from couchbase.cluster import  ClusterTimeoutOptions, ClusterOptions
 from operator import itemgetter
 import numpy as np
 
