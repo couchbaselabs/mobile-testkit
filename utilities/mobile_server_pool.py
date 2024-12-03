@@ -144,7 +144,7 @@ def reserve_node(doc_id, job_name, counter=0):
     :param counter: For recursion, passed by code itself
     :return: Bool
     """
-    result = sdk_client.get(doc_id)
+    result = sdk_client.default_collection().get(doc_id)
     doc = result.value
     curr_cas = result.cas
     # Reserving the ip from the pool and updating the entry in the bucket
@@ -156,7 +156,7 @@ def reserve_node(doc_id, job_name, counter=0):
         sdk_client.replace(doc_id, doc, cas=curr_cas)
         return True
     except CouchbaseException as err:
-        result = sdk_client.get(doc_id)
+        result = sdk_client.default_collection().get(doc_id)
         doc = result.value
         if doc["state"] != "booked" and counter < 5:
             log_info("Attempt to reserve node {} failed due to error {}".format(doc_id, err))
@@ -179,7 +179,7 @@ def release_node(pool_list, job_name):
     :return: void
     """
     for node in pool_list[1:]:
-        result = sdk_client.get(node)
+        result = sdk_client.default_collection().get(node)
         print(result.value)
         doc = result.value
         print(doc, "Doc details")
@@ -208,7 +208,7 @@ def cleanup_for_blocked_nodes(job_name=None):
     release_node_list = []
     for row in query:
         doc_id = row["id"]
-        result = sdk_client.get(doc_id, quiet=True)
+        result = sdk_client.default_collection().get(doc_id, quiet=True)
         if not result:
             log_info("Can't access the data for node {}".format(doc_id))
         doc = result.value
