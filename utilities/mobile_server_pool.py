@@ -5,7 +5,7 @@ import paramiko
 import time
 from requests import Session
 from optparse import OptionParser
-from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
+from couchbase.auth import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 sys.path = [".", "keywords"] + sys.path
 from keywords.utils import log_info  # noqa: E402
 from couchbase.exceptions import CouchbaseException  # noqa: E402

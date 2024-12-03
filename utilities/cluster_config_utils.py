@@ -7,7 +7,7 @@ from keywords.exceptions import ProvisioningError
 from shutil import copyfile, rmtree
 from subprocess import Popen, PIPE
 from distutils.dir_util import copy_tree
-from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
+from couchbase.auth import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 from keywords.constants import BUCKET_LIST
 from keywords.constants import SYNC_GATEWAY_CONFIGS_CPC
 

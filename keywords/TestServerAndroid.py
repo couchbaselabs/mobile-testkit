@@ -10,7 +10,7 @@ from keywords.utils import version_and_build
 from keywords.utils import log_info
 from platform import python_version
 from datetime import timedelta
-from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
+from couchbase.auth import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 from keywords.constants import USERNAME
 from keywords.constants import PASSWORD
 from keywords.constants import SERVER_IP
