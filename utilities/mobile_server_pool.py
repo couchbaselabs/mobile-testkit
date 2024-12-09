@@ -153,7 +153,7 @@ def reserve_node(doc_id, job_name, counter=0):
     doc["state"] = "booked"
     doc["booked_time"] = time.strftime("%Y-%m-%d %H:%M:%S")
     try:
-        sdk_client.replace(doc_id, doc, cas=curr_cas)
+        sdk_client.default_collection().replace(doc_id, doc, cas=curr_cas)
         return True
     except CouchbaseException as err:
         result = sdk_client.default_collection().get(doc_id)
@@ -189,7 +189,7 @@ def release_node(pool_list, job_name):
             doc["prevUser"] = doc["username"]
             doc["username"] = ""
             doc["state"] = "available"
-            sdk_client.replace(node, doc)
+            sdk_client.default_collection().replace(node, doc)
         else:
             log_info("Machine is reserved by other Job: {}".format(doc["username"]))
             raise Exception("Unable to release the node. Release node manually")
@@ -226,7 +226,7 @@ def cleanup_for_blocked_nodes(job_name=None):
             doc["prevUser"] = doc["username"]
             doc["username"] = ""
             doc["state"] = "available"
-            sdk_client.replace(doc_id, doc)
+            sdk_client.default_collection().replace(doc_id, doc)
             release_node_list.append(doc_id)
         else:
             log_info("Job is running, can't release assigned node.")
