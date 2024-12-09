@@ -45,7 +45,7 @@ def get_cluster(url, bucket_name):
     options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
     cluster = Cluster(url, options)
     cluster = cluster.bucket(bucket_name)
-    return cluster.default_collection()
+    return cluster
 
 
 def persist_cluster_config_environment_prop(cluster_config, property_name, value, property_name_check=True):
