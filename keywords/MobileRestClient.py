@@ -424,6 +424,14 @@ class MobileRestClient:
         if collection_access is not None:
             data["collection_access"] = collection_access
 
+        log_info("Creating user: {}".format(data))
+        log_info("Is auth provided: {}".format(auth))
+
+        log_info("Getting all dbs")
+        dbs = self.get_databases(url)
+
+        log_info("Dbs: {}".format(dbs))
+
         if auth:
             resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
