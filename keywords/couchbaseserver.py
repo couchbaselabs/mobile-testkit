@@ -446,14 +446,21 @@ class CouchbaseServer:
         """
         types.verify_is_list(bucket_names)
 
-        if len(bucket_names) == 0:
+        existing_bucket_names = self.get_bucket_names()
+        log_info("Existing bucket names: {}".format(existing_bucket_names))
+
+        buckets_to_create = list(set(bucket_names) - set(existing_bucket_names))
+        log_info("Buckets to create: {}".format(buckets_to_create))
+
+        if(len(buckets_to_create) == 0):
             return
-        log_info("Creating buckets: {}".format(bucket_names))
+
+        log_info("Creating buckets: {}".format(buckets_to_create))
 
         # Get the amount of RAM to allocate for each server bucket
-        per_bucket_ram_mb = self.get_ram_per_bucket(len(bucket_names))
+        per_bucket_ram_mb = self.get_ram_per_bucket(len(buckets_to_create))
 
-        for bucket_name in bucket_names:
+        for bucket_name in buckets_to_create:
             self.create_bucket(cluster_config, bucket_name, per_bucket_ram_mb, ipv6)
 
     def create_bucket(self, cluster_config, name, ram_quota_mb=1024, ipv6=False):
