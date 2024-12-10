@@ -413,7 +413,7 @@ class Cluster:
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
             self.servers[0].wait_for_ready_state()
         self.servers[0]._create_internal_rbac_user_by_roles(common_bucket_user, "mobile_sync_gateway", bucketname="*")
-        log_info(">>> Starting sync_gateway with configuration using setup_server_and_sgw: {}".format(cpc_config_path_full))
+        log_info(">>> Starting sync_gateway with configuration using setup_server_and_sgw: {}".format(config_path_full))
 
         # Extracing sgw config from sgw config file
         with open(config_path_full, "r") as config:

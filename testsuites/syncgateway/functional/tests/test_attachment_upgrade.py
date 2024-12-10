@@ -55,6 +55,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     # This test should only run when using xattr
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    log_info("sg_conf: {}".format(sg_conf))
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster_util = ClusterKeywords(cluster_conf)
