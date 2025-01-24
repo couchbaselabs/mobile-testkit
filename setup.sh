@@ -7,7 +7,8 @@
 
 # py37version=$(python3.7 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 #alias python3=/opt/homebrew/bin/python3.8
-alias python3=/usr/local/bin/python3.8
+#alias python3=/usr/local/bin/python3.8
+alias python3=/Users/couchbase/.pyenv/shims/python3
 py3version=$(python3 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 
 # if [[ $py3version == 3.8.* ]]; then
