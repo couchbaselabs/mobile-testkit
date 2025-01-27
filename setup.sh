@@ -40,26 +40,31 @@ else
     echo "Virtual environment already exists at $VENV_DIR"
 fi
 
-# Verify Python in the virtual environment
-$VENV_DIR/bin/python --version
-$VENV_DIR/bin/python -m pip install --upgrade pip
-$VENV_DIR/bin/python -m pip install couchbase==3.2.7
-
 # Activate virtual environment
 echo "Activating virtual environment..."
 source "$VENV_DIR/bin/activate"
 
-# Install PYTHON dependencies
-$PIP install -r requirements.txt
+# Install dependencies from requirements.txt
+echo "Installing dependencies..."
+$VENV_DIR/bin/pip install -r requirements.txt
 
-# set PYTHON env
+# Set environment variables
+echo "Setting environment variables..."
 export PYTHONPATH=$PYTHONPATH:$currentdir/
-
 export ANSIBLE_CONFIG=$currentdir/ansible.cfg
 
+# Upgrade pip to a specific version
+$VENV_DIR/bin/pip install --upgrade pip==20.1.1
 
-pip install --upgrade pip==20.1.1
-/Users/couchbase/.pyenv/shims/python3 -m pip install wheel setuptools==68.0.0
-python3 -m pip install couchbase==3.2.7 --no-use-pep517
-pip install importlib-metadata==4.3.0
-pip install setuptools==68.0.0
+# Install additional dependencies
+echo "Installing additional Python dependencies..."
+$PYTHON -m pip install wheel setuptools==68.0.0
+$PYTHON -m pip install couchbase==3.2.7 --no-use-pep517
+$VENV_DIR/bin/pip install importlib-metadata==4.3.0
+$VENV_DIR/bin/pip install setuptools==68.0.0
+
+# Verify installations
+$VENV_DIR/bin/python --version
+$VENV_DIR/bin/pip --version
+
+echo "Setup completed successfully."
