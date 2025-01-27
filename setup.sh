@@ -1,47 +1,53 @@
 #!/usr/bin/env bash
-# This scripts attempts to setup an environment for running mobile testkit tests.
-# 1. Check that you have Python 2.7 and virtualenv installed
-# 2. Installs venv/ in this directory containing a python 2.7 interpreter
-# 3. Installs all pip packages required by this repo
-# 4. Adds custom library paths to your PYTHONPATH
+# This script sets up an environment for running mobile testkit tests.
+# It checks for Python 3.8/3.7, installs virtualenv, and sets up a virtual environment.
 
-# py37version=$(python3.7 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
-alias python3=/Users/couchbase/.pyenv/shims/python3
-py3version=$(python3 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
+# Ensure we use the correct Python version
+PYENV_PYTHON="/Users/couchbase/.pyenv/shims/python3"
+export PATH="/Users/couchbase/.pyenv/shims:$PATH"
 
+py3version=$($PYENV_PYTHON -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 
-if [[ $py3version == 3.8.* ]]; then
-    printf "Using Python3 version: %s\n" $py3version
-    PYTHON=python3
-    PIP=pip3.8
-elif [[ $py3version == 3.7.* ]]; then
-    printf "Using Python3 version: %s\n" $py3version
-    PYTHON=python3
-    PIP=pip3.7
+if [[ $py3version == 3.8.* || $py3version == 3.7.* ]]; then
+    printf "Using Python3 version: %s\n" "$py3version"
+    PYTHON=$PYENV_PYTHON
+    PIP="$PYTHON -m pip"
 else
     echo "Exiting. Make sure Python version is 3.8 or 3.7"
-    return 1
+    exit 1
 fi
 
-$PYTHON -m virtualenv --version
+# Check if virtualenv is installed
+$PYTHON -m virtualenv --version &>/dev/null
 if [ $? -ne 0 ]; then
-    # Install virtual env
-    echo "Virtualenv not detected, running $PIP install virtualenv.  If you don't have $PIP, run easy_install $PIP"
-    $PIP install virtualenv
-    #return 1
+    echo "Virtualenv not detected. Installing virtualenv..."
+    $PIP install --user virtualenv
+    if [ $? -ne 0 ]; then
+        echo "Failed to install virtualenv. Please check your Python/Pip setup."
+        exit 1
+    fi
 fi
 
-currentdir=`pwd`
+# Set up virtual environment
+currentdir=$(pwd)
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
-# Setup virtual env
-/Users/couchbase/.pyenv/shims/virtualenv -p $PYTHON venv
-#virtualenv -p $PYTHON venv
+VENV_DIR="$currentdir/venv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Creating virtual environment..."
+    $PYTHON -m virtualenv -p $PYTHON "$VENV_DIR"
+else
+    echo "Virtual environment already exists at $VENV_DIR"
+fi
 
-/Users/couchbase/jenkins/workspace/CBLITE_iOS-Listener-TestServer-Topology-specific-Functional-CBLITE-XATTRS-DELTA-SYNC-tests/venv/bin/python --version
-/Users/couchbase/jenkins/workspace/CBLITE_iOS-Listener-TestServer-Topology-specific-Functional-CBLITE-XATTRS-DELTA-SYNC-tests/venv/bin/python -m pip install couchbase==3.2.7
+# Verify Python in the virtual environment
+$VENV_DIR/bin/python --version
+$VENV_DIR/bin/python -m pip install --upgrade pip
+$VENV_DIR/bin/python -m pip install couchbase==3.2.7
 
-source venv/bin/activate
+# Activate virtual environment
+echo "Activating virtual environment..."
+source "$VENV_DIR/bin/activate"
 
 # Install PYTHON dependencies
 $PIP install -r requirements.txt
