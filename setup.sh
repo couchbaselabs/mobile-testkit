@@ -36,6 +36,10 @@ export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
 # Setup virtual env
 virtualenv -p $PYTHON venv
+
+/Users/couchbase/jenkins/workspace/CBLITE_iOS-Listener-TestServer-Topology-specific-Functional-CBLITE-XATTRS-DELTA-SYNC-tests/venv/bin/python --version
+/Users/couchbase/jenkins/workspace/CBLITE_iOS-Listener-TestServer-Topology-specific-Functional-CBLITE-XATTRS-DELTA-SYNC-tests/venv/bin/python -m pip install couchbase==3.2.7
+
 source venv/bin/activate
 
 # Install PYTHON dependencies
@@ -45,6 +49,7 @@ $PIP install -r requirements.txt
 export PYTHONPATH=$PYTHONPATH:$currentdir/
 
 export ANSIBLE_CONFIG=$currentdir/ansible.cfg
+
 
 pip install --upgrade pip==20.1.1
 /Users/couchbase/.pyenv/shims/python3 -m pip install wheel setuptools==68.0.0
