@@ -6,6 +6,7 @@
 # 4. Adds custom library paths to your PYTHONPATH
 
 # py37version=$(python3.7 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
+alias python3=/Users/couchbase/.pyenv/shims/python3
 py3version=$(python3 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 
 
