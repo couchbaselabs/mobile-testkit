@@ -35,7 +35,8 @@ currentdir=`pwd`
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
 # Setup virtual env
-virtualenv -p $PYTHON venv
+/Users/couchbase/.pyenv/shims/virtualenv -p $PYTHON venv
+#virtualenv -p $PYTHON venv
 
 /Users/couchbase/jenkins/workspace/CBLITE_iOS-Listener-TestServer-Topology-specific-Functional-CBLITE-XATTRS-DELTA-SYNC-tests/venv/bin/python --version
 /Users/couchbase/jenkins/workspace/CBLITE_iOS-Listener-TestServer-Topology-specific-Functional-CBLITE-XATTRS-DELTA-SYNC-tests/venv/bin/python -m pip install couchbase==3.2.7
