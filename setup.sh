@@ -47,6 +47,7 @@ export PYTHONPATH=$PYTHONPATH:$currentdir/
 export ANSIBLE_CONFIG=$currentdir/ansible.cfg
 
 pip install --upgrade pip==20.1.1
+pip install wheel setuptools
 python3 -m pip install couchbase==3.2.7 --no-use-pep517
 pip install importlib-metadata==4.3.0
 pip install setuptools==68.0.0
