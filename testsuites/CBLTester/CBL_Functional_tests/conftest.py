@@ -18,7 +18,7 @@ from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 from keywords.constants import RESULTS_DIR
-
+import multiprocessing
 from CBLClient.FileLogging import FileLogging
 from CBLClient.Replication import Replication
 from CBLClient.Collection import Collection
