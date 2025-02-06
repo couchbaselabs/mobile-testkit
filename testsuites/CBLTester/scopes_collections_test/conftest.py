@@ -34,6 +34,8 @@ from CBLClient.Utils import Utils
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
 from libraries.testkit import prometheus
+import multiprocessing
+
 
 
 def pytest_addoption(parser):
@@ -235,6 +237,7 @@ def pytest_addoption(parser):
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
+    multiprocessing.set_start_method('spawn', force=True)
     liteserv_platform = request.config.getoption("--liteserv-platform")
     liteserv_version = request.config.getoption("--liteserv-version")
     liteserv_host = request.config.getoption("--liteserv-host")
@@ -285,7 +288,7 @@ def params_from_base_suite_setup(request):
     collection_name = request.config.getoption("--collection-name")
 
     test_name = request.node.name
-
+    multiprocessing.set_start_method('spawn', force=True)
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
                                           host=liteserv_host,
