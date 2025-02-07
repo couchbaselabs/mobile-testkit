@@ -97,7 +97,7 @@ class Runner(object):
         self.options.timeout = constants.DEFAULT_TIMEOUT
         self.options.poll_interval = constants.DEFAULT_POLL_INTERVAL
         self.options.force_handlers = constants.DEFAULT_FORCE_HANDLERS
-
+        self.options.ssh_extra_args = '-o StrictHostKeyChecking=no'
         # Set global verbosity
         self.display = Display()
         self.display.verbosity = self.options.verbosity
