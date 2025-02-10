@@ -46,7 +46,7 @@ class TestServeriOS(TestServerBase):
         if debug_mode:
             self.debug_mode = True
         if self.using_devicectl:
-            self.device_id = "iPhone.coredevice.local"
+            self.device_id = "16E5C211-C0C9-4A81-981B-52F4699AF951"
         if self.platform == "ios":
             if community_enabled:
                 self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
