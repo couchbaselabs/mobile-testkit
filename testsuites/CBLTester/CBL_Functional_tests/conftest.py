@@ -601,6 +601,14 @@ def params_from_base_suite_setup(request):
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
         buckets = server.get_bucket_names()
+        sync_gateways = cluster_topology["sync_gateways"]
+        sg_obj = SyncGateway()
+        # **STOP SYNC GATEWAY BEFORE DELETING THE BUCKET**
+        for sg in sync_gateways:
+            sg_ip = host_for_url(sg["admin"])
+            log_info("Stopping Sync Gateway before bucket deletion: {}".format(sg_ip))
+            sg_obj.stop_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+
         if enable_sample_bucket in buckets:
             log_info("Deleting existing {} bucket".format(enable_sample_bucket))
             server.delete_bucket(enable_sample_bucket)
@@ -612,8 +620,7 @@ def params_from_base_suite_setup(request):
         server._create_internal_rbac_bucket_user(enable_sample_bucket, cluster_config=cluster_config)
 
         # Restart SG after the bucket deletion
-        sync_gateways = cluster_topology["sync_gateways"]
-        sg_obj = SyncGateway()
+
 
         for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
