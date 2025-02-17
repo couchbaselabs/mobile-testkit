@@ -26,10 +26,10 @@
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
-    couchbase_server_primary_node: 10.100.150.137
+    couchbase_server_primary_node: 10.100.150.186
 
     # Current node
-    couchbase_server_node: 10.100.150.137
+    couchbase_server_node: 10.100.150.186
 
     couchbase_server_bucket_type: couchbase
     couchbase_server_bucket_replica: 1
