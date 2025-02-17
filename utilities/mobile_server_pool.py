@@ -129,6 +129,23 @@ def check_vm_alive(server):
             time.sleep(SSH_POLL_INTERVAL)
             continue
 
+def kill_sg_server(server):
+    num_retries = 0
+    while num_retries <= SSH_NUM_RETRIES:
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(hostname=server, username=SSH_USERNAME, password=SSH_PASSWORD)
+            result = ssh.exec_command( "systemctl status sync_gateway")
+            if "Unit sync_gateway.service could not be found." in result[2]:
+                print(f"Sync Gateway not found as a process on {server}")
+                return
+            ssh.exec_command("systemctl stop sync_gateway")
+        except Exception as e:
+            print("Exception occured while trying to kill SGW {0}: {1}".format(server, str(e)))
+            num_retries = num_retries + 1
+            time.sleep(SSH_POLL_INTERVAL)
+            continue
 
 def check_device_alive(device_ip):
     command = ["ping", "-c", "1", device_ip]
@@ -179,6 +196,7 @@ def release_node(pool_list, job_name):
     :return: void
     """
     for node in pool_list[1:]:
+        kill_sg_server(node)
         result = sdk_client.default_collection().get(node)
         print(result.value)
         doc = result.value
