@@ -136,11 +136,20 @@ def kill_sg_server(server):
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(hostname=server, username=SSH_USERNAME, password=SSH_PASSWORD)
-            result = ssh.exec_command( "systemctl status sync_gateway")
-            if "Unit sync_gateway.service could not be found." in result[2]:
+            stdin, stdout, stderr = ssh.exec_command("systemctl status sync_gateway")
+            error_output = stderr.read().decode().strip()
+            command_output = stdout.read().decode().strip()
+            print(command_output)
+            if "could not be found" in error_output:
                 print(f"Sync Gateway not found as a process on {server}")
                 return
-            ssh.exec_command("systemctl stop sync_gateway")
+
+            print(f"Sync Gateway found on {server}, stopping service...")
+            ssh.exec_command("sudo systemctl stop sync_gateway")
+            print(f"Sync Gateway stopped on {server}")
+
+            ssh.close()
+            return
         except Exception as e:
             print("Exception occured while trying to kill SGW {0}: {1}".format(server, str(e)))
             num_retries = num_retries + 1
