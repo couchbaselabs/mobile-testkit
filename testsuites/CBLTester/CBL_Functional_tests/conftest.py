@@ -304,7 +304,8 @@ def params_from_base_suite_setup(request):
     collection_name = request.config.getoption("--collection-name")
 
     test_name = request.node.name
-    multiprocessing.set_start_method('spawn', force=True)
+    multiprocessing.set_start_method('fork', force=True)
+    print("multiprocessing.set_start_method('fork', force=True)")
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
                                           host=liteserv_host,
