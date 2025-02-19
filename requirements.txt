@@ -62,6 +62,6 @@ wrapt==1.12.1
 xmltodict==0.10.2
 numpy==1.21.6
 pytest-rerunfailures==8.0
-flask==1.1.2
+flask==2.3.2
 typing-extensions==3.7.4.3
 werkzeug==2.0.3
