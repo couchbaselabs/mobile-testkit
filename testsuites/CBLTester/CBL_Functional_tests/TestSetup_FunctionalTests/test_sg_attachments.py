@@ -18,8 +18,6 @@ from keywords.constants import RBAC_FULL_ADMIN
 @pytest.mark.channels
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net"),
-                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1186")
 @pytest.mark.parametrize("source, target, num_of_docs", [
     ('cbl', 'cbl', 100),
     ('sg', 'cbl', 10),
@@ -297,8 +295,8 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
 @pytest.mark.channels
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net"),
-                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1186")
+# @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net"),
+#                     reason="Under investiation: https://issues.couchbase.com/browse/CM-1186")
 def test_restart_sg_creating_attachments(params_from_base_test_setup):
     """
     https://docs.google.com/spreadsheets/d/1RrrIcIZN7MgLDlNzGWfUHo2NTYrx1Jr55SBNeCdDUQs/edit#gid=0

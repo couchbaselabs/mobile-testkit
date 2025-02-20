@@ -1,0 +1,367 @@
+Starting the tests .....
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-4.6.9, py-1.5.1, pluggy-0.13.1
+rootdir: /Users/barkha.goyal/Desktop/mobile-testkit, inifile: pytest.ini
+plugins: rerunfailures-8.0, html-1.10.0, timeout-1.0.0
+collected 280 items
+<Package /Users/barkha.goyal/Desktop/mobile-testkit/testsuites/CBLTester/CBL_Functional_tests/TestSetup_FunctionalTests>
+  <Module test_cbl_log_redaction.py>
+    <Function test_mask_password_in_logs[auto-password]>
+    <Function test_mask_password_in_logs[auto password]>
+    <Function test_mask_password_in_logs[validpassword]>
+    <Function test_verify_invalid_mask_password_in_logs[auto-password]>
+    <Function test_verify_invalid_mask_password_in_logs[auto password]>
+    <Function test_verify_invalid_mask_password_in_logs[invalidpassword]>
+  <Module test_cbl_logging.py>
+    <Function test_file_logging[verbose-True-512000000-10000]>
+    <Function test_file_logging[verbose-False-0-0]>
+    <Function test_file_logging[info-False-0-0]>
+    <Function test_file_logging[warning-False-0-0]>
+    <Function test_file_logging[error-False-0-0]>
+    <Function test_file_logging[debug-True-1536000-3]>
+    <Function test_file_logging[verbose-True-2048000-4]>
+    <Function test_file_logging[info-True-2560000-5]>
+    <Function test_file_logging[warning-True-3072000-6]>
+    <Function test_file_logging[error-True-3584000-7]>
+    <Function test_file_logging[verbose-True-512000000-10001]>
+  <Module test_cbl_reserve_properties.py>
+    <Function test_reserve_property>
+  <Module test_channel_revocation.py>
+    <Function test_user_removed_from_channel_basic[pull]>
+    <Function test_user_removed_from_channel_basic[push]>
+    <Function test_user_removed_from_channel_basic[pushAndPull]>
+    <Function test_user_removed_from_channel_with_doc_mutation[pull]>
+    <Function test_user_removed_from_channel_with_doc_mutation[push]>
+    <Function test_user_removed_from_channel_with_doc_mutation[pushAndPull]>
+    <Function test_user_removed_from_role[pull]>
+    <Function test_user_removed_from_role[push]>
+    <Function test_user_removed_from_role[pushAndPull]>
+    <Function test_users_role_revoked[pull]>
+    <Function test_users_role_revoked[push]>
+    <Function test_users_role_revoked[pushAndPull]>
+    <Function test_auto_purge_config_settings[no_flag]>
+    <Function test_auto_purge_config_settings[enabled]>
+    <Function test_auto_purge_config_settings[disabled]>
+    <Function test_auto_purge_config_with_removal_type[doc_removed_from_channel]>
+    <Function test_auto_purge_config_with_removal_type[user_removed_from_channel]>
+    <Function test_auto_purge_notification[enabled]>
+    <Function test_auto_purge_notification[disabled]>
+    <Function test_auto_purge_with_pull_filtering[disabled]>
+    <Function test_auto_purge_with_pull_filtering[enabled]>
+    <Function test_user_reassigned_to_channel_pull[pull]>
+    <Function test_user_reassigned_to_channel_pull[pushAndPull]>
+    <Function test_user_reassigned_to_channel_push[False]>
+    <Function test_user_reassigned_to_channel_push[True]>
+    <Function test_tombstoned_doc_auto_purge>
+    <Function test_resurrected_doc_auto_purge[True-tombstone-api]>
+    <Function test_resurrected_doc_auto_purge[True-tombstone-sdk]>
+    <Function test_resurrected_doc_auto_purge[False-tombstone-api]>
+    <Function test_resurrected_doc_auto_purge[False-tombstone-sdk]>
+    <Function test_resurrected_doc_auto_purge[True-purge-api]>
+    <Function test_resurrected_doc_auto_purge[True-purge-sdk]>
+    <Function test_resurrected_doc_auto_purge[False-purge-api]>
+    <Function test_resurrected_doc_auto_purge[False-purge-sdk]>
+    <Function test_role_ressignment_end_to_end>
+  <Module test_concurrency.py>
+    <Function test_replication_with_concurrencyControl_sameDocId_createUpdate[lastWriteWins]>
+    <Function test_replication_with_concurrencyControl_sameDocId_createUpdate[failOnConflict]>
+    <Function test_replication_with_concurrencyControl_deleteSameDocId[lastWriteWins]>
+    <Function test_replication_with_concurrencyControl_deleteSameDocId[failOnConflict]>
+    <Function test_replication_with_concurrencyControl_sgCBL_sameDocId[lastWriteWins]>
+    <Function test_replication_with_concurrencyControl_sgCBL_sameDocId[failOnConflict]>
+  <Module test_custom_conflicts.py>
+    <Function test_local_wins_custom_conflicts[pull]>
+    <Function test_local_wins_custom_conflicts[push_pull]>
+    <Function test_remote_wins_custom_conflicts[pull]>
+    <Function test_remote_wins_custom_conflicts[push_pull]>
+    <Function test_null_wins_custom_conflicts[pull]>
+    <Function test_null_wins_custom_conflicts[push_pull]>
+    <Function test_merge_wins_custom_conflicts[pull]>
+    <Function test_merge_wins_custom_conflicts[push_pull]>
+    <Function test_incorrect_doc_id_custom_conflicts_resolution[pull]>
+    <Function test_incorrect_doc_id_custom_conflicts_resolution[push_pull]>
+    <Function test_non_blocking_custom_conflicts_resolution[pull]>
+    <Function test_non_blocking_custom_conflicts_resolution[push_pull]>
+    <Function test_stop_replicator_before_ccr_completes>
+    <Function test_delete_not_wins_custom_conflicts[pull]>
+    <Function test_delete_not_wins_custom_conflicts[push_pull]>
+    <Function test_exception_thrown_custom_conflicts[pull]>
+    <Function test_exception_thrown_custom_conflicts[push_pull]>
+  <Module test_database.py>
+    <Function test_databaseEncryption[encrypting-password]>
+    <Function test_databaseEncryption[123]>
+    <Function test_databaseEncryption[****&&&]>
+    <Function test_databaseEncryption[1*rt]>
+    <Function test_invalidEncryption[wrong_password]>
+    <Function test_invalidEncryption[None]>
+    <Function test_updateDBEncryptionKey>
+    <Function test_DBEncryptionKey_withCompact>
+    <Function test_removeDBEncryptionKey>
+    <Function test_copy_prebuilt_database[False]>
+    <Function test_copy_prebuilt_database[True]>
+    <Function test_db_close_on_active_replicators>
+    <Function test_db_close_on_active_replicator_and_live_query>
+    <Function test_db_delete_on_active_replicators>
+    <Function test_db_delete_on_active_replicator_and_live_query>
+  <Module test_delta_sync.py>
+    <Function test_delta_sync_replication[10-pull-None-True]>
+    <Function test_delta_sync_replication[10-pull-sample_text.txt-True]>
+    <Function test_delta_sync_replication[1-push-golden_gate_large.jpg-True]>
+    <Function test_delta_sync_replication[10-push-None-True]>
+    <Function test_delta_sync_enabled_disabled[10-pull]>
+    <Function test_delta_sync_enabled_disabled[10-push]>
+    <Function test_delta_sync_within_expiry[1-pull]>
+    <Function test_delta_sync_within_expiry[1-push]>
+    <Function test_delta_sync_utf8_strings[1-pull]>
+    <Function test_delta_sync_utf8_strings[1-push]>
+    <Function test_delta_sync_nested_doc[1-push]>
+    <Function test_delta_sync_dbWorker>
+    <Function test_delta_sync_larger_than_doc[1-pull]>
+    <Function test_delta_sync_larger_than_doc[1-push]>
+    <Function test_delta_sync_on_community_edition[10-pushAndPull-None-True]>
+    <Function test_delta_sync_on_community_edition[10-pull-sample_text.txt-True]>
+    <Function test_delta_sync_with_no_deltas[cbl-cbl]>
+    <Function test_delta_sync_with_no_deltas[sgw-cbl]>
+    <Function test_delta_sync_with_no_deltas[cbl-sgw]>
+    <Function test_delta_sync_with_no_deltas[sgw-sgw]>
+  <Module test_no_conflicts_cbl.py>
+    <Function test_no_conflicts_enabled>
+    <Function test_no_conflicts_enabled_with_revs_limit[sync_gateway_revs_conflict_configurable-10-1]>
+    <Function test_no_conflicts_enabled_with_revs_limit[sync_gateway_revs_conflict_configurable-10-10]>
+    <Function test_no_conflicts_enabled_with_revs_limit[sync_gateway_revs_conflict_configurable-100-25]>
+    <Function test_no_conflicts_update_with_revs_limit[sync_gateway_revs_conflict_configurable-10-25]>
+    <Function test_no_conflicts_update_with_revs_limit[sync_gateway_revs_conflict_configurable-100-35]>
+    <Function test_no_conflicts_update_with_revs_limit[sync_gateway_revs_conflict_configurable-100-50]>
+    <Function test_migrate_conflicts_to_noConflicts_CBL[sync_gateway_revs_conflict_configurable-10-10]>
+    <Function test_migrate_conflicts_to_noConflicts_CBL[sync_gateway_revs_conflict_configurable-100-10]>
+    <Function test_migrate_conflicts_to_noConflicts_CBL[sync_gateway_revs_conflict_configurable-500-5]>
+    <Function test_cbl_no_conflicts_sgAccel_added[sync_gateway_revs_conflict_configurable-10-20]>
+    <Function test_cbl_no_conflicts_sgAccel_added[sync_gateway_revs_conflict_configurable-100-20]>
+    <Function test_cbl_no_conflicts_sgAccel_added[sync_gateway_revs_conflict_configurable-10-500]>
+    <Function test_sg_CBL_updates_concurrently[listener_tests/listener_tests_no_conflicts-10-4]>
+    <Function test_sg_CBL_updates_concurrently[listener_tests/listener_tests_no_conflicts-100-10]>
+    <Function test_sg_CBL_updates_concurrently[listener_tests/listener_tests_no_conflicts-1000-10]>
+    <Function test_multiple_cbls_updates_concurrently_with_push[listener_tests/listener_tests_no_conflicts-10-2]>
+    <Function test_multiple_cbls_updates_concurrently_with_push[listener_tests/listener_tests_no_conflicts-100-10]>
+    <Function test_multiple_cbls_updates_concurrently_with_push[listener_tests/listener_tests_no_conflicts-100-50]>
+    <Function test_multiple_cbls_updates_concurrently_with_pull[listener_tests/listener_tests_no_conflicts-10-2]>
+    <Function test_multiple_cbls_updates_concurrently_with_pull[listener_tests/listener_tests_no_conflicts-1000-10]>
+    <Function test_sg_cbl_updates_concurrently_with_push_pull[listener_tests/listener_tests_no_conflicts-10-2-False]>
+    <Function test_sg_cbl_updates_concurrently_with_push_pull[listener_tests/listener_tests_no_conflicts-10-10-True]>
+    <Function test_sg_cbl_updates_concurrently_with_push_pull[listener_tests/listener_tests_no_conflicts-1000-10-True]>
+    <Function test_CBL_push_without_pull[listener_tests/listener_tests_no_conflicts-10-4]>
+    <Function test_CBL_push_without_pull[listener_tests/listener_tests_no_conflicts-100-10]>
+    <Function test_CBL_push_without_pull[listener_tests/listener_tests_no_conflicts-1000-10]>
+  <Module test_predective_queries.py>
+    <Function test_predictiveQueries_basicInputOutput[four_k]>
+    <Function test_predictiveQueries_basicInputOutput[simple_user]>
+    <Function test_predictiveQueries_basicInputOutput[complex_doc]>
+    <Function test_predictiveQueries_basicInputOutput[simple]>
+    <Function test_predictiveQueries_euclideanCosineDistance[coordinates0-5-25-0.0006851662332328923]>
+    <Function test_predictiveQueries_euclideanCosineDistance[coordinates1-14.317821063276-205-0.319548900632722]>
+    <Function test_predictiveQueries_euclideanCosineDistance[coordinates2-None-None-None]>
+    <Function test_predictiveQueries_euclideanCosineDistance[coordinates3-None-None-None]>
+    <Function test_predictiveQueries_euclideanCosineDistance[coordinates4-None-None-None]>
+    <Function test_predictiveQueries_euclideanCosineDistance[coordinates5-35.86084215408221-1286-0.43620415177230565]>
+    <Function test_predictiveQueries_euclideanCosineDistance[coordinates6-86.75828490697589-7527-1.5677405830676259]>
+    <Function test_predictiveQueries_euclideanCosineDistance[coordinates7-None-None-None]>
+  <Module test_replication.py>
+    <Function test_replication_configuration_valid_values[10-True-True]>
+    <Function test_replication_configuration_with_pull_replication[basic-None]>
+    <Function test_replication_configuration_with_push_replication[basic-None]>
+    <Function test_replication_push_replication_without_authentication>
+    <Function test_replication_push_replication_invalid_authentication[basic-invalid_user-password-None-None]>
+    <Function test_replication_push_replication_invalid_authentication[session-None-None-invalid_session-invalid_cookie]>
+    <Function test_replication_configuration_with_filtered_doc_ids>
+    <Function test_replication_configuration_with_headers>
+    <Function test_CBL_tombstone_doc[10-False]>
+    <Function test_CBL_tombstone_doc[1000-False]>
+    <Function test_CBL_for_purged_doc[listener_tests/listener_tests_no_conflicts-purge]>
+    <Function test_CBL_for_purged_doc[listener_tests/listener_tests_no_conflicts-expire]>
+    <Function test_replication_purge_in_CBL[listener_tests/listener_tests_no_conflicts-purge]>
+    <Function test_replication_delete_in_CBL[listener_tests/listener_tests_no_conflicts]>
+    <Function test_CBL_push_pull_with_sgAccel_down[listener_tests/listener_tests_no_conflicts-10-4]>
+    <Function test_CBL_push_pull_with_sgAccel_down[listener_tests/listener_tests_no_conflicts-100-10]>
+    <Function test_CBL_push_pull_with_sgAccel_down[listener_tests/listener_tests_no_conflicts-1000-10]>
+    <Function test_initial_pull_replication_background_apprun[1000-True-False]>
+    <Function test_initial_pull_replication_background_apprun[1000-False-False]>
+    <Function test_push_replication_with_backgroundApp[100-True-False]>
+    <Function test_push_replication_with_backgroundApp[10000-False-False]>
+    <Function test_replication_wrong_blip>
+    <Function test_default_conflict_scenario_delete_wins[sg-True-1]>
+    <Function test_default_conflict_scenario_delete_wins[cbl-True-1]>
+    <Function test_default_conflict_scenario_delete_wins[sg-False-1]>
+    <Function test_default_conflict_scenario_delete_wins[cbl-False-1]>
+    <Function test_default_conflict_scenario_delete_wins[sg-False-5]>
+    <Function test_default_conflict_scenario_delete_wins[cbl-False-5]>
+    <Function test_default_conflict_scenario_highRevGeneration_wins[sg-True]>
+    <Function test_default_conflict_scenario_highRevGeneration_wins[cbl-True]>
+    <Function test_default_conflict_scenario_highRevGeneration_wins[sg-False]>
+    <Function test_default_conflict_scenario_highRevGeneration_wins[cbl-False]>
+    <Function test_default_conflict_scenario_highRevID_wins[sg-True]>
+    <Function test_default_conflict_scenario_highRevID_wins[cbl-True]>
+    <Function test_default_conflict_scenario_highRevID_wins[sg-False]>
+    <Function test_default_conflict_scenario_highRevID_wins[cbl-False]>
+    <Function test_default_conflict_with_two_conflictsAndTomstone>
+    <Function test_default_conflict_with_oneTombstone_conflict>
+    <Function test_default_conflict_with_three_conflicts>
+    <Function test_default_conflict_withConflicts_and_sgOffline>
+    <Function test_default_conflict_withConflicts_withChannels>
+    <Function test_CBL_push_pull_with_sg_down>
+    <Function test_replication_with_3Channels[1cbl_1sg-10-True]>
+    <Function test_replication_with_3Channels[3cbl_1sg-10-True]>
+    <Function test_replication_with_3Channels[1cbl_1sg-10-False]>
+    <Function test_replication_with_3Channels[3cbl_1sg-10-False]>
+    <Function test_replication_with_privatePublicChannels>
+    <Function test_replication_withChannels1_withMultipleSgDBs[2cbl_2sg]>
+    <Function test_replication_withChannels1_withMultipleSgDBs[1cbl_2sg]>
+    <Function test_replication_withMultipleBuckets[3cbl_3sg]>
+    <Function test_replication_withMultipleBuckets[1cbl_3sg]>
+    <Function test_replication_1withMultipleBuckets_deleteOneBucket>
+    <Function test_replication_multipleChannels_withFilteredDocIds>
+    <Function test_resetCheckpointWithPurge[one_way-sg]>
+    <Function test_resetCheckpointWithPurge[two_way-sg]>
+    <Function test_resetCheckpointWithPurge[one_way-cbl]>
+    <Function test_resetCheckpointWithPurge[two_way-cbl]>
+    <Function test_resetCheckpointFailure>
+    <Function test_resetCheckpointWithUpdate[one_way-sg]>
+    <Function test_resetCheckpointWithUpdate[two_way-sg]>
+    <Function test_resetCheckpointWithUpdate[one_way-cbl]>
+    <Function test_resetCheckpointWithUpdate[two_way-cbl]>
+    <Function test_CBL_SG_replication_with_rev_messages[sync_gateway_rev_cache_size5-purge]>
+    <Function test_replication_push_replication_guest_enabled[basic]>
+    <Function test_replication_push_replication_guest_enabled[session]>
+    <Function test_doc_removal_from_channel>
+    <Function test_doc_removal_with_multipleChannels>
+    <Function test_roles_replication>
+    <Function test_channel_update_replication>
+    <Function test_replication_behavior_with_channelRole_modification>
+    <Function test_replication_pull_from_empty_database[None-False]>
+    <Function test_replication_pull_from_empty_database[generate_2_png_100_100-True]>
+    <Function test_replication_with_custom_retries[500-True-2-25-pull]>
+    <Function test_replication_with_custom_retries[500-True-3-20-push]>
+    <Function test_replication_with_custom_retries[500-True-6-15-pull-push]>
+    <Function test_replication_with_custom_timeout[500-False-1-pull-push]>
+    <Function test_replication_reset_retires[500-True-17-10-pull-push]>
+    <Function test_replication_reset_retires[500-True-17-10-push]>
+  <Module test_replication_eventing.py>
+    <Function test_replication_eventing_status[10]>
+    <Function test_replication_eventing_status[100]>
+    <Function test_replication_eventing_status[1000]>
+    <Function test_push_replication_error_event[10]>
+    <Function test_push_replication_error_event[1000]>
+    <Function test_replication_access_revoke_event[10]>
+    <Function test_replication_access_revoke_event[100]>
+    <Function test_replication_delete_event[10]>
+    <Function test_replication_delete_event[100]>
+    <Function test_push_replication_for_20mb_doc[None-None]>
+    <Function test_push_replication_for_20mb_doc[load_from_data_dir-attachment_file_list1]>
+    <Function test_push_replication_for_20mb_doc[generate_2_png_100_100-None]>
+  <Module test_replication_filtering.py>
+    <Function test_replication_push_filtering[10]>
+    <Function test_replication_push_filtering[100]>
+    <Function test_replication_push_filtering[1000]>
+    <Function test_replication_pull_filtering[10]>
+    <Function test_replication_pull_filtering[100]>
+    <Function test_replication_pull_filtering[1000]>
+    <Function test_replication_filter_deleted_document[10]>
+    <Function test_replication_filter_deleted_document[100]>
+    <Function test_replication_filter_deleted_document[1000]>
+    <Function test_replication_filter_access_revoke_document[10]>
+    <Function test_replication_filter_access_revoke_document[100]>
+    <Function test_replication_filter_access_revoke_document[1000]>
+    <Function test_filter_retrieval_with_replication_restart[10]>
+    <Function test_filter_retrieval_with_replication_restart[100]>
+    <Function test_filter_retrieval_with_replication_restart[1000]>
+  <Module test_replication_for_blob.py>
+    <Function test_doc_update_replication_with_blob_no_touch>
+    <Function test_blob_contructor_replication[byte_array]>
+    <Function test_blob_contructor_replication[stream]>
+    <Function test_blob_contructor_replication[file_url]>
+    <Function test_blob_replication_with_update>
+  <Module test_replicator_encryption_hook.py>
+    <Function test_basic_replication_with_encryption>
+    <Function test_replication_with_error>
+    <Function test_delta_sync_with_encryption[2-3-pull]>
+    <Function test_delta_sync_with_encryption[2-3-push]>
+    <Function test_encryption_with_two_dbs>
+    <Function test_replication_complex_doc_encryption>
+  <Module test_sg_attachments.py>
+    <Function test_delete_docs_with_attachments[cbl-cbl-100]>
+    <Function test_delete_docs_with_attachments[sg-cbl-10]>
+    <Function test_doc_with_many_attachments>
+    <Function test_restart_sg_creating_attachments>
+    <Function test_attachment_expire_purged_doc[purge]>
+    <Function test_attachment_expire_purged_doc[expire]>
+  <Module test_transactions.py>
+    <Function test_transactions_insert_replace_remove_rollback>
+    <Function test_transactions_with_latest_updates>
+    <Function test_transactions_with_tombstoned_docs>
+    <Function test_transactions_with_simultaneous_doc_updates_docresurrection>
+  <Module test_xattrs_grants_with_cbl.py>
+    <Function test_xattrs_grant_automatic_imports[False]>
+    <Function test_reassigning_channels_using_user_xattrs>
+    <Function test_tombstone_docs_via_sdk[delete]>
+    <Function test_tombstone_docs_via_sdk[expire]>
+
+=============================== warnings summary ===============================
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.ce_sanity - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.database - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.properties - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.channel_revocation - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.community - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.custom_conflict - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.hydrogen - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.predictivequeries - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.backgroundapp - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.callback - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.channels - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.attachment_cleanup - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.transactions - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331
+  /Users/barkha.goyal/Desktop/mobile-testkit/venv/lib/python3.9/site-packages/_pytest/mark/structures.py:331: PytestUnknownMarkWarning: Unknown pytest.mark.cbl - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/latest/mark.html
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/latest/warnings.html
+ generated xml file: /Users/barkha.goyal/Desktop/mobile-testkit/results/results.xml 
+ generated html file: /Users/barkha.goyal/Desktop/mobile-testkit/results/report.html 
+========================= 14 warnings in 0.32 seconds ==========================

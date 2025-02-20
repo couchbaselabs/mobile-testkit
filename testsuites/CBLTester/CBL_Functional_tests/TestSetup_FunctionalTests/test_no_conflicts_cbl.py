@@ -199,8 +199,8 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
 @pytest.mark.conflicts
 @pytest.mark.noconflicts
 @pytest.mark.replication
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("java"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1169")
+# @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("java"),
+#                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1169")
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 10, 25),
     ('sync_gateway_revs_conflict_configurable', 100, 35),

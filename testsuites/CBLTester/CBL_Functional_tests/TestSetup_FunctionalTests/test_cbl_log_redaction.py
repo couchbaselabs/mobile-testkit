@@ -20,8 +20,8 @@ from keywords.constants import RBAC_FULL_ADMIN
     ("auto password"),
     pytest.param("validpassword", marks=pytest.mark.ce_sanity),
 ])
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("android"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1174")
+# @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("android"),
+#                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1174")
 def test_mask_password_in_logs(params_from_base_test_setup, password):
     """
         @summary:
@@ -83,8 +83,8 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     "auto password",
     "invalidpassword",
 ])
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("android"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1173")
+# @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("android"),
+#                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1173")
 def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, invalid_password):
     """
         @summary:
