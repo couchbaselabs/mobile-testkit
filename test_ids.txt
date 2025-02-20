@@ -7,10 +7,8 @@ collected 280 items
 <Package /Users/barkha.goyal/Desktop/mobile-testkit/testsuites/CBLTester/CBL_Functional_tests/TestSetup_FunctionalTests>
   <Module test_cbl_log_redaction.py>
     <Function test_mask_password_in_logs[auto-password]>
-    <Function test_mask_password_in_logs[auto password]>
     <Function test_mask_password_in_logs[validpassword]>
     <Function test_verify_invalid_mask_password_in_logs[auto-password]>
-    <Function test_verify_invalid_mask_password_in_logs[auto password]>
     <Function test_verify_invalid_mask_password_in_logs[invalidpassword]>
   <Module test_cbl_logging.py>
     <Function test_file_logging[verbose-True-512000000-10000]>
