@@ -81,7 +81,7 @@ class TestDatabase(object):
 
         db = self.db_obj.create(random_string(6))
         # Exception checking when document id is null
-        err_msg = "Bad Request"
+        err_msg = "\"document\" is null"
         try:
             self.db_obj.delete(database=db, document=None)
             assert 0
