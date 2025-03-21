@@ -60,13 +60,14 @@ class TestDatabase(object):
         assert doc_id == -1
 
     def test_save_document_exception(self):
-        if self.liteserv_platform not in ["android",
-                                          "java-macosx", "java-msft", "java-ubuntu", "java-centos",
-                                          "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        if self.liteserv_platform not in [
+                "android", "java-macosx", "java-msft", "java-ubuntu",
+                "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu",
+                "javaws-centos"]:
             pytest.skip("Test only applicable for android and java platforms")
 
         db = self.db_obj.create(random_string(6))
-        err_msg = "Bad Request"
+        err_msg = "\"document\" is null"
         try:
             self.db_obj.saveDocument(db, None)
             assert 0
