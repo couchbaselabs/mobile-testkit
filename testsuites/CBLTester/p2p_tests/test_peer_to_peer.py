@@ -1234,7 +1234,7 @@ def test_peer_to_peer_tries(params_from_base_test_setup, num_of_docs, continuous
     else:
         """
         for push_pull / push replication, server_docs_count will be equal to 2*num_of_docs,
-        since docs are replicated to both client and server / server only, 
+        since docs are replicated to both client and server / server only,
         respectively.
         """
         assert server_docs_count == 2 * num_of_docs, (
