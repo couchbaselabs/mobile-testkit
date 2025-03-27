@@ -1168,8 +1168,8 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
 @pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType, retries, interval", [
-    (500, True, "push", "MessageEndPoint", 9, 9),
-    (2000, True, "pull-push", "MessageEndPoint", 13, 8),
+    (1000, True, "push", "MessageEndPoint", 9, 9),
+    (1000, True, "pull-push", "MessageEndPoint", 13, 8),
     (1000, True, "pull", "MessageEndPoint", 9, 20)
 ])
 def test_peer_to_peer_tries(params_from_base_test_setup, num_of_docs, continuous, replicator_type, endPointType, retries, interval):
@@ -1224,7 +1224,21 @@ def test_peer_to_peer_tries(params_from_base_test_setup, num_of_docs, continuous
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     log_info("server_docs_count: {}".format(server_docs_count))
     log_info("client_docs_count: {}".format(db_obj_server.getCount(cbl_db_server)))
-    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
+    if replicator_type == "pull":
+        """
+        pull replication will replicate only to the client,
+        so server_docs_count will be equal to num_of_docs
+        """
+        assert server_docs_count == num_of_docs, (
+            "Number of docs is not equivalent to number of docs in server ")
+    else:
+        """
+        for push_pull / push replication, server_docs_count will be equal to 2*num_of_docs,
+        since docs are replicated to both client and server / server only, 
+        respectively.
+        """
+        assert server_docs_count == 2 * num_of_docs, (
+            "Number of docs is not equivalent to number of docs in server ")
     replicator.stop(repl)
     peer_to_peer_server.server_stop(message_url_tcp_listener, endPointType)
 
