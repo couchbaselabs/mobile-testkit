@@ -240,7 +240,7 @@ def test_peer_to_peer_tls_self_signed_mutiple_clients(params_from_base_test_setu
         1. Start the server with the self signed certs using the create identity api.
         2. Start replication with AcceptOnlySelfSignedServerCertificate.
         3. Verify replication is completed.
-        4. Verify all docs got replicated on server
+        4. Verify all docs got replicated on server.
     """
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
@@ -298,7 +298,9 @@ def test_peer_to_peer_tls_self_signed_mutiple_clients(params_from_base_test_setu
     assert total2 == completed2, "replication from client to server did not completed " + str(
         total2) + " not equal to " + str(completed2)
     server_docs_count = db_obj_server.getCount(cbl_db_server)
-    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
+    client_docs_count = db_obj_client.getCount(cbl_db_client)
+    assert server_docs_count == client_docs_count, (
+        "Post replication server doc count is not correct")
     replicator.stop(repl)
     replicator.stop(repl2)
     peerToPeer_server.server_stop(url_listener, replicator_type)
@@ -318,7 +320,7 @@ def test_peer_to_peer_tls_any_self_signed_certs_create(params_from_base_test_set
         1. Start the server with the self signed certs using the create identity api.
         2. Start replication with AcceptOnlySelfSignedServerCertificate.
         3. Verify replication is completed.
-        4. Verify all docs got replicated on server
+        4. Verify all docs got replicated on server.
     """
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
@@ -367,6 +369,8 @@ def test_peer_to_peer_tls_any_self_signed_certs_create(params_from_base_test_set
     assert total == completed, "replication from client to server did not completed " + str(
         total) + " not equal to " + str(completed)
     server_docs_count = db_obj_server.getCount(cbl_db_server)
-    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
+    client_docs_count = db_obj_client.getCount(cbl_db_client)
+    assert server_docs_count == client_docs_count, (
+        "Post replication server doc count is not correct")
     replicator.stop(repl)
     peerToPeer_server.server_stop(url_listener, replicator_type)
