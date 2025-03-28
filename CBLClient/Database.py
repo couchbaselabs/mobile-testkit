@@ -1,4 +1,5 @@
 import uuid
+import os
 
 from CBLClient.Client import Client
 from CBLClient.Collection import Collection
@@ -253,7 +254,12 @@ class Database(object):
                 else:
                     types.verify_is_callable(attachments_generator)
                     attachments = attachments_generator()
-                doc_body["_attachments"] = {att.name: {"data": att.data} for att in attachments}
+                doc_body["_attachments"] = {
+                    att.name: {
+                        "path": os.path.abspath(f"resources/data/{att.name}")
+                    }
+                    for att in attachments
+                }
 
             if id_prefix is None:
                 doc_id = str(uuid.uuid4())

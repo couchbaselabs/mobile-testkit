@@ -313,8 +313,13 @@ def test_peer_to_peer_tls_self_signed_mutiple_clients(params_from_base_test_setu
     (True, "push", "URLEndPoint", False),
     (False, "push_pull", "URLEndPoint", False),
 ])
-def test_peer_to_peer_tls_any_self_signed_certs_create(params_from_base_test_setup, server_setup, continuous, replicator_type,
-                                                       endPointType, with_certs):
+def test_peer_to_peer_tls_any_self_signed_certs_create(
+        params_from_base_test_setup,
+        server_setup,
+        continuous,
+        replicator_type,
+        endPointType,
+        with_certs):
     """
         @summary:
         1. Start the server with the self signed certs using the create identity api.
