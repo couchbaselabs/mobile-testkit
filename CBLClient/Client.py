@@ -16,39 +16,51 @@ class Client(object):
     def invokeMethod(self, method, args=None, ignore_deserialize=False):
         resp = Response()
         try:
-            # Create body from args.
+            # Create body from args
             body = {}
-
             url = self.base_url + "/" + method
 
             if args:
                 for k, v in args:
                     val = ValueSerializer.serialize(v)
                     body[k] = val
-            # Create connection to method endpoint.
+
+            # Create connection to method endpoint
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
             resp = self.session.post(url, data=json.dumps(body))
+
+            # Log full response details for debugging
+            log_info(f"Request URL: {url}")
+            log_info(f"Request Body: {json.dumps(body, indent=2)}")
+            log_info(f"Response Code: {resp.status_code}")
+            log_info(f"Raw Response Content: {resp.content}")
+
             resp.raise_for_status()
-            responseCode = resp.status_code
-            if responseCode == 200:
+
+            if resp.status_code == 200:
                 result = resp.content
-                if ignore_deserialize:
-                    return result
                 if isinstance(result, bytes):
                     result = result.decode('utf8', 'ignore')
-                if len(result) < 25:
-                    # Only print short messages
-                    log_info("For url: {} Got response: {}".format(url, result))
+
+                # Print full message regardless of length
+                log_info("Full Server Response: {}".format(result))
+
+                # Check for null or invalid configs
+                if "@null" in result or "null_java" in result:
+                    raise Exception(f"Invalid DB Configuration: {result}")
+
+                # Deserialize properly
                 return ValueSerializer.deserialize(result)
+
         except Exception as err:
+            error_message = f"Exception: {str(err)}"
             if resp.content:
                 cont = resp.content
                 if isinstance(resp.content, bytes):
                     cont = resp.content.decode('utf8', 'ignore')
-                raise Exception(str(err) + "Bad Request" + cont)
-            else:
-                raise Exception(str(err))
+                error_message += f"\nServer Response: {cont}"
+            raise Exception(error_message)
 
     def release(self, obj):
         args = Args()
