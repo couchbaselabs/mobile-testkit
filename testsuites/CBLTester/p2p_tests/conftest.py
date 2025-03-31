@@ -298,7 +298,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                 db_config = db.configure(password=encryption_password)
             else:
                 db_config = db.configure()
+
+            # Add logging for debugging
+            log_info(f"DB Config: {db_config}")
+            log_info(f"DB Config Type: {type(db_config)}")
+            # Add more logging to capture the server response
             cbl_db = db.create(db_name, db_config)
+            log_info(f"Create DB Response: {cbl_db}")
+
             cbl_db_list.append(cbl_db)
             log_info("Getting the database name")
             assert db.getName(cbl_db) == db_name
