@@ -1,6 +1,7 @@
 import time
 import datetime
 import pytest
+import json
 
 from keywords.utils import log_info, clear_resources_pngs, set_device_enabled
 from keywords.TestServerFactory import TestServerFactory
@@ -295,7 +296,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
             log_info("Creating a Database {} at the test setup".format(db_name))
             if enable_encryption:
-                db_config = db.configure(password=encryption_password)
+                # Send the properly formatted request
+                db_config = db.configure(password=json.dumps({
+                    "password": encryption_password  # No extra quotes
+                }))
             else:
                 db_config = db.configure()
 

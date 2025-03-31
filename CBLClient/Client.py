@@ -40,6 +40,8 @@ class Client(object):
 
             if resp.status_code == 200:
                 result = resp.content
+                if ignore_deserialize:
+                    return result
                 if isinstance(result, bytes):
                     result = result.decode('utf8', 'ignore')
 

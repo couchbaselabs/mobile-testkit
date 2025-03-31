@@ -31,6 +31,7 @@ class Database(object):
         if conflictResolver is not None:
             args.setMemoryPointer("conflictResolver", conflictResolver)
         if password is not None:
+            log_info("password: {}".format(password))
             args.setString("password", password)
         return self._client.invokeMethod("databaseConfiguration_configure", args)
 
