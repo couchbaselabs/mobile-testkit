@@ -1,7 +1,6 @@
 import time
 import datetime
 import pytest
-import json
 
 from keywords.utils import log_info, clear_resources_pngs, set_device_enabled
 from keywords.TestServerFactory import TestServerFactory
@@ -296,17 +295,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
             log_info("Creating a Database {} at the test setup".format(db_name))
             if enable_encryption:
-                # Send the properly formatted request
-                db_config = db.configure(password=json.dumps({
-                    "password": encryption_password  # No extra quotes
-                }))
+                db_config = db.configure(password=encryption_password)
             else:
                 db_config = db.configure()
 
             # Add logging for debugging
             log_info(f"DB Config: {db_config}")
             log_info(f"DB Config Type: {type(db_config)}")
-            # Add more logging to capture the server response
             cbl_db = db.create(db_name, db_config)
             log_info(f"Create DB Response: {cbl_db}")
 
