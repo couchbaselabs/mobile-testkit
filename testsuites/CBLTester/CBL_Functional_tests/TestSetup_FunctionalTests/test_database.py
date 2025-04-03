@@ -363,6 +363,7 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     else:
         prebuilt_db_path = "Databases/{}.cblite2".format(db_prefix)
 
+    log_info("Attempting to get prebuilt DB from path: {}".format(prebuilt_db_path))
     old_db_path = db.get_pre_built_db(prebuilt_db_path)
     db.copyDatabase(old_db_path, cbl_db_name, db_config)
     cbl_db1 = db.create(cbl_db_name, db_config)

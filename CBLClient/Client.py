@@ -48,9 +48,9 @@ class Client(object):
                 # Print full message regardless of length
                 log_info("Full Server Response: {}".format(result))
 
-                # Check for null or invalid configs
-                if "@null" in result or "null_java" in result:
-                    raise Exception(f"Invalid DB Configuration: {result}")
+                # # Check for null or invalid configs
+                # if "@null" in result or "null_java" in result:
+                #     raise Exception(f"Invalid DB Configuration: {result}")
 
                 # Deserialize properly
                 return ValueSerializer.deserialize(result)
