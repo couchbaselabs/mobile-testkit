@@ -32,9 +32,7 @@ class Client(object):
 
             # Log full response details for debugging
             log_info(f"Request URL: {url}")
-            log_info(f"Request Body: {json.dumps(body, indent=2)}")
             log_info(f"Response Code: {resp.status_code}")
-            log_info(f"Raw Response Content: {resp.content}")
 
             resp.raise_for_status()
 
