@@ -1139,9 +1139,15 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
             url_listener_port
         )
         repl = wait_until_replicator_completes.result()
+        log_info(f"Restarting with DB handle: {cbl_db_server}")
+        log_info(f"DB type: {type(cbl_db_server)}")
+        log_info(f"endPointType: {endPointType}")
+        log_info(f"listener: {listener}")
+        log_info(f"restart_server: {restart_server}")
         try:
             listener = restart_server.result()
         except Exception as err:
+            log_info(f"Error: {err}")
             if 'Address already in use' in str(err):
                 time.sleep(500)
                 listener = restart_server.result()
