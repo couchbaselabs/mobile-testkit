@@ -1266,6 +1266,7 @@ def restart_passive_peer(peer_to_peer_server, listener, cbl_db_server, listener_
                 raise
     raise Exception("Failed to restart listener after multiple retries")
 
+
 def updata_bulk_docs_custom(db_obj, database, number_of_updates=1, param="none", doc_ids=[]):
     updated_docs = {}
     if not doc_ids:
