@@ -1237,14 +1237,28 @@ def client_start_replicate(peerToPeer_client, db_obj_client, param, server_host,
 
 
 def restart_passive_peer(peer_to_peer_server, listener, cbl_db_server, listener_type, port):
+    log_info("Stopping listener...")
     peer_to_peer_server.server_stop(listener, listener_type)
-    if listener_type == "URLEndPoint":
-        # This is require to get the port freed up
-        listener = peer_to_peer_server.server_start(cbl_db_server, port)
-    else:
-        listener = peer_to_peer_server.message_listener_start(cbl_db_server)
-    return listener
-
+    time.sleep(3)  # Give OS time to release the port
+    max_retries = 5
+    retry_delay = 2
+    for i in range(max_retries):
+        try:
+            log_info(f"Attempt {i + 1} to restart listener...")
+            if listener_type == "URLEndPoint":
+                listener = peer_to_peer_server.server_start(cbl_db_server, port)
+            else:
+                listener = peer_to_peer_server.message_listener_start(cbl_db_server)
+            log_info("Listener restarted successfully.")
+            return listener
+        except Exception as err:
+            if "Address already in use" in str(err):
+                log_info(f"Port still in use, waiting {retry_delay}s before retrying...")
+                time.sleep(retry_delay)
+            else:
+                log_info(f"Listener restart failed with unexpected error: {err}")
+                raise
+    raise Exception("Failed to restart listener after multiple retries")
 
 def updata_bulk_docs_custom(db_obj, database, number_of_updates=1, param="none", doc_ids=[]):
     updated_docs = {}
