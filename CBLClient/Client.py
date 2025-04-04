@@ -43,9 +43,6 @@ class Client(object):
                 if isinstance(result, bytes):
                     result = result.decode('utf8', 'ignore')
 
-                # Print full message regardless of length
-                log_info("Full Server Response: {}".format(result))
-
                 # # Check for null or invalid configs
                 # if "@null" in result or "null_java" in result:
                 #     raise Exception(f"Invalid DB Configuration: {result}")
