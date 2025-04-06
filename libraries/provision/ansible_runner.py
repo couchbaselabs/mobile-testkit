@@ -13,7 +13,7 @@ class AnsibleRunner:
         self.provisiong_config = config
 
     def run_ansible_playbook(self, script_name, extra_vars={}, subset=constants.DEFAULT_SUBSET):
-        sg_platform = "debian"
+        sg_platform = "linux"
         if os.path.isfile(self.provisiong_config + ".json"):
             sg_platform = get_sg_platform(self.provisiong_config)
         if "debian" in sg_platform.lower():
