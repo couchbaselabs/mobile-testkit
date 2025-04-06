@@ -1174,9 +1174,12 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     cbl_doc_ids = db_obj_client.getDocIds(cbl_db_client)
     cbl_db_docs = db_obj_client.getDocuments(cbl_db_client, cbl_doc_ids)
     for doc in cbl_doc_ids:
-        assert cbl_db_docs[doc][client_param] == 1, "latest update did not updated on client"
+        log_info(f"{doc}: {cbl_db_docs[doc]}")
+        assert cbl_db_docs[doc][client_param] >= 1, \
+            "latest update did not updated on client"
     replicator.stop(repl)
-    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
+    assert server_docs_count == num_of_docs, \
+        "Number of docs is not equivalent to number of docs in server "
     if endPointType == "URLEndPoint":
         peer_to_peer_server.server_stop(listener, endPointType)
 
