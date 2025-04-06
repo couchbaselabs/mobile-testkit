@@ -1146,6 +1146,16 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
         log_info(f"restart_server: {restart_server}")
         try:
             listener = restart_server.result()
+            if endPointType == "MessageEndPoint":
+                log_info("Restarting replicator for MessageEndPoint...")
+                replicator.stop(repl)
+                time.sleep(2)
+                repl = client_start_replicate(
+                    peerToPeer_client, db_obj_client, client_param,
+                    server_host,
+                    db_name_server, cbl_db_client, continuous, replicator_type,
+                    endPointType, url_listener_port
+                )
         except Exception as err:
             log_info(f"Error: {err}")
             if 'Address already in use' in str(err):
