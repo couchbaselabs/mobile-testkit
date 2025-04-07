@@ -369,8 +369,18 @@ class Replication(object):
                 if err is not None and err != 'nil' and err != -1:
                     if not isContinous:
                         raise Exception("Error while replicating", err)
-                    if is_replicator_in_connection_retry(err) and (cur_timestamp - begin_timestamp) < max_timeout:
-                        log_info("Replicator connection is retrying, please wait ......")
+
+                    # Acceptable errors during retry in continuous mode
+                    transient_errors = ["Connection reset by peer",
+                                        "SocketException",
+                                        "connection refused",
+                                        "failed to connect"]
+                    if any(e.lower() in err.lower() for e in
+                           transient_errors) and (
+                            cur_timestamp - begin_timestamp) < max_timeout:
+                        log_info("Transient network error, replicator will retry...")
+                    elif is_replicator_in_connection_retry(err) and (cur_timestamp - begin_timestamp) < max_timeout:
+                        log_info("Replicator is retrying connection...")
                     else:
                         raise Exception("Error while replicating", err)
 
