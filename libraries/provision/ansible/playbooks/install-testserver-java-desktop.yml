@@ -50,13 +50,13 @@
     ignore_errors: yes
 
   - name: Fix POSIX syntax in daemon_manager.sh (convert [[ to [)
-    ansible.builtin.replace:
+    replace:
       path: ~/javatestserver/daemon_manager.sh
       regexp: '\[\['
       replace: '['
 
   - name: Fix POSIX syntax in daemon_manager.sh (convert ]] to ])
-    ansible.builtin.replace:
+    replace:
       path: ~/javatestserver/daemon_manager.sh
       regexp: '\]\]'
       replace: ']'
