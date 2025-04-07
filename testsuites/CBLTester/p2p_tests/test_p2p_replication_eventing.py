@@ -4,7 +4,7 @@ import random
 from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
-from keywords.utils import get_event_changes, meet_supported_version
+from keywords.utils import get_event_changes, meet_supported_version, log_info
 
 
 @pytest.mark.p2p
@@ -188,7 +188,19 @@ def test_peer_to_peer_push_replication_error_event(
 
     # RESTART message listener if needed
     if endpoint_type == "MessageEndPoint":
-        peer_to_peer_server.message_listener_start(cbl_db_server, url_listener_port)
+        try:
+            log_info("Attempting to start MessageEndpoint listener on server...")
+            peer_to_peer_server.message_listener_start(
+                cbl_db_server, url_listener_port)
+            log_info("MessageEndpoint listener started successfully.")
+        except Exception as e:
+            # If the listener is already running, continue; otherwise re-raise
+            err_msg = str(e).lower()
+            if "already started" in err_msg or "bad request" in err_msg:
+                log_info("MessageEndpoint listener already running; "
+                         "continuing test.")
+            else:
+                raise
 
     # replication and waiting for conflict to create error event
     repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
