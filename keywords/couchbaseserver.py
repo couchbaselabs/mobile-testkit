@@ -922,6 +922,8 @@ class CouchbaseServer:
             elif version.startswith("3.1"):
                 return "couchbase-server-{}_{}_x86_64_{}-{}-rel.deb".format(edition, cbs_platform, version, build_number)
             else:
+                if "debian" in cbs_platform:
+                    return "couchbase-server-{}_{}-{}-linux_amd64.deb".format(edition, version, build_number)
                 return "couchbase-server-{}_{}-{}-{}10_amd64.deb".format(edition, version, build_number, cbs_platform)
         elif "centos" in cbs_platform:
             if version.startswith("3.1.6"):
@@ -931,7 +933,7 @@ class CouchbaseServer:
             else:
                 return "couchbase-server-{}-{}-{}-{}.x86_64.rpm".format(edition, version, build_number, cbs_platform)
 
-    def resolve_cb_nas_url(self, version, build_number, cbs_platform="linux", cbs_ce=False):
+    def resolve_cb_nas_url(self, version, build_number, cbs_platform="debian", cbs_ce=False):
         """
         Resolve a download URL for couchbase server on the internal VPN download site
         Given:
