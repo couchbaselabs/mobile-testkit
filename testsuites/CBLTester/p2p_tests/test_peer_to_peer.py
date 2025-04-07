@@ -923,6 +923,22 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, serv
             cbl1_delete_task.result()
             cbl2_update_task.result()
 
+    # RESTART message listener if needed
+    if endPointType == "MessageEndPoint":
+        try:
+            log_info(
+                "Attempting to start MessageEndpoint listener on server...")
+            peer_to_peer_server.message_listener_start(
+                cbl_db_server, url_listener_port)
+            log_info("MessageEndpoint listener started successfully.")
+        except Exception as e:
+            # If the listener is already running, continue; otherwise re-raise
+            err_msg = str(e).lower()
+            if "already started" in err_msg or "bad request" in err_msg:
+                log_info("MessageEndpoint listener already running; "
+                         "continuing test.")
+            else:
+                raise
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=False, replication_type="push_pull", endPointType=endPointType)  # , authenticator=replicator_authenticator)
     peerToPeer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
