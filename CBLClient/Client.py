@@ -43,11 +43,6 @@ class Client(object):
                 if isinstance(result, bytes):
                     result = result.decode('utf8', 'ignore')
 
-                # # Check for null or invalid configs
-                # if "@null" in result or "null_java" in result:
-                #     raise Exception(f"Invalid DB Configuration: {result}")
-
-                # Deserialize properly
                 return ValueSerializer.deserialize(result)
 
         except Exception as err:
