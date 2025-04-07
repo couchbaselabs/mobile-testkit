@@ -121,8 +121,12 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
     (10, "MessageEndPoint"),
     (100, "MessageEndPoint"),
 ])
-def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, server_setup,
-                                                   num_of_docs, endpoint_type):
+def test_peer_to_peer_push_replication_error_event(
+    params_from_base_test_setup,
+    server_setup,
+    num_of_docs,
+    endpoint_type
+):
     """
     @summary:
     1. Add docs to both client and server
@@ -181,6 +185,10 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
     db_obj_client.update_bulk_docs(database=cbl_db_client, number_of_updates=1, doc_ids=client_doc_ids)
 
     db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=2, doc_ids=client_doc_ids)
+
+    # RESTART message listener if needed
+    if endpoint_type == "MessageEndPoint":
+        peer_to_peer_server.message_listener_start(cbl_db_server, url_listener_port)
 
     # replication and waiting for conflict to create error event
     repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
