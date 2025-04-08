@@ -367,6 +367,21 @@ class Replication(object):
             if err_check:
                 err = self.getError(repl)
                 if err is not None and err != 'nil' and err != -1:
+                    # Here we are checking/waiting for the error in a case
+                    # of a hiccup with the MessageEndPoint type.
+                    recoverable_errors = [
+                        "connection reset", "connection refused",
+                        "SocketException",
+                        "BLIP", "Message endpoint", "disconnected", "transient"
+                    ]
+                    # Allow a retry for known recoverable errors
+                    if any(e.lower() in err.lower() for e in
+                           recoverable_errors):
+                        log_info(
+                            f"Transient error during replication: {err}. Will retry...")
+                        count += 1
+                        continue
+
                     if not isContinous:
                         raise Exception("Error while replicating", err)
 
