@@ -62,7 +62,10 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
     sg_client = MobileRestClient()
-    sg_client.create_database(url=sg_admin_url, db_name=remote_db, auth=auth)
+    dbs = sg_client.get_databases
+    log_info("The existing databases are: {}".format(dbs))
+    if remote_db not in dbs:
+        sg_client.create_database(url=sg_admin_url, db_name=remote_db, auth=auth)
     sg_client.create_user(sg_admin_url, remote_db, username, password=password, channels=sg_channels, auth=auth)
     cookie, session_id = sg_client.create_session(sg_admin_url, remote_db, username, auth=auth)
     session = cookie, session_id

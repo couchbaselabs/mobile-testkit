@@ -17,6 +17,10 @@ elif [[ $py3version == 3.7.* ]]; then
     printf "Using Python3 version: %s\n" $py3version
     PYTHON=python3
     PIP=pip3.7
+elif [[ $py3version == 3.9.* ]]; then
+    printf "Using Python3 version: %s\n" $py3version
+    PYTHON=python3
+    PIP=pip3.9
 else
     echo "Exiting. Make sure Python version is 3.8 or 3.7"
     return 1
