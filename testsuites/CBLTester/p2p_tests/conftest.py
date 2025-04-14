@@ -345,7 +345,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                 log_info("Exception occurred: {}".format(err))
 
 
-# @pytest.fixture(scope="function")
+@pytest.fixture(scope="function")
+# def server_setup(params_from_base_test_setup):
 #     base_url_list = params_from_base_test_setup["base_url_list"]
 #     cbl_db_list = params_from_base_test_setup["cbl_db_list"]
 #     base_url_server = base_url_list[0]
