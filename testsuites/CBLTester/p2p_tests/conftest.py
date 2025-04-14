@@ -373,7 +373,7 @@ def server_setup(params_from_base_test_setup):
     delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
     base_url_server = base_url_list[0]
     cbl_db_server = cbl_db_list[0]
-    listener = PeerToPeer(base_url_server, delta_sync_enabled)
+    listener = PeerToPeer(base_url_server)
     # Need to start and stop listener, if test fails in the middle listener will not be closed.
     url_listener = listener.server_start(cbl_db_server, 6000)
     log_info("Url listener/server/passive peer starting .....")
