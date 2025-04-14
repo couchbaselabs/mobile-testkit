@@ -30,9 +30,9 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    base_url_list = server_setup["base_url_list"]
-    cbl_db_server = server_setup["cbl_db_server"]
-    cbl_db_list = server_setup["cbl_db_list"]
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    cbl_db_server = params_from_base_test_setup["cbl_db_server"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
     channels = ["peerToPeer"]
     base_url_client = base_url_list[1]
     replicator = Replication(base_url_client)
