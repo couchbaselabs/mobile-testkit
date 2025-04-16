@@ -72,7 +72,7 @@ def test_databaseEncryption(params_from_base_test_setup, password):
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
 
-        assert str(he.value).startswith('400 Client Error: Bad Request for url:')
+        assert "file is not a database" in str(he.value)
 
     # 6. Verify that database can be accessed with password
     db_config1 = db.configure(password=password)
