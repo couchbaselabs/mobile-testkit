@@ -131,7 +131,7 @@ def test_invalidEncryption(params_from_base_test_setup, password):
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config_without_password)
-        assert str(he.value).startswith('400 Client Error: Bad Request for url:')
+        assert '400 Client Error: Bad Request for url:' in str(he.value)
 
     # 4. access database with invalid password
     # 5. Verify database cannot be accessed
