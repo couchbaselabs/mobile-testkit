@@ -382,8 +382,9 @@ class Replication(object):
                     # of a hiccup with the MessageEndPoint type.
                     recoverable_errors = [
                         "connection reset", "connection refused",
-                        "SocketException",
-                        "BLIP", "Message endpoint", "disconnected", "transient"
+                        "SocketException", "BLIP", "Message endpoint",
+                        "disconnected", "transient",
+                        "CouchbaseLiteException", "14002"
                     ]
                     # Allow a retry for known recoverable errors
                     if any(e.lower() in err.lower() for e in
