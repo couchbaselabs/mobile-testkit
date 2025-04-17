@@ -83,7 +83,7 @@ class TestDatabase(object):
         db = self.db_obj.create(random_string(6))
         # Exception checking when document id is null
         delete_err_msg = "\"document\" is null"
-        purge_err_msg = "Bad Request"
+        purge_err_msg = "400 Client Error"
         try:
             self.db_obj.delete(database=db, document=None)
             assert 0

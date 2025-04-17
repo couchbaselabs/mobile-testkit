@@ -192,12 +192,15 @@ def test_vector_search_index_correctness(vector_search_test_fixture):
         scopeName="_default",
         collectionName="indexVectors",
         indexName="indexVectorsIndex",
-        expression="prediction(gteSmall, {\"word\": word}).vector",
+        expression='prediction("gteSmall", {"word": ".word"}).vector',
         dimensions=gteSmallDims,
         centroids=8,
         metric="cosine",
         minTrainingSize=25 * 8,
         maxTrainingSize=256 * 8)
+
+    indexes = db.getIndexes(database=vsTestDatabase, collectionName="indexVectors", scopeName="_default")
+    print(f"Available indexes on 'indexVectors': {indexes}")
 
     # TODO test index training using a known term - distance should be very small but non zero if trained but if not then 0/null
     ivQueryAll = vsHandler.query(term="dinner",
