@@ -1,7 +1,7 @@
 import pytest
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import random_string, get_embedded_asset_file_path
+from keywords.utils import random_string, get_embedded_asset_file_path, log_info
 from CBLClient.Array import Array
 from CBLClient.Blob import Blob
 from CBLClient.Document import Document
@@ -191,6 +191,15 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
 
         if blob_data_type == "byte_array":
+            with open(image_location, "rb") as f:
+                image_bytes = f.read()
+
+            # Write to a temp file for manual inspection if needed
+            with open("/tmp/test_img.jpg", "wb") as out:
+                out.write(image_bytes)
+
+            log_info(f"Image byte length: {len(image_bytes)}")
+            assert len(image_bytes) > 0
             image_byte_array = blob.createImageContent(image_location, cbl_db)
             blob_value = blob.create("image/jpeg", content=image_byte_array)
         elif blob_data_type == "stream":
