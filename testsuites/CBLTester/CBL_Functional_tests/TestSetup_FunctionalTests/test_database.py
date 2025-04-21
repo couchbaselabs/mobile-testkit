@@ -355,7 +355,7 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
         db_config = db.configure()
         db_prefix = "PrebuiltDB"
     if liteserv_platform in ["android", "xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
-                             "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+                             "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos", "java-debian"]:
         prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
     elif liteserv_platform == "net-msft":
         app_dir = "\\".join(db_path.split("\\")[:-2])
