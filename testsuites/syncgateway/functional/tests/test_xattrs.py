@@ -2105,8 +2105,8 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
         assert he is not None
         log_info(str(he.value))
 
-        assert str(he.value).startswith('404 Client Error: Not Found for url:') or \
-            str(he.value).startswith('403 Client Error: Forbidden for url:')
+        assert '404 Client Error: Not Found for url:' in str(he.value) or \
+            '403 Client Error: Forbidden for url:' in str(he.value)
 
         # Parse out the doc id
         # sg_0?conflicts=true&revs=true
