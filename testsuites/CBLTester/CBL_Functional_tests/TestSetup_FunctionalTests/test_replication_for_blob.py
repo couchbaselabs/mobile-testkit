@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from keywords.MobileRestClient import MobileRestClient
@@ -192,6 +194,17 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         image_location = "../../../../resources/data/golden_gate_large.jpg"
         log_info("Image location path:{}".format(image_location))
         if blob_data_type == "byte_array":
+            cwd = os.getcwd()
+            log_info(f"Current working directory on test machine: {cwd}")
+
+            # Recursively walk and print a directory tree
+            for root, dirs, files in os.walk(cwd):
+                level = root.replace(cwd, '').count(os.sep)
+                indent = ' ' * 2 * level
+                log_info(f"{indent}{os.path.basename(root)}/")
+                subindent = ' ' * 2 * (level + 1)
+                for f in files:
+                    log_info(f"{subindent}{f}")
             with open(image_location, "rb") as f:
                 image_bytes = f.read()
 
