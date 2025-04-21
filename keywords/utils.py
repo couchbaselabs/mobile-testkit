@@ -479,12 +479,7 @@ def get_embedded_asset_file_path(cblite_platform, db, cbl_db, file_name):
     log_info("get a file path from embedded resources.")
     if cblite_platform in ["android", "xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
                            "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos", "c-android", "java-debian"]:
-        for root, dirs, files in os.walk(os.getcwd()):
-            if file_name in files:
-                full_path = os.path.join(root, file_name)
-                log_info(f"Found image at: {full_path}")
-                return full_path
-        raise FileNotFoundError(f"Could not find {file_name} under {os.getcwd()}")
+        return file_name
     elif cblite_platform in ["ios", "c-ios"]:
         return "Files/{}".format(file_name)
     elif cblite_platform == "net-msft":
