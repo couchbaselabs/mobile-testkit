@@ -28,7 +28,7 @@ class Client(object):
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
-
+            json_body=json.dumps(body)
             curl_command = f"curl -X POST '{url}' \\\n" \
                            f"     -H 'Content-Type: application/json' \\\n" \
                            f"     -d '{json_body}'"
