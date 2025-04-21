@@ -194,13 +194,11 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
             with open(image_location, "rb") as f:
                 image_bytes = f.read()
 
-            # Write to a temp file for manual inspection if needed
-            with open("/tmp/test_img.jpg", "wb") as out:
-                out.write(image_bytes)
-
             log_info(f"Image byte length: {len(image_bytes)}")
             assert len(image_bytes) > 0
-            image_byte_array = blob.createImageContent(image_location, cbl_db)
+
+            # Use the actual bytes here — not the path
+            image_byte_array = blob.createImageContent(image_bytes, cbl_db)
             blob_value = blob.create("image/jpeg", content=image_byte_array)
         elif blob_data_type == "stream":
             image_stream = blob.createImageStream(image_location, cbl_db)
