@@ -479,8 +479,10 @@ def get_embedded_asset_file_path(cblite_platform, db, cbl_db, file_name):
     log_info("get a file path from embedded resources.")
     if cblite_platform in ["android", "xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
                            "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos", "c-android", "java-debian"]:
-        return file_name
-    elif "ios" or "c-ios" in cblite_platform:
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources", file_name))
+        log_info(f"Resolved full image path: {path}")
+        return path
+    elif cblite_platform in ["ios", "c-ios"]:
         return "Files/{}".format(file_name)
     elif cblite_platform == "net-msft":
         db_path = db.getPath(cbl_db).rstrip("\\")
