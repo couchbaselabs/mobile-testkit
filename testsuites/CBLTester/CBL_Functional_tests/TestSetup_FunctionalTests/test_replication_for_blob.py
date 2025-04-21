@@ -1,3 +1,5 @@
+import base64
+
 import pytest
 
 from keywords.MobileRestClient import MobileRestClient
@@ -194,12 +196,13 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
             with open(image_location, "rb") as f:
                 image_bytes = f.read()
 
-            log_info(f"Image byte length: {len(image_bytes)}")
             assert len(image_bytes) > 0
 
-            # Use the actual bytes here — not the path
-            image_byte_array = blob.createImageContent(image_bytes, cbl_db)
-            blob_value = blob.create("image/jpeg", content=image_byte_array)
+            # Base64 encode the bytes
+            image_b64_str = base64.b64encode(image_bytes).decode("utf-8")
+
+            # Now call with a valid base64 string
+            blob_value = blob.createImageContent(image_b64_str, cbl_db)
         elif blob_data_type == "stream":
             image_stream = blob.createImageStream(image_location, cbl_db)
             blob_value = blob.create("image/jpeg", stream=image_stream)
