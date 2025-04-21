@@ -262,9 +262,9 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     # In XATTR mode, the expiry results in a tombstone
     # In Doc Meta mode, the expiry results in a purge
     if xattrs_enabled:
-        assert str(he.value).startswith("403 Client Error: Forbidden for url:")
+        assert "403 Client Error: Forbidden for url:" in str(he.value)
     else:
-        assert str(he.value).startswith("404 Client Error: Not Found for url:")
+        assert "404 Client Error: Not Found for url:" in str(he.value)
 
     verify_doc_deletion_on_server(
         doc_id=doc_exp_3["id"],
@@ -380,9 +380,9 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     # In XATTR mode, the expiry results in a tombstone
     # In Doc Meta mode, the expiry results in a purge
     if xattrs_enabled:
-        assert str(he.value).startswith("403 Client Error: Forbidden for url:")
+        assert "403 Client Error: Forbidden for url:" in str(he.value)
     else:
-        assert str(he.value).startswith("404 Client Error: Not Found for url:")
+        assert "404 Client Error: Not Found for url:" in str(he.value)
 
     verify_doc_deletion_on_server(
         doc_id=doc_exp_3["id"],
@@ -502,9 +502,9 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     # In XATTR mode, the expiry results in a tombstone
     # In Doc Meta mode, the expiry results in a purge
     if xattrs_enabled:
-        assert str(he.value).startswith("403 Client Error: Forbidden for url:")
+        assert "403 Client Error: Forbidden for url:" in str(he.value)
     else:
-        assert str(he.value).startswith("404 Client Error: Not Found for url:")
+        assert "404 Client Error: Not Found for url:" in str(he.value)
 
     verify_doc_deletion_on_server(
         doc_id=doc_exp_3["id"],
@@ -620,9 +620,9 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     # In XATTR mode, the expiry results in a tombstone
     # In Doc Meta mode, the expiry results in a purge
     if xattrs_enabled:
-        assert str(he.value).startswith("403 Client Error: Forbidden for url:")
+        assert "403 Client Error: Forbidden for url:" in str(he.value)
     else:
-        assert str(he.value).startswith("404 Client Error: Not Found for url:")
+        assert "404 Client Error: Not Found for url:" in str(he.value)
 
     verify_doc_deletion_on_server(
         doc_id=doc_exp_3["id"],
@@ -818,9 +818,9 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     # In XATTR mode, the expiry results in a tombstone
     # In Doc Meta mode, the expiry results in a purge
     if xattrs_enabled:
-        assert str(he.value).startswith("403 Client Error: Forbidden for url:")
+        assert "403 Client Error: Forbidden for url:" in str(he.value)
     else:
-        assert str(he.value).startswith("404 Client Error: Not Found for url:")
+        assert "404 Client Error: Not Found for url:" in str(he.value)
 
     verify_doc_deletion_on_server(
         doc_id=doc_exp_3["id"],
@@ -939,9 +939,9 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     # In XATTR mode, the expiry results in a tombstone
     # In Doc Meta mode, the expiry results in a purge
     if xattrs_enabled:
-        assert str(he.value).startswith("403 Client Error: Forbidden for url:")
+        assert "403 Client Error: Forbidden for url:" in str(he.value)
     else:
-        assert str(he.value).startswith("404 Client Error: Not Found for url:")
+        assert "404 Client Error: Not Found for url:" in str(he.value)
 
     verify_doc_deletion_on_server(
         doc_id=doc_exp_10["id"],

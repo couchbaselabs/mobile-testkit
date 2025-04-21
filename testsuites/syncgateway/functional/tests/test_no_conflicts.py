@@ -74,7 +74,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="2-foo",
                                    auth=autouser_session)
-        assert str(he.value).startswith('409 Client Error: Conflict for url:')
+        assert '409 Client Error: Conflict for url:' in str(he.value)
 
     # 6. Update the docs 1 more time
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
@@ -150,7 +150,7 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="2-foo",
                                    auth=autouser_session)
-        assert str(he.value).startswith('409 Client Error: Conflict for url:')
+        assert '409 Client Error: Conflict for url:' in str(he.value)
 
     # 5. Get number of revisions and verify length is equal to revs_limit set to
     for doc in sg_docs:

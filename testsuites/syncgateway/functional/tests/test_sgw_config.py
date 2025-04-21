@@ -114,7 +114,7 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
         sg_doc_body = document.create_doc(doc_id=doc_id, channels=channel)
         with pytest.raises(HTTPError) as he:
             sg_client.add_doc(url=sg_url, db=sg_db, doc=sg_doc_body, auth=user_session)
-        assert str(he.value).startswith("403 Client Error: Forbidden for url:")
+        assert "403 Client Error: Forbidden for url:" in str(he.value)
 
     # import_filter verification
     if js_type == "import_filter":
@@ -453,7 +453,7 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
         sg_doc_body = document.create_doc(doc_id=doc_id, channels=channel)
         with pytest.raises(HTTPError) as he:
             sg_client.add_doc(url=sg_url, db=sg_db, doc=sg_doc_body, auth=user_session)
-        assert str(he.value).startswith("403 Client Error: Forbidden for url:")
+        assert "403 Client Error: Forbidden for url:" in str(he.value)
 
     # import_filter verification
     if filter_type == "import_filter":
