@@ -1,7 +1,7 @@
 import pytest
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import random_string, get_embedded_asset_file_path, log_info
+from keywords.utils import random_string, log_info
 from CBLClient.Array import Array
 from CBLClient.Blob import Blob
 from CBLClient.Document import Document
@@ -188,7 +188,8 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         dictionary.setString(mutable_dictionary, "new_field_string_1", random_string(length=30))
         dictionary.setString(mutable_dictionary, "new_field_string_2", random_string(length=80))
 
-        image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
+        # image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
+        image_location = "/tmp/golden_gate_large.jpg"
         log_info("Image location path:", image_location)
         if blob_data_type == "byte_array":
             image_byte_array = blob.createImageContent(image_location, cbl_db)
