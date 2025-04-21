@@ -192,7 +192,10 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         image_location = "/tmp/golden_gate_large.jpg"
         log_info("Image location path:{}".format(image_location))
         if blob_data_type == "byte_array":
-            image_byte_array = blob.createImageContent(image_location, cbl_db)
+            with open(image_location, "rb") as f:
+                image_bytes = f.read()
+
+            image_byte_array = blob.createImageContent(image_bytes, cbl_db)
             blob_value = blob.create("image/jpeg", content=image_byte_array)
         elif blob_data_type == "stream":
             image_stream = blob.createImageStream(image_location, cbl_db)
