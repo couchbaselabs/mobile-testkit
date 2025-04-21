@@ -1,9 +1,7 @@
-import base64
-
 import pytest
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import random_string, get_embedded_asset_file_path, log_info
+from keywords.utils import random_string, get_embedded_asset_file_path
 from CBLClient.Array import Array
 from CBLClient.Blob import Blob
 from CBLClient.Document import Document
