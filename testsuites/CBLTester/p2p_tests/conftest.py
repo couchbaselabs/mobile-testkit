@@ -287,6 +287,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                 log_info("Log files available at - {}".format(cbllog.get_directory()))
 
             db_name = "{}_{}_{}".format(create_db_per_test, str(time.time()), i + 1)
+            db_name = db_name.replace('.','')
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
             db = Database(base_url)
