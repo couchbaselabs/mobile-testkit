@@ -366,25 +366,25 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 #     peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
 
-@pytest.fixture(scope="function")
-def server_setup(params_from_base_test_setup):
-    base_url_list = params_from_base_test_setup["base_url_list"]
-    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
-    delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
-    base_url_server = base_url_list[0]
-    cbl_db_server = cbl_db_list[0]
-    listener = PeerToPeer(base_url_server)
-    # Need to start and stop listener, if test fails in the middle listener will not be closed.
-    url_listener = listener.server_start(cbl_db_server, 6000)
-    log_info("Url listener/server/passive peer starting .....")
-    yield {
-
-        "url_listener": url_listener,
-        "peer_to_peer_listener": listener,
-        "base_url_list": base_url_list,
-        "base_url_server": base_url_server,
-        "cbl_db_server": cbl_db_server,
-        "cbl_db_list": cbl_db_list,
-        "delta_sync_enabled": delta_sync_enabled
-    }
-    listener.server_stop(url_listener, "URLEndPoint")
+# @pytest.fixture(scope="function")
+# def server_setup(params_from_base_test_setup):
+#     base_url_list = params_from_base_test_setup["base_url_list"]
+#     cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+#     delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
+#     base_url_server = base_url_list[0]
+#     cbl_db_server = cbl_db_list[0]
+#     listener = PeerToPeer(base_url_server)
+#     # Need to start and stop listener, if test fails in the middle listener will not be closed.
+#     url_listener = listener.server_start(cbl_db_server, 6000)
+#     log_info("Url listener/server/passive peer starting .....")
+#     yield {
+#
+#         "url_listener": url_listener,
+#         "peer_to_peer_listener": listener,
+#         "base_url_list": base_url_list,
+#         "base_url_server": base_url_server,
+#         "cbl_db_server": cbl_db_server,
+#         "cbl_db_list": cbl_db_list,
+#         "delta_sync_enabled": delta_sync_enabled
+#     }
+#     listener.server_stop(url_listener, "URLEndPoint")
