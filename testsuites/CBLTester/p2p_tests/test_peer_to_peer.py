@@ -1158,7 +1158,7 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     peer_to_peer_server.server_stop(listener, endPointType)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed  when server restarted " + total + " not equal to " + completed
+    assert total == completed, "replication from client to server did not completed  when server restarted " + str(total)+ " not equal to " + str(completed)
     server_docs_count = db_obj_server.getCount(cbl_db_server)
 
     cbl_doc_ids = db_obj_client.getDocIds(cbl_db_client)
