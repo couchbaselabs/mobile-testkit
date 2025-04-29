@@ -401,6 +401,7 @@ def test_p2p_delete_db_active_replicator_and_live_query(params_from_base_test_se
     # 1a. create a db, and add document to the cbl db. Creating new DB
     db = Database(base_url_list[0])
     db_name = "test_delete_db_" + str(time.time())
+    db_name = db_name.replace('.','')
     log_info("Creating a Database {} at test setup".format(db_name))
     db_config = db.configure()
     cbl_db = db.create(db_name, db_config)

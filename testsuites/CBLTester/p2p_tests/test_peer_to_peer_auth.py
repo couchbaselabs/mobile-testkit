@@ -43,8 +43,8 @@ def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup,
     listener = ListenerAuthenticator(base_url_list[0])
 
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+    # peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
 
@@ -99,8 +99,8 @@ def test_peer_to_peer_with_basic_auth_incorrect_pass(params_from_base_test_setup
     listener = ListenerAuthenticator(base_url_list[0])
 
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+    # peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
     listener_auth = listener.create("testkit", "pa")
