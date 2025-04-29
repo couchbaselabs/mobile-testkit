@@ -1,21 +1,21 @@
 
-import pytest
-
-from keywords import attachment
-from CBLClient.Replication import Replication
-from CBLClient.PeerToPeer import PeerToPeer
-from CBLClient.BasicAuthenticator import BasicAuthenticator
-from CBLClient.ListenerAuthenticator import ListenerAuthenticator
-
-
-@pytest.mark.p2p
-@pytest.mark.listener
-@pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
-    (10, True, "push_pull", "URLEndPoint"),
-    (10, False, "push_pull", "URLEndPoint"),
-    (10, True, "push", "URLEndPoint"),
-    (10, False, "push", "URLEndPoint")
-])
+# import pytest
+#
+# from keywords import attachment
+# from CBLClient.Replication import Replication
+# from CBLClient.PeerToPeer import PeerToPeer
+# from CBLClient.BasicAuthenticator import BasicAuthenticator
+# from CBLClient.ListenerAuthenticator import ListenerAuthenticator
+#
+#
+# @pytest.mark.p2p
+# @pytest.mark.listener
+# @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
+#     (10, True, "push_pull", "URLEndPoint"),
+#     (10, False, "push_pull", "URLEndPoint"),
+#     (10, True, "push", "URLEndPoint"),
+#     (10, False, "push", "URLEndPoint")
+# ])
 # def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
 #     """
 #         @summary:
