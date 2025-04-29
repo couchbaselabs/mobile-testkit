@@ -40,8 +40,8 @@ def test_peer_to_peer_tls_basic_certs(params_from_base_test_setup, server_setup,
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+    # peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
     num_of_docs = 50
@@ -132,9 +132,9 @@ def test_peer_to_peer_enable_with_certs_authenticator(params_from_base_test_setu
     db_name_server = db_name_list[0]
     peerToPeer_server = PeerToPeer(base_url_list[0])
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-    print(message_url_tcp_listener)
-    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+    # print(message_url_tcp_listener)
+    # peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
     num_of_docs = 50
@@ -197,8 +197,8 @@ def test_peer_to_peer_enable_tls_with_any_selfsigned_and_authenticator(params_fr
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+    # peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
     num_of_docs = 50
@@ -260,9 +260,9 @@ def test_peer_to_peer_tls_self_signed_mutiple_clients(params_from_base_test_setu
     db_name_server = db_name_list[0]
     peerToPeer_server = PeerToPeer(base_url_list[0])
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-    print(message_url_tcp_listener)
-    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+    # print(message_url_tcp_listener)
+    # peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
     num_of_docs = 50
@@ -338,9 +338,9 @@ def test_peer_to_peer_tls_any_self_signed_certs_create(params_from_base_test_set
     db_name_server = db_name_list[0]
     peerToPeer_server = PeerToPeer(base_url_list[0])
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-    print(message_url_tcp_listener)
-    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+    # print(message_url_tcp_listener)
+    # peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
     num_of_docs = 50
