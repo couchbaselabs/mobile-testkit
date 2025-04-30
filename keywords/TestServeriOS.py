@@ -46,7 +46,8 @@ class TestServeriOS(TestServerBase):
         if debug_mode:
             self.debug_mode = True
         if self.using_devicectl:
-            self.device_id = "16E5C211-C0C9-4A81-981B-52F4699AF951"
+            # self.device_id = "16E5C211-C0C9-4A81-981B-52F4699AF951"
+            self.device_id = self.find_device_id()
         if self.platform == "ios":
             if community_enabled:
                 self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
@@ -404,3 +405,14 @@ class TestServeriOS(TestServerBase):
             return True
         except Exception:
             return False
+
+    def find_device_id(self):
+        try:
+            output = subprocess.check_output(
+                "xcrun devicectl list devices | tail -n1 | awk -F 'local' '{print $2}' | awk '{print $1}'",
+                shell=True
+            )
+            return output.decode().strip()
+        except subprocess.CalledProcessError as e:
+            log_error("Failed to find device ID: {}".format(e))
+            return "16E5C211-C0C9-4A81-981B-52F4699AF951"
