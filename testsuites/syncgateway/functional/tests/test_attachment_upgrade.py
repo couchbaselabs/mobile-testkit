@@ -66,8 +66,8 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     log_info("The existing databases are: {}".format(dbs))
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
     log_info("sg_conf new: {}".format(sg_conf))
-    if remote_db not in dbs:
-        sg_client.create_database(url=sg_admin_url, db_name=remote_db, auth=auth)
+    topology = cluster_util.get_cluster_topology(cluster_conf)
+    sg_client.create_database(url=sg_admin_url, db_name=remote_db, auth=auth)
     sg_client.create_user(sg_admin_url, remote_db, username, password=password, channels=sg_channels, auth=auth)
     cookie, session_id = sg_client.create_session(sg_admin_url, remote_db, username, auth=auth)
     session = cookie, session_id
