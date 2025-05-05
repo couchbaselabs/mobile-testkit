@@ -14,6 +14,7 @@ from requests.exceptions import HTTPError
 from keywords.constants import RBAC_FULL_ADMIN
 
 
+@pytest.mark.skip(reason="This test is not applicable for SG 3.0 and above as attachments are treated differently")
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
 @pytest.mark.parametrize("doc_count, marked", [
@@ -189,6 +190,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
                                                 attachment="sample_text.txt", auth=session)
 
 
+@pytest.mark.skip(reason="This test is not applicable for SG 3.0 and above as attachments are treated differently")
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
 @pytest.mark.parametrize("delete_doc_type", [
@@ -308,6 +310,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
         assert compaction_status["purged_attachments"] + compaction_status["marked_attachments"] >= 101, "purged and marked attachment count is not matching"
 
 
+@pytest.mark.skip(reason="This test is not applicable for SG 3.0 and above as attachments are treated differently")
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
 def test_upgrade_legacy_attachments(params_from_base_test_setup, sgw_version_reset):
