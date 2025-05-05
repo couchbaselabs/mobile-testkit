@@ -66,7 +66,9 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     log_info("The existing databases are: {}".format(dbs))
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
     topology = cluster_util.get_cluster_topology(cluster_conf)
-    sg_client.create_database(url=sg_admin_url, name=remote_db, sync_gateway_mode=mode, bucket_name='data-bucket')
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_client.create_database(url=sg_admin_url, name=remote_db, sync_gateway_mode=mode, server_url=cbs_url, bucket_name='data-bucket')
     sg_client.create_user(sg_admin_url, remote_db, username, password=password, channels=sg_channels, auth=auth)
     cookie, session_id = sg_client.create_session(sg_admin_url, remote_db, username, auth=auth)
     session = cookie, session_id
@@ -234,7 +236,9 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     log_info("The existing databases are: {}".format(dbs))
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
     topology = cluster_util.get_cluster_topology(cluster_conf)
-    sg_client.create_database(url=sg_admin_url, name=remote_db, sync_gateway_mode=mode, bucket_name='data-bucket')
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_client.create_database(url=sg_admin_url, name=remote_db, sync_gateway_mode=mode, server_url=cbs_url, bucket_name='data-bucket')
     sg_client.create_user(sg_admin_url, remote_db, username, password=password, channels=sg_channels, auth=auth)
     cookie, session_id = sg_client.create_session(sg_admin_url, remote_db, username, auth=auth)
     session = cookie, session_id
