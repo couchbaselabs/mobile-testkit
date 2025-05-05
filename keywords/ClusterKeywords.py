@@ -253,12 +253,17 @@ class ClusterKeywords:
             "3.1.6": "5",
             "3.1.8": "2",
             "3.1.9": "13",
-            "3.2.0": "514"
+            "3.2.0": "514",
+            "3.2.1": "15",
+            "3.2.2": "21",
+            "3.2.3": "16",
+            "3.2.4": "6"
         }
         if sg_build is None:
             expected_sync_gateway_version = "{}-{}".format(expected_sync_gateway_version,
                                                            sg_released_version[sg_version])
         for sg in cluster_obj["sync_gateways"]:
+            log_info("Verifying sync_gateway version in cluster keywords")
             if cluster_obj["environment"]["ipv6_enabled"]:
                 sg["ip"] = "[{}]".format(sg["ip"])
             verify_sync_gateway_product_info(sg["ip"])

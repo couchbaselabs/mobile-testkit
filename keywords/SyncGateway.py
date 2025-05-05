@@ -143,7 +143,7 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "3.2.1": "15",
         "3.2.2": "21",
         "3.2.3": "16",
-        "3.2.4": "6",
+        "3.2.4": "6"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -452,9 +452,11 @@ class SyncGateway(object):
 
         # Verify sync_gateway versions
         if url is None:
+            log_info("Verifying sync_gateway versions in install_sync_gateway IF")
             for sg in cluster_obj["sync_gateways"]:
                 verify_sync_gateway_version(sg["ip"], sync_gateway_version)
         else:
+            log_info("Verifying sync_gateway versions in install_sync_gateway ELSE")
             url_ip = url.split('//')[1].split(":")[0]
             verify_sync_gateway_version(url_ip, sync_gateway_version)
 
@@ -751,6 +753,7 @@ class SyncGateway(object):
             verify_sync_gateway_product_info(sg_ip)
             log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
             if verify_version:
+                log_info("Verifying sync_gateway version before upgrade")
                 verify_sync_gateway_version(sg_ip, sync_gateway_version)
             log_info("Upgrading sync gateway: {}".format(sg_ip))
             self.upgrade_sync_gateways(
