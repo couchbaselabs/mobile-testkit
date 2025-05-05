@@ -522,13 +522,17 @@ class MobileRestClient:
             validate_sync_gateway_mode(sync_gateway_mode)
 
             data = {}
-            if server_url is None:
-                raise RestError("Creating database error. You must provide a couchbase server url")
-            data["server"] = server_url
+            # if server_url is None:
+            #     raise RestError("Creating database error. You must provide a couchbase server url")
+            # data["server"] = server_url
 
             if bucket_name is None:
                 raise RestError("Creating database error. You must provide a couchbase server bucket name")
             data["bucket"] = bucket_name
+
+            data["enable_shared_bucket_access"] = True
+            data["import_docs"] = "True"
+            data["num_index_replicas"] = 0
 
             if sync_gateway_mode is None:
                 raise RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
@@ -546,7 +550,7 @@ class MobileRestClient:
                     "bucket": index_bucket_name,
                     "writer": is_index_writer
                 }
-
+            log_info("Creating database with data: {}".format(data))
             resp = self._session.put("{}/{}/".format(url, name), data=json.dumps(data))
 
         log_r(resp)
