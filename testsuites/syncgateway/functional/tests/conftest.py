@@ -727,6 +727,7 @@ def sgw_version_reset(params_from_base_test_setup):
     }
     sg_latest_version = get_sg_version(cluster_conf)
     try:
+        log_info("Verifying sync gateway version in conftest")
         verify_sync_gateway_version(sg1.ip, sg_latest_version)
     except Exception as ex:
         print("exception message: ", ex)

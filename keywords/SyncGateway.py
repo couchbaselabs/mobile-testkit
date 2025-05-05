@@ -452,8 +452,9 @@ class SyncGateway(object):
 
         # Verify sync_gateway versions
         if url is None:
-            log_info("Verifying sync_gateway versions in install_sync_gateway IF")
             for sg in cluster_obj["sync_gateways"]:
+                log_info("SG is {}".format(sg))
+                log_info("Verifying sync_gateway versions in install_sync_gateway IF")
                 verify_sync_gateway_version(sg["ip"], sync_gateway_version)
         else:
             log_info("Verifying sync_gateway versions in install_sync_gateway ELSE")

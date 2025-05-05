@@ -38,6 +38,7 @@ def sgw_version_reset(request, params_from_base_test_setup):
     }
     sg_latest_version = get_sg_version(cluster_conf)
     try:
+        log_info("Verifying sync gateway version in tests automatic_migration")
         verify_sync_gateway_version(sg1.ip, sg_latest_version)
     except Exception:
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
