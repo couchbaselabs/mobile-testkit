@@ -531,8 +531,9 @@ class MobileRestClient:
             data["bucket"] = bucket_name
 
             data["enable_shared_bucket_access"] = True
-            data["import_docs"] = "True"
+            data["import_docs"] = True
             data["num_index_replicas"] = 0
+            data["sync"] = "function(doc){channel(doc.channels);}" 
 
             if sync_gateway_mode is None:
                 raise RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
