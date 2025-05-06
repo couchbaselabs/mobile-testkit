@@ -383,7 +383,7 @@ class TestServeriOS(TestServerBase):
     def close_app(self):
         try:
             cur_dir = os.getcwd()
-            subprocess.check_output(["osascript", "{}/utilities/sim_close_app.scpt".format(cur_dir)], shell=True)
+            subprocess.check_output(["osascript", "{}/utilities/sim_close_app.scpt".format(cur_dir)])
         except Exception as e:
             log_info(str(e))
 
@@ -412,6 +412,7 @@ class TestServeriOS(TestServerBase):
                 "xcrun devicectl list devices | tail -n1 | awk -F 'local' '{print $2}' | awk '{print $1}'",
                 shell=True
             )
+            log_info("\nFound device: {}\n".format(output))
             return output.decode().strip()
         except subprocess.CalledProcessError as e:
             log_error("Failed to find device ID: {}".format(e))
