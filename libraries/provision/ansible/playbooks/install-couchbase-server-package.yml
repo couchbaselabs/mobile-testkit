@@ -16,7 +16,7 @@
     couchbase_server_password: password
 
     # 512 reserved for query service
-    couchbase_server_index_ram: 512
+    couchbase_server_index_ram: 450
     couchbase_server_cluster_ram: "{{((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
     couchbase_server_admin_port: 8091
     protocol: http://
