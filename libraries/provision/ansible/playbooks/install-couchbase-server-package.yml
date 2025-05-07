@@ -26,7 +26,7 @@
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
-    couchbase_server_primary_node: 10.100.150.137
+    couchbase_server_primary_node: 10.100.150.186
 
     # Current node
     couchbase_server_node: 10.100.150.137
@@ -137,6 +137,11 @@
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
       wait_for: port=8091 delay=90 timeout=600
+
+    - name: COUCHBASE SERVER | Reset node
+      shell: " {{ couchbase_server_home_path }}/bin/couchbase-cli node-reset -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} -p={{ couchbase_server_password }} --force"
+      register: reset_output
+      ignore_errors: yes
 
     - name: Setting IP family of the cluster
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli ip-family  --set --ipv6 -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
