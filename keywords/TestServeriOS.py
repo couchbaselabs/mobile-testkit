@@ -325,7 +325,7 @@ class TestServeriOS(TestServerBase):
         subprocess_command = ["ios-deploy", "--justlaunch", "--bundle", self.app_path]
         if self.using_devicectl:
             subprocess_command = ["xcrun", "devicectl", "device", "process", "launch", "--device", self.device_id, self.bundle_id]
-        output = subprocess.check_output(subprocess_command)
+        output = subprocess.x(subprocess_command)
         log_info(output)
 
         self._wait_until_reachable(port=self.port)
@@ -383,7 +383,7 @@ class TestServeriOS(TestServerBase):
     def close_app(self):
         try:
             cur_dir = os.getcwd()
-            subprocess.check_output(["osascript", "{}/utilities/sim_close_app.scpt".format(cur_dir)])
+            # subprocess.check_output(["osascript", "{}/utilities/sim_close_app.scpt".format(cur_dir)])
         except Exception as e:
             log_info(str(e))
 
