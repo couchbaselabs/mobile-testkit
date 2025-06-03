@@ -26,7 +26,7 @@
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
-    couchbase_server_primary_node: 10.100.150.137
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
     # Current node
     couchbase_server_node: 10.100.150.137
