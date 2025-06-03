@@ -29,7 +29,7 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
     # Current node
-    couchbase_server_node: 10.100.150.137
+    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
 
     couchbase_server_bucket_type: couchbase
     couchbase_server_bucket_replica: 1
