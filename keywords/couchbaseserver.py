@@ -488,6 +488,8 @@ class CouchbaseServer:
         if is_magma_enabled(cluster_config):
             magma_data = {"storageBackend": "magma"}
             data.update(magma_data)
+        else:
+            data["storageBackend"] = "couchstore"
         if server_major_version <= 4:
             # Create a bucket with password for server_major_version < 5
             # proxyPort should not be passed for 5.0.0 onwards for bucket creation
