@@ -349,6 +349,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
 
         if no_conflicts_enabled(cluster_config):
             no_conflicts_prop = '"allow_conflicts": false,'
+        else:
+            no_conflicts_prop = '"allow_conflicts": true,'
         try:
             revs_limit = get_revs_limit(cluster_config)
             revs_limit_prop = '"revs_limit": {},'.format(revs_limit)
