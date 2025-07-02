@@ -313,6 +313,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
         if no_conflicts_enabled(cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+        else:
+            playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
 
         if sg_ssl_enabled(cluster_config):
             if is_centralized_persistent_config_disabled(cluster_config):

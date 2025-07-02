@@ -473,6 +473,9 @@ def params_from_base_suite_setup(request):
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    if not no_conflicts_enabled:
+        sg_config = sync_gateway_config_path_for_mode("sync_gateway_allow_conflicts", mode)
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
     if skip_provisioning or use_sequoia:
