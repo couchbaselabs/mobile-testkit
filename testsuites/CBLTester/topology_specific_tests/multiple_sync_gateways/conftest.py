@@ -238,7 +238,7 @@ def params_from_base_suite_setup(request):
                 cbs_ce=cbs_ce,
                 sg_ce=sg_ce
             )
-        except ProvisioningError:
+        except ProvisioningError as e:
             error = str(e)
             log_info(error)
             logging_helper = Logging()
