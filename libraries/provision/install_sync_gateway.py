@@ -82,7 +82,7 @@ class SyncGatewayConfig:
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, sg_ce=False,
-                                          sg_platform="centos",
+                                          sg_platform="debian",
                                           sg_installer_type="msi",
                                           sa_platform="centos",
                                           sa_installer_type="msi", aws=False,
@@ -165,7 +165,7 @@ class SyncGatewayConfig:
 
 
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
-                         sg_platform="centos", sg_installer_type="msi",
+                         sg_platform="debian", sg_installer_type="msi",
                          sa_platform="centos", sa_installer_type="msi",
                          ipv6=False, aws=False, url=None, sync_gateway_version=None, custom_build=None, code_coverage=None):
 
@@ -313,6 +313,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
         if no_conflicts_enabled(cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+        else:
+            playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
 
         if sg_ssl_enabled(cluster_config):
             if is_centralized_persistent_config_disabled(cluster_config):

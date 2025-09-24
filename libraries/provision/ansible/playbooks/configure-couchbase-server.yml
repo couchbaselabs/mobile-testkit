@@ -106,7 +106,7 @@
         addnode_protocol: https://
         addnode_port: 18091
         ssl_verify: --no-ssl-verify
-      when: "( {{ cb_major_version['stdout'] | search('\\b[7]\\b') }} ) or ( '7.1.0' in cb_full_version.stdout )"
+      when: "( {{ cb_major_version['stdout'] | search('\\b[7-8]\\b') }} ) or ( '7.1.0' in cb_full_version.stdout )"
 
     - set_fact:
         addnode_port: "{{ couchbase_server_addone_port }}"

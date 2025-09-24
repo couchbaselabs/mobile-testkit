@@ -23,7 +23,7 @@ class RemoteExecutor:
     located in the root of the repository
     """
 
-    def __init__(self, host, sg_platform="centos", username=None, password=None, cluster_config=None):
+    def __init__(self, host, sg_platform="debian", username=None, password=None, cluster_config=None):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client = client

@@ -261,6 +261,7 @@ class Admin:
 
     # POST /{db}/_offline
     def take_db_offline(self, db):
+        logging.info("Taking db offline")
         if not is_admin_auth_disabled(self.cluster_config):
             self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:

@@ -424,6 +424,14 @@ class MobileRestClient:
         if collection_access is not None:
             data["collection_access"] = collection_access
 
+        log_info("Creating user: {}".format(data))
+        log_info("Is auth provided: {}".format(auth))
+
+        log_info("Getting all dbs")
+        dbs = self.get_databases(url)
+
+        log_info("Dbs: {}".format(dbs))
+
         if auth:
             resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
@@ -514,13 +522,18 @@ class MobileRestClient:
             validate_sync_gateway_mode(sync_gateway_mode)
 
             data = {}
-            if server_url is None:
-                raise RestError("Creating database error. You must provide a couchbase server url")
-            data["server"] = server_url
+            # if server_url is None:
+            #     raise RestError("Creating database error. You must provide a couchbase server url")
+            # data["server"] = server_url
 
             if bucket_name is None:
                 raise RestError("Creating database error. You must provide a couchbase server bucket name")
             data["bucket"] = bucket_name
+
+            data["enable_shared_bucket_access"] = True
+            data["import_docs"] = True
+            data["num_index_replicas"] = 0
+            data["sync"] = "function(doc){channel(doc.channels);}" 
 
             if sync_gateway_mode is None:
                 raise RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
@@ -538,7 +551,7 @@ class MobileRestClient:
                     "bucket": index_bucket_name,
                     "writer": is_index_writer
                 }
-
+            log_info("Creating database with data: {}".format(data))
             resp = self._session.put("{}/{}/".format(url, name), data=json.dumps(data))
 
         log_r(resp)
@@ -2499,30 +2512,21 @@ class MobileRestClient:
 
         return resp.json()
 
-    def take_db_offline(self, cluster_conf, db):
-        # Take bucket offline
-        ansible_runner = AnsibleRunner(cluster_conf)
-        status = ansible_runner.run_ansible_playbook(
-            "sync-gateway-db-offline.yml",
-            extra_vars={
-                "db": db
-            }
-        )
+    def take_db_offline(self, cluster_conf, db, url):
+        logging.info("Taking db offline")
+        resp = self._session.post("{}/{}/_offline".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+        # resp_obj = resp.json()
+        return 0
 
-        return status
-
-    def bring_db_online(self, cluster_conf, db, delay=0):
-        # Bring db online
-        ansible_runner = AnsibleRunner(cluster_conf)
-        status = ansible_runner.run_ansible_playbook(
-            "sync-gateway-db-online.yml",
-            extra_vars={
-                "db": db,
-                "delay": delay
-            }
-        )
-
-        return status
+    def bring_db_online(self, cluster_conf, db, url, delay=0):
+        logging.info("Bringing db online")
+        resp = self._session.post("{}/{}/_online".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+        # resp_obj = resp.json()
+        return 0
 
     def get_changes_style_all_docs(self, url, db, auth=None, include_docs=False):
         """ Get all changes with include docs enabled and style all_docs """

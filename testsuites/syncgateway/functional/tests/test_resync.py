@@ -68,11 +68,11 @@ def test_resync(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     )
 
     # Taking DB offline
-    client.take_db_offline(cluster_conf=cluster_config, db=sg_db)
+    client.take_db_offline(cluster_conf=cluster_config, db=sg_db, url=sg_admin_url)
     status = client.db_resync(url=sg_admin_url, db=sg_db, auth=auth)
     assert status == 200, "re-sync failed"
     verify_rsync_error(cluster_config=cluster_config)
-    client.bring_db_online(cluster_conf=cluster_config, db=sg_db)
+    client.bring_db_online(cluster_conf=cluster_config, db=sg_db, url=sg_admin_url)
 
 
 def verify_rsync_error(cluster_config):

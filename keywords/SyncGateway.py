@@ -130,13 +130,21 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "2.8.4": "9",
         "3.0.5": "8",
         "3.0.7": "3",
+        "3.0.8": "3",
+        "3.0.9": "13",
         "3.1.0": "592",
         "3.1.2": "34",
         "3.1.3": "6",
         "3.1.5": "3",
         "3.1.6": "5",
         "3.1.8": "2",
-        "3.1.9": "13"
+        "3.1.9": "13",
+        "3.2.0": "514",
+        "3.2.1": "15",
+        "3.2.2": "21",
+        "3.2.3": "16",
+        "3.2.4": "6",
+        "3.3.0": "286"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -342,6 +350,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
 
         if no_conflicts_enabled(cluster_config):
             no_conflicts_prop = '"allow_conflicts": false,'
+        else:
+            no_conflicts_prop = '"allow_conflicts": true,'
         try:
             revs_limit = get_revs_limit(cluster_config)
             revs_limit_prop = '"revs_limit": {},'.format(revs_limit)
@@ -446,8 +456,11 @@ class SyncGateway(object):
         # Verify sync_gateway versions
         if url is None:
             for sg in cluster_obj["sync_gateways"]:
+                log_info("SG is {}".format(sg))
+                log_info("Verifying sync_gateway versions in install_sync_gateway IF")
                 verify_sync_gateway_version(sg["ip"], sync_gateway_version)
         else:
+            log_info("Verifying sync_gateway versions in install_sync_gateway ELSE")
             url_ip = url.split('//')[1].split(":")[0]
             verify_sync_gateway_version(url_ip, sync_gateway_version)
 
@@ -577,6 +590,8 @@ class SyncGateway(object):
 
             if no_conflicts_enabled(cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+            else:
+                playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
             try:
                 revs_limit = get_revs_limit(cluster_config)
                 playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
@@ -744,6 +759,7 @@ class SyncGateway(object):
             verify_sync_gateway_product_info(sg_ip)
             log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
             if verify_version:
+                log_info("Verifying sync_gateway version before upgrade")
                 verify_sync_gateway_version(sg_ip, sync_gateway_version)
             log_info("Upgrading sync gateway: {}".format(sg_ip))
             self.upgrade_sync_gateways(
@@ -907,6 +923,8 @@ class SyncGateway(object):
 
             if no_conflicts_enabled(cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+            else:
+                playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
             try:
                 revs_limit = get_revs_limit(cluster_config)
                 playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
@@ -1100,6 +1118,8 @@ class SyncGateway(object):
 
             if no_conflicts_enabled(cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+            else:
+                playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
 
             if sg_ssl_enabled(cluster_config):
                 if is_centralized_persistent_config_disabled(cluster_config):

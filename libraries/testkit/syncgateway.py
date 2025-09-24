@@ -171,6 +171,8 @@ class SyncGateway:
 
             if no_conflicts_enabled(self.cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+            else:
+                playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
             try:
                 revs_limit = get_revs_limit(self.cluster_config)
                 playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
@@ -334,6 +336,8 @@ class SyncGateway:
 
             if no_conflicts_enabled(cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+            else:
+                playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
             try:
                 revs_limit = get_revs_limit(cluster_config)
                 playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
@@ -897,6 +901,8 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
 
     if no_conflicts_enabled(cluster_config):
         no_conflicts_var = '"allow_conflicts": false,'
+    else:
+        no_conflicts_var = '"allow_conflicts": true,'
 
     try:
         revs_limit = get_revs_limit(cluster_config)
@@ -1262,6 +1268,8 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
 
     if no_conflicts_enabled(cluster_config):
         no_conflicts_var = '"allow_conflicts": false,'
+    else:
+        no_conflicts_var = '"allow_conflicts": true,'
 
     try:
         revs_limit = get_revs_limit(cluster_config)
