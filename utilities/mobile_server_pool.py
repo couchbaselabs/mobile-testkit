@@ -22,6 +22,8 @@ SSH_PASSWORD = 'couchbase'
 SSH_POLL_INTERVAL = 20
 MOBILE_OS = ["android", "ios"]
 
+print(f"[DEBUG] Connecting to couchbase://{SERVER_IP}")
+
 timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
 options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD), timeout_options=timeout_options)
 cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
