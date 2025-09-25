@@ -38,6 +38,7 @@ def sgw_version_reset(request, params_from_base_test_setup):
     }
     sg_latest_version = get_sg_version(cluster_conf)
     try:
+        log_info("Verifying sync gateway version in tests automatic_migration")
         verify_sync_gateway_version(sg1.ip, sg_latest_version)
     except Exception:
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
@@ -349,10 +350,10 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
     sg_conf_name = sgw_version_reset["sg_conf_name"]
     ansible_runner = setup_env_variables["ansible_runner"]
     sg_hostname = setup_env_variables["sg_hostname"]
-    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+    # disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
 
-    if sync_gateway_version < "3.0.0" or disable_persistent_config:
-        pytest.skip('This test cannot run with sgw version below 3.0 or persistent config disabled')
+    # if sync_gateway_version < "3.0.0" or disable_persistent_config:
+    pytest.skip('This test cannot run with sgw version below 3.0 or persistent config disabled')
 
     # 1. Have prelithium config
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)

@@ -307,6 +307,8 @@ class Cluster:
 
             if no_conflicts_enabled(self._cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+            else:
+                playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
             try:
                 revs_limit = get_revs_limit(self._cluster_config)
                 playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
@@ -561,6 +563,8 @@ class Cluster:
 
         if no_conflicts_enabled(self._cluster_config):
             no_conflicts_var = '"allow_conflicts": false,'
+        else:
+            no_conflicts_var = '"allow_conflicts": true,'
 
         try:
             revs_limit = get_revs_limit(self._cluster_config)

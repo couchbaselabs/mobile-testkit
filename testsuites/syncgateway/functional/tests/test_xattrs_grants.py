@@ -206,11 +206,11 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
     # 5. Run resync, verify docs are updated and assigned to updated channel
     #     Verify import_counts stats
     if resync:
-        sg_client.take_db_offline(cluster_conf=cluster_config, db=sg_db)
+        sg_client.take_db_offline(cluster_conf=cluster_config, db=sg_db, url=sg_admin_url)
         status = sg_client.db_resync(url=sg_admin_url, db=sg_db, auth=auth)
         assert status == 200, "re-sync failed"
         admin.wait_for_resync_to_complete(db=sg_db)
-        sg_client.bring_db_online(cluster_conf=cluster_config, db=sg_db)
+        sg_client.bring_db_online(cluster_conf=cluster_config, db=sg_db, url=sg_admin_url)
         admin.wait_for_db_online(sg_db, 60)
         sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
         sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)

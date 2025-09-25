@@ -134,6 +134,7 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -154,7 +155,7 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
 
     # Take bucket offline
     sg_client = MobileRestClient()
-    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db", url=sg_admin_url)
     assert status == 0
 
     # all db endpoints should return 503
@@ -181,6 +182,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -214,8 +216,8 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         time_sec = 10
         while offline_retries < 10:
             try:
-                assert sg_client.take_db_offline(cluster_conf, "db") == 0
-                futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
+                assert sg_client.take_db_offline(cluster_conf, "db", sg_admin_url) == 0
+                futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db", sg_admin_url)] = "db_offline_task"
                 break
             except AssertionError as error:
                 offline_retries = offline_retries + 1
@@ -246,7 +248,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
     assert len(docs_in_changes) > 0
 
     # Bring db back online
-    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db", url=sg_admin_url)
     assert status == 0
 
     # Get all docs that have been pushed
@@ -273,6 +275,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -301,7 +304,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
         futures = {executor.submit(user.start_continuous_changes_tracking, termination_doc_id=None): user.name for user in users}
 
         time.sleep(5)
-        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db", sg_admin_url)] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -343,6 +346,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -370,7 +374,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
         # start longpoll tracking with no timeout, will block until longpoll is closed by db going offline
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False)] = "polling"
         time.sleep(5)
-        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db", sg_admin_url)] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -410,6 +414,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -439,7 +444,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
         futures = {executor.submit(user.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False): user.name for user in users}
 
         time.sleep(5)
-        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db", sg_admin_url)] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -486,6 +491,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -516,7 +522,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None)] = "polling"
         time.sleep(5)
         futures[executor.submit(doc_pusher.add_docs, num_docs, bulk)] = "docs_push"
-        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db", sg_admin_url)] = "db_offline_task"
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
 
@@ -564,7 +570,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
 
     # Bring db back online
     sg_client = MobileRestClient()
-    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db", url=sg_admin_url)
     assert status == 0
 
     # Get all docs that have been pushed
@@ -595,6 +601,7 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -621,7 +628,7 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
     # POST /db/_online
     # Take bucket online
     sg_client = MobileRestClient()
-    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db", url=sg_admin_url)
     assert status == 0
 
     # all db endpoints should succeed
@@ -696,6 +703,7 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -716,7 +724,7 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
 
     time.sleep(2)
     sg_client = MobileRestClient()
-    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db", url=sg_admin_url)
     assert status == 0
 
     log_info("offline request response status: {}".format(status))
@@ -725,7 +733,7 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     db_info = admin.get_db_info("db")
     assert db_info["state"] == "Offline"
 
-    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db", delay=15)
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db", url=sg_admin_url, delay=15)
     assert status == 0
     log_info("online request response status: {}".format(status))
 

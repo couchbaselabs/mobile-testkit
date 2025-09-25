@@ -180,7 +180,7 @@ def pytest_addoption(parser):
     parser.addoption("--sync-gateway-previous-version",
                      action="store",
                      help="sync-gateway-previous-version",  # Adding a default to try to fix the test failure
-                     default="2.7.4")
+                     default="3.0.9")
 
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
@@ -473,6 +473,9 @@ def params_from_base_suite_setup(request):
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    if not no_conflicts_enabled:
+        sg_config = sync_gateway_config_path_for_mode("sync_gateway_allow_conflicts", mode)
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
     if skip_provisioning or use_sequoia:
@@ -727,6 +730,7 @@ def sgw_version_reset(params_from_base_test_setup):
     }
     sg_latest_version = get_sg_version(cluster_conf)
     try:
+        log_info("Verifying sync gateway version in conftest")
         verify_sync_gateway_version(sg1.ip, sg_latest_version)
     except Exception as ex:
         print("exception message: ", ex)
