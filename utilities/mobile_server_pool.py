@@ -10,7 +10,7 @@ sys.path = [".", "keywords"] + sys.path
 from keywords.utils import log_info  # noqa: E402
 from couchbase.exceptions import CouchbaseException  # noqa: E402
 
-SERVER_IP = "172.23.104.129"
+SERVER_IP = "172.23.216.60"
 # SERVER_IP = "172.23.120.140"
 USERNAME = 'Administrator'
 PASSWORD = 'esabhcuoc'
