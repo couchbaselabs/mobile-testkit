@@ -176,6 +176,9 @@ class Cluster:
                                            cluster_config=self._cluster_config,
                                            ipv6=self.ipv6)
 
+            for bucket_name in bucket_name_set:
+                self.wait_for_bucket_ready(self.servers[0].url, bucket_name, timeout=120)
+
             # Wait for server to be in a warmup state to work around
             # https://github.com/couchbase/sync_gateway/issues/1745
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
@@ -373,6 +376,21 @@ class Cluster:
                 send_dbconfig_as_restCall(self._cluster_config, db_config_json, self.sync_gateways, sgw_config_data)
 
         return mode
+
+    # helper function for bucket warmup waiting
+    def wait_for_bucket_ready(self, admin_url, bucket_name, timeout=60):
+        start = time.time()
+        while time.time() - start < timeout:
+            try:
+                resp = requests.get(f"{admin_url}/pools/default/buckets/{bucket_name}")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data["nodes"][0]["status"] == "healthy":
+                        return True
+            except Exception:
+                pass
+            time.sleep(5)
+        raise Exception(f"Bucket {bucket_name} not ready after {timeout}s")
 
     def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[], use_config=False, sync_gateway_version=None):
         # Parse config and grab bucket names
