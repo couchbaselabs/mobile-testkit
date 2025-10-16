@@ -33,7 +33,7 @@ class TestServerCpp(TestServerBase):
         if self.platform == "c-macosx":
             self.package_name = "testserver_macos"
         elif self.platform == "c-debian":
-            self.package_name = "testserver_debian9-x86_64"
+            self.package_name = "testserver_debian11-x86_64"
         elif self.platform == "c-rpi":
             if "TESTSERVER_ARM" not in os.environ:
                 self.package_name = "testserver_raspios10-armhf"
