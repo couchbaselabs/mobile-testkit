@@ -570,6 +570,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     params_from_base_test_setup["need_sgw_admin_auth"] = False
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
