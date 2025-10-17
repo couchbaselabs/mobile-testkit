@@ -176,9 +176,9 @@ class Cluster:
                                            cluster_config=self._cluster_config,
                                            ipv6=self.ipv6)
 
-            for bucket_name in bucket_name_set:
-                log_info("Waiting for bucket %s warmup" % bucket)
-                self.wait_for_bucket_ready(self.servers[0].url, bucket_name, timeout=300)
+            # for bucket_name in bucket_name_set:
+            #     log_info("Waiting for bucket %s warmup" % bucket)
+            #     self.wait_for_bucket_ready(self.servers[0].url, bucket_name, timeout=300)
 
             # Wait for server to be in a warmup state to work around
             # https://github.com/couchbase/sync_gateway/issues/1745
@@ -377,28 +377,6 @@ class Cluster:
                 send_dbconfig_as_restCall(self._cluster_config, db_config_json, self.sync_gateways, sgw_config_data)
 
         return mode
-
-    # helper function for bucket warmup waiting
-    def wait_for_bucket_ready(self, admin_url, bucket_name, timeout=300):
-        start = time.time()
-        auth = ('Administrator', 'password')
-        while time.time() - start < timeout:
-            try:
-                r = requests.get(f"{admin_url}/pools/default/buckets/{bucket_name}", auth=auth, verify=False, timeout=10)
-                if r.status_code == 200:
-                    data = r.json()
-                    # bucket exists; check nodes statuses
-                    node_statuses = [n.get("status") for n in data.get("nodes", []) if n.get("status") is not None]
-                    log_info(f"Bucket {bucket_name} nodes: {node_statuses}")
-                    if node_statuses and all(ns == "healthy" for ns in node_statuses):
-                        return True
-                    # optional: check bucket basicStats or state if available
-                else:
-                    log_info(f"Bucket {bucket_name} not found yet (status {r.status_code})")
-            except Exception as e:
-                log_info(f"wait_for_bucket_ready: exception while checking bucket {bucket_name}: {e}")
-            time.sleep(5)
-        raise Exception(f"Bucket {bucket_name} not ready after {timeout}s")
 
     def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[], use_config=False, sync_gateway_version=None):
         # Parse config and grab bucket names

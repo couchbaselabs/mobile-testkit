@@ -509,6 +509,11 @@ class CouchbaseServer:
         if server_major_version >= 5:
             self._create_internal_rbac_bucket_user(name, cluster_config=cluster_config)
 
+        # Wait for bucket to be ready
+        log_info("Waiting for bucket {} to be ready".format(name))
+        self.wait_for_bucket_ready(name, timeout=180)
+        log_info("Bucket {} is ready".format(name))
+
         # Create client an retry until KeyNotFound error is thrown
         try:
             if self.cbs_ssl and ipv6:
@@ -528,6 +533,33 @@ class CouchbaseServer:
 
         self.wait_for_ready_state()
         return name
+
+        # helper function for bucket warmup waiting
+    def wait_for_bucket_ready(self, bucket_name, timeout=300):
+        """
+        Wait for a bucket to be ready
+        """
+        start = time.time()
+        auth = ('Administrator', 'password')
+        while time.time() - start < timeout:
+            try:
+                r = requests.get(f"{self.url}/pools/default/buckets/{bucket_name}", auth=auth, verify=False, timeout=10)
+                if r.status_code == 200:
+                    data = r.json()
+                    # bucket exists; check nodes statuses
+                    node_statuses = [n.get("status") for n in data.get("nodes", []) if n.get("status") is not None]
+                    log_info(f"Bucket {bucket_name} nodes statii: {node_statuses}")
+                    if node_statuses and all(ns == "healthy" for ns in node_statuses):
+                        log_info(f"Bucket {bucket_name} is ready")
+                        return True
+                    # optional: check bucket basicStats or state if available
+                else:
+                    log_info(f"Bucket {bucket_name} not found yet (status {r.status_code})")
+            except Exception as e:
+                log_info(f"wait_for_bucket_ready: exception while checking bucket {bucket_name}: {e}")
+            time.sleep(5)
+        raise Exception(f"Bucket {bucket_name} not ready after {timeout}s")
+
 
     def delete_couchbase_server_cached_rev_bodies(self, bucket, ipv6=False):
         """
