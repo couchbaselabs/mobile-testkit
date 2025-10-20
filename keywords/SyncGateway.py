@@ -144,7 +144,8 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "3.2.2": "21",
         "3.2.3": "16",
         "3.2.4": "6",
-        "3.3.0": "286"
+        "3.3.0": "286",
+        "4.0.0": "246"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -348,7 +349,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
                              "tls_key_path": "sg_privkey.pem"
                             }, """
 
-        if no_conflicts_enabled(cluster_config):
+        # For SGW 4.0.0 and above, allow_conflicts cannot be enabled
+        if no_conflicts_enabled(cluster_config) or get_sg_version(cluster_config) >= "4.0.0":
             no_conflicts_prop = '"allow_conflicts": false,'
         else:
             no_conflicts_prop = '"allow_conflicts": true,'
@@ -588,7 +590,7 @@ class SyncGateway(object):
                              "tls_key_path": "sg_privkey.pem"
                             }, """
 
-            if no_conflicts_enabled(cluster_config):
+            if no_conflicts_enabled(cluster_config) or get_sg_version(cluster_config) >= "4.0.0":
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
             else:
                 playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
@@ -921,7 +923,7 @@ class SyncGateway(object):
                                 "SSLKey": "sg_privkey.pem"
                                 }, """
 
-            if no_conflicts_enabled(cluster_config):
+            if no_conflicts_enabled(cluster_config) or get_sg_version(cluster_config) >= "4.0.0":
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
             else:
                 playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
@@ -1116,7 +1118,7 @@ class SyncGateway(object):
                 else:
                     playbook_vars["autoimport"] = '"import_docs": "continuous",'
 
-            if no_conflicts_enabled(cluster_config):
+            if no_conflicts_enabled(cluster_config) or get_sg_version(cluster_config) >= "4.0.0":
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
             else:
                 playbook_vars["no_conflicts"] = '"allow_conflicts": true,'

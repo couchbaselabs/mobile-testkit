@@ -169,7 +169,8 @@ class SyncGateway:
                     playbook_vars["autoimport"] = '"import_docs": "continuous",'
                 playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
-            if no_conflicts_enabled(self.cluster_config):
+            # For SGW 4.0.0 and above, allow_conflicts cannot be enabled
+            if no_conflicts_enabled(self.cluster_config) or get_sg_version(self.cluster_config) >= "4.0.0":
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
             else:
                 playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
@@ -334,7 +335,7 @@ class SyncGateway:
                     playbook_vars["autoimport"] = '"import_docs": "continuous",'
                 playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
-            if no_conflicts_enabled(cluster_config):
+            if no_conflicts_enabled(cluster_config) or get_sg_version(cluster_config) >= "4.0.0":
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
             else:
                 playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
@@ -899,7 +900,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
         autoimport_var = '"import_docs": true,'
         xattrs_var = '"enable_shared_bucket_access": true,'
 
-    if no_conflicts_enabled(cluster_config):
+    if no_conflicts_enabled(cluster_config) or get_sg_version(cluster_config) >= "4.0.0":
         no_conflicts_var = '"allow_conflicts": false,'
     else:
         no_conflicts_var = '"allow_conflicts": true,'
@@ -1266,7 +1267,7 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
         autoimport_var = '"import_docs": true,'
         xattrs_var = '"enable_shared_bucket_access": true,'
 
-    if no_conflicts_enabled(cluster_config):
+    if no_conflicts_enabled(cluster_config) or get_sg_version(cluster_config) >= "4.0.0":
         no_conflicts_var = '"allow_conflicts": false,'
     else:
         no_conflicts_var = '"allow_conflicts": true,'

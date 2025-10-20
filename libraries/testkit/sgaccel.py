@@ -96,7 +96,7 @@ class SgAccel:
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
-        if no_conflicts_enabled(self.cluster_config):
+        if no_conflicts_enabled(self.cluster_config) or get_sg_version(self.cluster_config) >= "4.0.0":
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
         else:
             playbook_vars["no_conflicts"] = '"allow_conflicts": true,'

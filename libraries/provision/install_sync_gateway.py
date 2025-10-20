@@ -311,7 +311,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
-        if no_conflicts_enabled(cluster_config):
+        # For SGW 4.0.0 and above, allow_conflicts cannot be enabled
+        if no_conflicts_enabled(cluster_config) or get_sg_version(cluster_config) >= "4.0.0":
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
         else:
             playbook_vars["no_conflicts"] = '"allow_conflicts": true,'

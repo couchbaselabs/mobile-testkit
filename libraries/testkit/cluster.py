@@ -305,7 +305,8 @@ class Cluster:
                     playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
                     playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
-            if no_conflicts_enabled(self._cluster_config):
+            # For SGW 4.0.0 and above, allow_conflicts cannot be enabled
+            if no_conflicts_enabled(self._cluster_config) or get_sg_version(self._cluster_config) >= "4.0.0":
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
             else:
                 playbook_vars["no_conflicts"] = '"allow_conflicts": true,'
@@ -561,7 +562,7 @@ class Cluster:
                 autoimport_var = '"import_docs": "continuous",'
             xattrs_var = '"enable_shared_bucket_access": true,'
 
-        if no_conflicts_enabled(self._cluster_config):
+        if no_conflicts_enabled(self._cluster_config) or get_sg_version(self._cluster_config) >= "4.0.0":
             no_conflicts_var = '"allow_conflicts": false,'
         else:
             no_conflicts_var = '"allow_conflicts": true,'
